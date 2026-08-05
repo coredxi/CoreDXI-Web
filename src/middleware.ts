@@ -13,10 +13,10 @@ export default auth((req) => {
   requestHeaders.delete("content-security-policy");
   requestHeaders.delete("content-security-policy-report-only");
   requestHeaders.set("x-nonce", nonce);
-  requestHeaders.set("Content-Security-Policy-Report-Only", csp);
+  requestHeaders.set("Content-Security-Policy", csp);
 
   const withCsp = (response: NextResponse): NextResponse => {
-    response.headers.set("Content-Security-Policy-Report-Only", csp);
+    response.headers.set("Content-Security-Policy", csp);
     return response;
   };
 
