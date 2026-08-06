@@ -29,6 +29,8 @@ export async function generateMetadata({
     title: item.title,
     description,
     alternates: { canonical },
+    // og:image/twitter:image는 파일 기반 opengraph-image.tsx(합성형 카드)가 단독 책임진다 —
+    // 여기서 images를 지정하면 파일 기반과 우선순위가 충돌하고 채널별 이미지가 불일치할 수 있다.
     openGraph: {
       type: "article",
       locale: "ko_KR",
@@ -36,13 +38,11 @@ export async function generateMetadata({
       title: item.title,
       description,
       url: canonical,
-      images: item.thumbnailUrl ? [{ url: item.thumbnailUrl }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
       title: item.title,
       description,
-      images: item.thumbnailUrl ? [item.thumbnailUrl] : undefined,
     },
   };
 }
