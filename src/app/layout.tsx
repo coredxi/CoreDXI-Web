@@ -66,6 +66,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    site: "@coredxi",
     title: "CoreDXI — 비즈니스의 중심을 AI로 깨우다",
     description:
       "복잡한 협업은 심플하게, 변화는 단단하게. B2B AX 전환 솔루션을 제공하는 AI 코어 파트너.",
