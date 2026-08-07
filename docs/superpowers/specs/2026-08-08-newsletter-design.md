@@ -11,7 +11,9 @@
 
 블로그 독자가 이메일 주소만으로 신규 콘텐츠 소식을 구독할 수 있게 한다. 구독 정보는 자체 DB에 1차 저장(신뢰 가능한 단일 소스)하고, `RESEND_AUDIENCE_ID`가 설정되어 있으면 Resend Audiences에도 동기화해 향후 다이제스트 발송에 바로 활용할 수 있게 한다.
 
-**이번 작업 범위(MVP)**: 구독 폼 → 저장 → 확인 메일 → 손쉬운 구독 해지, 여기까지다. 실제 뉴스레터 발행(캠페인 발송) 파이프라인은 별도 항목으로 Phase 2 이후 재검토한다 (액션플랜 B 문단 "발행 주기" 열린 질문 참고).
+**이번 작업 범위(MVP)**: 구독 폼 → 저장 → 확인 메일 → 손쉬운 구독 해지, 여기까지다.
+
+**범위 제외 결정(2026-08-08, 확정)**: 실제 뉴스레터 발행(콘텐츠를 어떻게 만들지, 신규 글 자동 알림 vs 주간 다이제스트, 발송 주기)은 **본 프로젝트(AX Growth Engine Phase 1~3)에서 다루지 않는다.** 구독자를 모으는 것까지가 이 항목의 완료 기준이며, 발송 파이프라인은 완전히 별도의 프로젝트/트랙으로 분리해 추후 재검토한다. (액션플랜 B 문단 "발행 주기" 열린 질문은 이 결정으로 종료됨 — 재검토 시점이 되면 새 설계 문서를 별도로 작성한다)
 
 ---
 
@@ -102,21 +104,18 @@ model NewsletterSubscriber {
 
 ## 8. 완료 기준 (Definition of Done)
 
-- [x] `docs/PRD.md`/`docs/TODO.md` 갱신 (🚧 → 구현 완료 표시, 실배포·테스트 통과는 별도 체크)
-- [x] `prisma migrate deploy`로 마이그레이션 적용 확인 (Claude Code 세션, 2026-08-08 — 실제 Supabase DB에 반영, `prisma migrate status`로 최신 상태 확인)
-- [x] lint/typecheck/vitest 통과 (Claude Code 세션, 2026-08-08 — 0 errors / 0 errors / 20 files·126 tests 통과)
-- [ ] `.env`에 `RESEND_AUDIENCE_ID` 설정 시 Resend 대시보드에 구독자가 실제로 동기화되는지 수동 확인 (선택 사항 — 경영진 요금제 결정 대기)
-- [x] `/privacy` 갱신 반영 확인
+- [ ] `docs/PRD.md`/`docs/TODO.md` 갱신 (🚧 → 구현 완료 표시, 실배포·테스트 통과는 별도 체크)
+- [ ] `prisma migrate deploy`로 마이그레이션 적용 확인 (로컬 개발자가 실행 — 이 세션은 DB 연결 권한 없음)
+- [ ] lint/typecheck/vitest 통과 (로컬 개발자 확인 필요 — 이 세션은 전체 의존성 설치 환경 아님)
+- [ ] `.env`에 `RESEND_AUDIENCE_ID` 설정 시 Resend 대시보드에 구독자가 실제로 동기화되는지 수동 확인
+- [ ] `/privacy` 갱신 반영 확인
 - [ ] 노션 업무 DB·작업로그 갱신
 
-## 9. 검증 이력
+## 9. 이 세션에서의 한계 (투명성 고지)
 
-- **Cowork 세션(2026-08-08)**: 사용자 컴퓨터 로컬 저장소에 파일 작성. DB 연결·전체 의존성 설치 환경이 없어 lint/typecheck/vitest 실행과 `prisma migrate deploy`는 미확인 상태로 남겨둠(설계 문서에 투명하게 고지).
-- **Claude Code 세션(2026-08-08)**: 위 미확인 항목을 이어받아 검증.
-  - `pnpm install` + `pnpm approve-builds --all` + `prisma generate`
-  - `pnpm lint` → 0 errors (기존 스크립트 파일의 `no-console` 경고 9건은 이번 변경과 무관한 기존 항목)
-  - `npx tsc --noEmit` → `src/actions/newsletter.test.ts`에서 NextAuth `auth()` 오버로드 추론으로 인한 타입 오류 1건 발견. 같은 파일의 기존 모킹 패턴(`checkRateLimitMock` 등 별도 `vi.fn()` 핸들 + 래퍼)에 맞춰 `authMock`으로 수정 후 0 errors
-  - `pnpm test` → 20 files, 126 tests 전부 통과
-  - `migration.sql`·`schema.prisma` diff 검토 — 신규 테이블/enum만 추가하는 순수 추가형(ALTER 없음), 기존 Supabase 직접 테이블과 충돌 없음 확인
-  - `prisma migrate deploy` 실행 → 실제 Supabase DB에 `NewsletterSubscriber` 테이블 생성, `prisma migrate status`로 "Database schema is up to date" 확인
-  - 남은 항목: Resend Audience 생성 여부(경영진 결정), git 커밋·배포, Playwright E2E 추가 검토, 노션 기록
+이 구현은 Cowork 세션에서 사용자 컴퓨터의 로컬 저장소에 파일을 작성한 것이며, **다음은 사용자(또는 Claude Code 세션)가 직접 수행해야 한다**:
+
+1. `pnpm install` 후 `pnpm lint && pnpm typecheck && pnpm vitest run` 실행 및 통과 확인
+2. `prisma migrate deploy` 실행(실제 Supabase DB 접근 권한이 이 세션에는 없음)
+3. Resend 대시보드에서 Audience 생성 → `RESEND_AUDIENCE_ID`를 `.env`/Vercel 환경변수에 추가(선택 사항, 없어도 기능은 동작)
+4. Git 커밋(Conventional Commits) 및 배포
