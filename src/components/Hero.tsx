@@ -9,6 +9,7 @@
 import Image from "next/image";
 import { getPageContent } from "@/lib/page-content";
 import { HOME_CONTENT_DEFAULTS } from "@/lib/page-content/home";
+import { TrackedCtaLink } from "@/components/analytics/TrackedCtaLink";
 
 export async function Hero() {
   const content = await getPageContent("home", HOME_CONTENT_DEFAULTS);
@@ -51,15 +52,16 @@ export async function Hero() {
         </p>
 
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4">
-          <a
+          <TrackedCtaLink
             href={content.primaryCtaHref}
+            location="hero_primary"
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-8 py-4 text-base font-semibold text-white shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] transition-all duration-200 hover:bg-primary/90 hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:translate-y-0 sm:w-auto"
           >
             {content.primaryCtaText}
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
             </svg>
-          </a>
+          </TrackedCtaLink>
 
           <a
             href={content.secondaryCtaHref}

@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { getPageContent } from "@/lib/page-content";
 import { SOLUTIONS_CONTENT_DEFAULTS } from "@/lib/page-content/solutions";
+import { TrackedCtaLink } from "@/components/analytics/TrackedCtaLink";
 
 export const revalidate = 60;
 
@@ -43,13 +44,14 @@ export default async function SolutionsPage() {
               {content.heroSubtitle}
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <Link
+              <TrackedCtaLink
                 href="/contact"
+                location="solutions_hero"
                 className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90"
               >
                 무료 도입 상담
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
+              </TrackedCtaLink>
               <Link
                 href="/cases"
                 className="inline-flex items-center gap-2 rounded-xl border-2 border-primary/30 bg-card px-8 py-4 text-sm font-semibold text-primary dark:text-blue-300 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/60 hover:bg-primary/5"
@@ -107,13 +109,14 @@ export default async function SolutionsPage() {
                         </li>
                       ))}
                     </ul>
-                    <Link
+                    <TrackedCtaLink
                       href="/contact"
+                      location="solutions_mid"
                       className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-primary/90"
                     >
                       도입 문의
                       <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                    </Link>
+                    </TrackedCtaLink>
                   </div>
                 );
               })}
@@ -165,13 +168,14 @@ export default async function SolutionsPage() {
             <p className="mt-4 text-base leading-relaxed text-white/70">
               {content.ctaDesc}
             </p>
-            <Link
+            <TrackedCtaLink
               href="/contact"
+              location="solutions_bottom"
               className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-sm font-semibold text-primary shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl dark:text-blue-300"
             >
               무료 도입 상담 신청
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
+            </TrackedCtaLink>
           </div>
         </section>
       </main>

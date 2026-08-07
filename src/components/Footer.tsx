@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TrackedCtaLink } from "@/components/analytics/TrackedCtaLink";
 import { ArrowRight } from "lucide-react";
 import { NewsletterSubscribeForm } from "@/components/newsletter/NewsletterSubscribeForm";
 
@@ -31,13 +32,14 @@ export function Footer() {
             >
               개인정보처리방침
             </Link>
-            <Link
+            <TrackedCtaLink
               href="/contact"
+              location="footer"
               className="inline-flex items-center gap-2 text-primary transition-colors duration-300 hover:text-primary/80"
             >
               문의하기
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
+            </TrackedCtaLink>
           </div>
         </div>
       </div>
