@@ -80,12 +80,12 @@
 - ✅ **git 히스토리 보안 정리** — 커밋돼 있던 실제 인증 쿠키 파일(ck.txt 등) 완전 제거, `.gitignore` 추가
 - ✅ **공개 페이지 다크모드** — `next-themes` `ThemeProvider` 연결(기본값 라이트, 사용자가 직접 전환), Header에 토글 버튼 추가. 홈/소개/솔루션/성공사례/블로그/문의/로그인/회원가입/404 등 공개 페이지 24개 파일 색상 토큰화(`bg-background`/`bg-card`/`text-foreground` 등). WCAG AA 대비 기준 검증 포함. 관리자 패널(`/admin/**`)은 의도적으로 범위 제외(아래 4번 참고)
 - ✅ **CSP(Content-Security-Policy) Enforcing 전환 완료** — nonce 기반(`src/lib/csp.ts`), GA4/영상임베드/OAuth 허용 목록 확정, 위반 리포트 Sentry 연동(`/api/csp-report`). Report-Only 3주 모니터링 중 위반 1건(2026-07-19 개발 환경, `/cases/[slug]` JSON-LD nonce 누락) 확인 후 즉시 수정(2026-07-22), 이후 프로덕션 포함 재발 없음 확인. 2026-08-05 `Content-Security-Policy-Report-Only` → `Content-Security-Policy`로 전환, 로컬 골든패스·자동테스트(lint/tsc/vitest 101개/E2E)·프로덕션 콘솔 확인까지 완료(`docs/superpowers/specs/2026-07-19-csp-design.md` 참고)
-- ✅ **소셜 메타태그(OG/Twitter Card) 강화 완료** — 2026-08-06 착수, 2026-08-07 배포·전채널 검증까지 완료. 설계: `docs/superpowers/specs/2026-08-06-social-meta-design.md` / 트레이드오프: `docs/superpowers/specs/2026-08-06-social-meta-tradeoffs.md`
+- ✅ **소셜 메타태그(OG/Twitter Card) 강화 완료** — 2026-08-06 착수, 2026-08-07 배포·전채널 검증 + `twitter:site` 핸들까지 완료. 설계: `docs/superpowers/specs/2026-08-06-social-meta-design.md` / 트레이드오프: `docs/superpowers/specs/2026-08-06-social-meta-tradeoffs.md`
   - 커버 합성형 OG 카드(블로그 커버·사례 썸네일 배경 + 브랜드 오버레이, 실패 시 배지형 폴백) + 파일 기반 `opengraph-image.tsx`/config 이미지 우선순위 충돌 해소 + SSRF 방지 URL 화이트리스트(`feat`, T1·T2·T3·T4·T5·T7·T8)
   - `/privacy`·`/terms` canonical — 기존에 이미 `pageMetadata()` 적용돼 있어 재현되지 않음을 확인, 재발 방지 주석만 추가(`fix`, T6)
   - Vitest 유닛(배경 URL 검증·합성/배지 분기 판단) + Playwright E2E 골든패스(블로그 상세 og:title/twitter:card/og:image 200 응답) 추가(`test`, T10)
   - 프로덕션 배포 후 카카오톡 공유 디버거·Facebook Sharing Debugger·LinkedIn Post Inspector + 실기기 카카오톡 3종(홈/블로그/성공사례) 전부 정상 렌더링 확인 완료(2026-08-07). X는 공개 Card Validator가 폐지되어 실기기 확인으로 대체
-  - ⏸️ **후속 남은 항목(블로커 아님)**: `twitter:site` 핸들 — 회사 공식 X 계정 보유 여부 마케팅팀 확인 대기, 확인되면 `layout.tsx`에 한 줄 추가하는 후속 `feat` 커밋으로 처리
+  - ✅ **후속 항목도 완료**: 마케팅팀이 회사 공식 X 계정(`@coredxi`) 확인 → `layout.tsx` 전역 `twitter.site`에 핸들 추가(`feat: 전역 twitter:site 메타 핸들 추가`, 커밋 `aacf0b0`, 2026-08-07)
 
 ## 2. 개선이 필요한 항목 🔧
 

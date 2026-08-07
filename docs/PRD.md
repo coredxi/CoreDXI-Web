@@ -120,7 +120,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 - 블로그 글 상세에 JSON-LD (Article) 삽입
 - 루트 `layout.tsx`에 Organization JSON-LD
 - 네이버 서치어드바이저 메타태그 포함
-- **소셜 메타태그 강화 완료 (2026-08-07)** — 블로그 커버·성공사례 썸네일을 배경으로 합성한 1200×630 OG 카드(커버 없으면 브랜드 배지형 폴백), 파일 기반/config 기반 이미지 충돌 해소, SSRF 방지 URL 화이트리스트, `/privacy`·`/terms` canonical 보완. 배포 후 카카오톡·Facebook·LinkedIn 디버거 + 실기기 카카오톡 3종 검증까지 완료(`docs/superpowers/specs/2026-08-06-social-meta-design.md` 참고). 남은 후속(블로커 아님): `twitter:site` 핸들 — 마케팅팀 확인 대기
+- **소셜 메타태그 강화 완료 (2026-08-07)** — 블로그 커버·성공사례 썸네일을 배경으로 합성한 1200×630 OG 카드(커버 없으면 브랜드 배지형 폴백), 파일 기반/config 기반 이미지 충돌 해소, SSRF 방지 URL 화이트리스트, `/privacy`·`/terms` canonical 보완. 배포 후 카카오톡·Facebook·LinkedIn 디버거 + 실기기 카카오톡 3종 검증까지 완료(`docs/superpowers/specs/2026-08-06-social-meta-design.md` 참고). `twitter:site` 핸들(`@coredxi`)도 마케팅팀 확인 후 `layout.tsx`에 반영 완료(2026-08-07) — 후속 항목 없음
 
 ---
 
