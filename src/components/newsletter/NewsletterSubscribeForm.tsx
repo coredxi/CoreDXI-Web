@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import Link from "next/link";
 import { Mail } from "lucide-react";
 import { subscribeNewsletter } from "@/actions/newsletter";
+import { trackEvent } from "@/lib/ga4-events";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -42,6 +43,7 @@ export function NewsletterSubscribeForm({ source = "footer", className }: Props)
         setStatus({ type: "error", message: result.error });
         return;
       }
+      trackEvent("newsletter_subscribe", { source });
       setStatus({ type: "success" });
       setEmail("");
       setConsent(false);
