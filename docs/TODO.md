@@ -1,7 +1,7 @@
 # CoreDXI-Web TODO
 
 > 최종 업데이트: 2026-08-07
-> 코드베이스 분석 기반 — 실제 구현 상태를 반영합니다. (2026-06-30 → 2026-07-07 종합 고도화 세션, 2026-07-19 rate limiting·다크모드 세션, 2026-08-07 소셜 메타태그 강화 완료 반영)
+> 코드베이스 분석 기반 — 실제 구현 상태를 반영합니다. (2026-06-30 → 2026-07-07 종합 고도화 세션, 2026-07-19 rate limiting·다크모드 세션, 2026-08-05 CSP Enforcing 전환, 2026-08-06 소셜 메타태그 강화 착수, 2026-08-07 코드 구현·테스트 완료 반영)
 
 ---
 
@@ -79,7 +79,7 @@
 - ✅ **프로덕션 TLS 검증 정상화** — `NODE_TLS_REJECT_UNAUTHORIZED="0"` 제거, Supabase 루트 CA 명시 신뢰로 교체
 - ✅ **git 히스토리 보안 정리** — 커밋돼 있던 실제 인증 쿠키 파일(ck.txt 등) 완전 제거, `.gitignore` 추가
 - ✅ **공개 페이지 다크모드** — `next-themes` `ThemeProvider` 연결(기본값 라이트, 사용자가 직접 전환), Header에 토글 버튼 추가. 홈/소개/솔루션/성공사례/블로그/문의/로그인/회원가입/404 등 공개 페이지 24개 파일 색상 토큰화(`bg-background`/`bg-card`/`text-foreground` 등). WCAG AA 대비 기준 검증 포함. 관리자 패널(`/admin/**`)은 의도적으로 범위 제외(아래 4번 참고)
-- ✅ **CSP(Content-Security-Policy) Report-Only 도입** — nonce 기반(`src/lib/csp.ts`), GA4/영상임베드/OAuth 허용 목록 확정, 위반 리포트 Sentry 연동(`/api/csp-report`). 1주 프로덕션 모니터링 후 enforcing 전환 예정(`docs/superpowers/specs/2026-07-19-csp-design.md` 참고)
+- ✅ **CSP(Content-Security-Policy) Enforcing 전환 완료** — nonce 기반(`src/lib/csp.ts`), GA4/영상임베드/OAuth 허용 목록 확정, 위반 리포트 Sentry 연동(`/api/csp-report`). Report-Only 3주 모니터링 중 위반 1건(2026-07-19 개발 환경, `/cases/[slug]` JSON-LD nonce 누락) 확인 후 즉시 수정(2026-07-22), 이후 프로덕션 포함 재발 없음 확인. 2026-08-05 `Content-Security-Policy-Report-Only` → `Content-Security-Policy`로 전환, 로컬 골든패스·자동테스트(lint/tsc/vitest 101개/E2E)·프로덕션 콘솔 확인까지 완료(`docs/superpowers/specs/2026-07-19-csp-design.md` 참고)
 
 ---
 

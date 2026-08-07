@@ -75,6 +75,10 @@ Permissions-Policy, HSTS는 이미 적용되어 있으나 CSP만 빠져 있다. 
 2. **Phase 2**: 프로덕션 배포 후 약 1주간 Sentry에 쌓인 CSP 위반 리포트 검토, 누락된 허용 항목 있으면 `csp.ts` 조정.
 3. **Phase 3**: 위반 없음 확인되면 헤더명을 `Content-Security-Policy-Report-Only` → `Content-Security-Policy`로
    전환(enforcing). `docs/TODO.md`의 "CSP 미적용" 항목을 완료로 갱신.
+   **완료(2026-08-05)**: Sentry 검토 결과 위반 1건(2026-07-19, 개발 환경, `/cases/[slug]` JSON-LD nonce 누락)뿐이었고
+   이미 2026-07-22 커밋(`101abcb`)으로 수정·재발 없음 확인. `src/middleware.ts` 헤더명 전환, 로컬 골든패스·
+   `npm run lint`/`tsc --noEmit`/`test`(101개)/`test:e2e`(2 passed 2 skipped) 통과, 프로덕션(`www.coredxi.com`)
+   콘솔에서 CSP 에러 없음 확인 후 배포 완료.
 
 ## 테스트 계획
 
