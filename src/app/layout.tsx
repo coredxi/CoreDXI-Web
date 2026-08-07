@@ -44,6 +44,9 @@ export const metadata: Metadata = {
   description:
     "복잡한 협업은 심플하게, 변화는 단단하게. B2B 회의 예약 및 AX 전환 솔루션을 제공하는 당신의 AI 코어 파트너, CoreDXI.",
   metadataBase: new URL(SITE_URL),
+  // 이 canonical은 홈(/) 전용 기본값이다. 페이지별 metadata가 없는 라우트는 이 값을 그대로 상속받아
+  // canonical이 홈으로 잘못 지정될 수 있으므로, 새로 추가하는 공개 페이지는 반드시 src/lib/seo.ts의
+  // pageMetadata()(또는 자체 alternates.canonical)를 지정할 것.
   alternates: {
     canonical: SITE_URL,
   },
