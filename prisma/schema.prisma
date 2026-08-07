@@ -188,3 +188,27 @@ model RateLimitHit {
 
   @@index([key, createdAt])
 }
+
+// =====================================================
+// NewsletterSubscriber — 블로그 뉴스레터 구독자
+// (docs/superpowers/specs/2026-08-08-newsletter-design.md 참고)
+// =====================================================
+enum NewsletterSubscriberStatus {
+  SUBSCRIBED
+  UNSUBSCRIBED
+}
+
+model NewsletterSubscriber {
+  id               String                     @id @default(cuid())
+  email            String                     @unique
+  status           NewsletterSubscriberStatus @default(SUBSCRIBED)
+  unsubscribeToken String                     @unique
+  resendContactId  String?
+  source           String?
+  subscribedAt     DateTime                   @default(now())
+  unsubscribedAt   DateTime?
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+
+  @@index([status])
+}

@@ -1,6 +1,6 @@
 # CoreDXI-Web PRD (Product Requirements Document)
 
-> 최종 업데이트: 2026-08-07
+> 최종 업데이트: 2026-08-08
 > 작성 기준: 코드베이스 분석 (Next.js App Router, `src/` 구조)
 
 ---
@@ -67,6 +67,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 문의하기 | `/contact` | 문의 폼(Supabase 저장) + 알림 이메일(Resend) |
 | 이용약관 | `/terms` | 정적 법적 문서 |
 | 개인정보처리방침 | `/privacy` | 정적 법적 문서 |
+| 뉴스레터 구독 해지 | `/unsubscribe/[token]` | 이메일 하단 링크로 접근, 토큰 기반 즉시 해지(구현·검증 완료, 배포 대기) |
 
 ### 5-2. 인증 시스템
 
@@ -157,6 +158,8 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | `Portfolio` | 성공사례 CMS |
 | `BlogPost` | 블로그 글 (Tiptap JSON 본문) |
 | `BlogCategory` | 블로그 카테고리 |
+| `RateLimitHit` | 관리자 로그인·문의 폼·뉴스레터 구독 등 요청 빈도 제한 기록 |
+| `NewsletterSubscriber` | 뉴스레터 구독자(2026-08-08 구현·검증·DB 반영 완료, `docs/superpowers/specs/2026-08-08-newsletter-design.md` 참고) |
 
 **Supabase 테이블** (Prisma 외):
 
@@ -265,7 +268,8 @@ src/
 | **Google OAuth** | 소셜 로그인 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` |
 | **Kakao OAuth** | 소셜 로그인 | `KAKAO_CLIENT_ID`, `KAKAO_CLIENT_SECRET` |
 | **Naver OAuth** | 소셜 로그인 | `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET` |
-| **Resend** | 이메일 발송 (OTP, 문의 알림) | `RESEND_API_KEY` |
+| **Resend** | 이메일 발송 (OTP, 문의 알림, 뉴스레터 구독 확인) | `RESEND_API_KEY` |
+| **Resend Audiences** | 뉴스레터 구독자 동기화(선택, 미설정 시 로컬 DB만 사용) | `RESEND_AUDIENCE_ID` |
 | **Google Analytics 4** | 방문자 분석 + 관리자 대시보드 | `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `GA4_PROPERTY_ID`, `GA4_SERVICE_ACCOUNT_JSON` |
 | **Sentry** | 에러 모니터링 | (next.config.ts에서 org/project 설정) |
 | **Notion** | (환경변수 존재, 실제 연동 미확인) | `NOTION_TOKEN`, `NOTION_*_DB_ID` (7개) |

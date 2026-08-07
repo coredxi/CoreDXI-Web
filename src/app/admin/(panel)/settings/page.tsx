@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Shield, UserPlus, Users } from "lucide-react";
+import { Send, Shield, UserPlus, Users } from "lucide-react";
 
 const SETTING_LINKS = [
   {
@@ -19,6 +19,12 @@ const SETTING_LINKS = [
     description: "새 관리자 계정을 추가합니다.",
     href: "/admin/register",
     icon: UserPlus,
+  },
+  {
+    title: "뉴스레터 구독자",
+    description: "블로그 뉴스레터 구독자 수와 목록을 확인합니다.",
+    href: "/admin/newsletter",
+    icon: Send,
   },
 ] as const;
 
