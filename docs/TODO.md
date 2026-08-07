@@ -1,7 +1,7 @@
 # CoreDXI-Web TODO
 
-> 최종 업데이트: 2026-08-07
-> 코드베이스 분석 기반 — 실제 구현 상태를 반영합니다. (2026-06-30 → 2026-07-07 종합 고도화 세션, 2026-07-19 rate limiting·다크모드 세션, 2026-08-05 CSP Enforcing 전환, 2026-08-06 소셜 메타태그 강화 착수, 2026-08-07 배포·전채널 검증까지 완료)
+> 최종 업데이트: 2026-08-08
+> 코드베이스 분석 기반 — 실제 구현 상태를 반영합니다. (2026-06-30 → 2026-07-07 종합 고도화 세션, 2026-07-19 rate limiting·다크모드 세션, 2026-08-05 CSP Enforcing 전환, 2026-08-06 소셜 메타태그 강화 착수, 2026-08-07 배포·전채널 검증까지 완료, 2026-08-08 뉴스레터 구독 구현)
 
 ---
 
@@ -86,6 +86,16 @@
   - Vitest 유닛(배경 URL 검증·합성/배지 분기 판단) + Playwright E2E 골든패스(블로그 상세 og:title/twitter:card/og:image 200 응답) 추가(`test`, T10)
   - 프로덕션 배포 후 카카오톡 공유 디버거·Facebook Sharing Debugger·LinkedIn Post Inspector + 실기기 카카오톡 3종(홈/블로그/성공사례) 전부 정상 렌더링 확인 완료(2026-08-07). X는 공개 Card Validator가 폐지되어 실기기 확인으로 대체
   - ✅ **후속 항목도 완료**: 마케팅팀이 회사 공식 X 계정(`@coredxi`) 확인 → `layout.tsx` 전역 `twitter.site`에 핸들 추가(`feat: 전역 twitter:site 메타 핸들 추가`, 커밋 `aacf0b0`, 2026-08-07)
+- ✅ **뉴스레터 구독 (Phase 1 마지막 잔여 항목, 구현·검증·DB 반영 완료)** — 2026-08-08 착수. 설계: `docs/superpowers/specs/2026-08-08-newsletter-design.md`
+  - `NewsletterSubscriber` Prisma 모델 신설(수동 `migration.sql`, `prisma migrate dev` 미사용) + `RateLimitHit` 재사용 rate limiting(IP당 1시간 5회, 문의 폼과 동일 기준)
+  - Footer에 전 페이지 공통 구독 폼(`NewsletterSubscribeForm`) + 필수 동의 체크박스, 구독 확인 메일(Resend) 발송
+  - `RESEND_AUDIENCE_ID` 설정 시 Resend Audiences 자동 동기화, 미설정 시에도 로컬 DB만으로 기능 100% 동작(그레이스풀 디그레이드)
+  - 랜덤 토큰 기반 `/unsubscribe/[token]` 구독 해지 페이지, 관리자 전용 `/admin/newsletter`(구독자 수·목록)
+  - `/privacy` 뉴스레터 수집 항목·보유기간(해지 시 즉시 파기) 조항 추가, `CONTENT_GUIDE.md`에 확인 방법 안내 추가
+  - Vitest 유닛 테스트 추가(`src/actions/newsletter.test.ts`, `contact.test.ts`와 동일 모킹 패턴)
+  - `pnpm lint`(0 errors) · `npx tsc --noEmit`(0 errors, 테스트 파일 `auth()` 모킹 타입 오류 1건 수정) · `pnpm test`(20 files, 126 tests 전부 통과) 확인 완료(2026-08-08, Claude Code 세션)
+  - `prisma migrate deploy`로 실제 Supabase DB에 `NewsletterSubscriber` 테이블 반영 완료(2026-08-08), `prisma migrate status`로 스키마 최신 상태 확인
+  - ⏸️ **남은 작업**: Resend Audience 생성 시 `RESEND_AUDIENCE_ID` 환경변수 설정(선택, 경영진 소관), git 커밋·배포, Playwright E2E 골든패스 추가 여부 검토, 노션 업무 DB·작업로그 갱신
 
 ## 2. 개선이 필요한 항목 🔧
 
@@ -105,11 +115,10 @@
 
 > Phase 1 잔여 3개 항목(뉴스레터 구독/소셜 메타태그 강화/전환 퍼널 대시보드)의 착수 순서·설계 방향은
 > `docs/superpowers/plans/2026-08-05-phase1-remaining-action-plan.md` 참고 (2026-08-05 작성)
-> — 이 중 **소셜 메타태그 강화는 2026-08-07 완료** (위 1번 ✅ 참고), 남은 2개(뉴스레터 구독/전환 퍼널 대시보드)가 Phase 1 잔여 항목
+> — **소셜 메타태그 강화는 2026-08-07 완료**, **뉴스레터 구독은 2026-08-08 구현 완료(테스트/배포 대기, 위 1번 🚧 참고)**, 남은 1개(전환 퍼널 대시보드)가 Phase 1 마지막 잔여 항목
 
 ### 중기 (3~6개월)
 
-- 💡 **뉴스레터 구독** — 블로그 독자 이메일 구독 기능 (Resend Audiences 활용)
 - 💡 **댓글/반응 기능** — 블로그 글에 좋아요 또는 댓글 기능
 - 💡 **관리자 패널 다크모드** — 공개 페이지는 완료(위 1번 참고), `/admin/**`은 범위 밖으로 남겨둠
 

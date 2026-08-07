@@ -11,6 +11,7 @@ import {
   Layers,
   LayoutDashboard,
   Mail,
+  Send,
   Settings,
   Shield,
   Users,
@@ -34,6 +35,7 @@ const ADMIN_CMS_NAV: {
   { label: "성공사례 관리", href: "/admin/portfolio", icon: Briefcase },
   { label: "블로그", href: "/admin/blog", icon: FileText },
   { label: "문의 내역 확인", href: "/admin/contact", icon: Mail },
+  { label: "뉴스레터 구독자", href: "/admin/newsletter", icon: Send },
   { label: "관리자 설정", href: "/admin/settings", icon: Settings },
 ];
 

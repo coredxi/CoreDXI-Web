@@ -73,6 +73,13 @@ export default function PrivacyPage() {
                       <td className="border border-border px-4 py-2">문의하기 양식</td>
                     </tr>
                     <tr>
+                      <td className="border border-border px-4 py-2">뉴스레터 구독</td>
+                      <td className="border border-border px-4 py-2">이메일 주소</td>
+                      <td className="border border-border px-4 py-2">
+                        뉴스레터 구독 양식(페이지 하단)
+                      </td>
+                    </tr>
+                    <tr>
                       <td className="border border-border px-4 py-2">서비스 이용</td>
                       <td className="border border-border px-4 py-2">
                         접속 IP, 쿠키, 서비스 이용 기록(자동 수집)
@@ -113,6 +120,11 @@ export default function PrivacyPage() {
                 </li>
                 <li>
                   문의 양식으로 수집된 정보는 문의 처리 완료 후 2년간 보관됩니다.
+                </li>
+                <li>
+                  뉴스레터 구독을 위해 수집된 이메일 주소는 구독을 해지하는
+                  즉시 파기됩니다. 모든 뉴스레터 메일에는 구독 해지 링크가
+                  포함되어 있습니다.
                 </li>
               </ol>
             </section>
