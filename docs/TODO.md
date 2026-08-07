@@ -1,7 +1,7 @@
 # CoreDXI-Web TODO
 
-> 최종 업데이트: 2026-07-19
-> 코드베이스 분석 기반 — 실제 구현 상태를 반영합니다. (2026-06-30 → 2026-07-07 종합 고도화 세션, 2026-07-19 rate limiting·다크모드 세션 반영)
+> 최종 업데이트: 2026-08-07
+> 코드베이스 분석 기반 — 실제 구현 상태를 반영합니다. (2026-06-30 → 2026-07-07 종합 고도화 세션, 2026-07-19 rate limiting·다크모드 세션, 2026-08-07 소셜 메타태그 강화 완료 반영)
 
 ---
 
@@ -70,8 +70,8 @@
 - ✅ **Tiptap 단일화** — BlockNote 완전 제거(에디터·리더·`@blocknote/*` 의존성 4개). 실 DB 확인 결과 BlockNote 포맷 글 0건이라 안전하게 제거, 전체 글 Tiptap 포맷
 - ✅ 비개발자용 `CONTENT_GUIDE.md` 작성 (홍보팀 가이드)
 - ✅ 브랜드 컬러·디자인 시스템 (`globals.css`, `--primary: #1E4E8C`)
-- ✅ **Vitest 유닛 테스트 89개** (OTP, SSRF 가드, 문의 액션, SEO, rate-limit, 답장 템플릿, blog/cases 검색, page-content, CMS 액션, 일반 회원 로그인 rate limiting, OTP 인증 rate limiting)
-- ✅ **Playwright E2E 골든패스 4개** (문의 제출, 관리자 로그인 성공/실패, 블로그 발행 — 관리자 테스트는 `E2E_ADMIN_EMAIL/PASSWORD` 없으면 자동 skip)
+- ✅ **Vitest 유닛 테스트 116개** (OTP, SSRF 가드, 문의 액션, SEO, rate-limit, 답장 템플릿, blog/cases 검색, page-content, CMS 액션, 일반 회원 로그인 rate limiting, OTP 인증 rate limiting, OG 배경 URL 검증·합성/배지 분기 판단)
+- ✅ **Playwright E2E 골든패스 5개** (문의 제출, 관리자 로그인 성공/실패, 블로그 발행, 블로그 소셜 메타 — 관리자 테스트는 `E2E_ADMIN_EMAIL/PASSWORD` 없으면 자동 skip)
 - ✅ CI(`ci.yml`)에 lint + typecheck + test 스텝 추가 (기존엔 build만 실행)
 - ✅ `.env.example` 생성, README 전면 현행화 (npm/포트3100/Turbopack/Supabase/Sentry/GA4/테스트 반영)
 - ✅ **관리자 로그인·문의 폼·회원가입 OTP 인증 rate limiting** (Prisma `RateLimitHit` 테이블 기반)
@@ -83,7 +83,17 @@
 
 ---
 
-## 2. 개선이 필요한 항목 🔧
+## 2. 진행 중인 항목 🚧
+
+- 🚧 **소셜 메타태그(OG/Twitter Card) 강화** — 2026-08-06 착수, 2026-08-07 코드 구현·테스트 완료. 설계: `docs/superpowers/specs/2026-08-06-social-meta-design.md` / 트레이드오프: `docs/superpowers/specs/2026-08-06-social-meta-tradeoffs.md`
+  - ✅ 커버 합성형 OG 카드(블로그 커버·사례 썸네일 배경 + 브랜드 오버레이, 실패 시 배지형 폴백) + 파일 기반 `opengraph-image.tsx`/config 이미지 우선순위 충돌 해소 + SSRF 방지 URL 화이트리스트(`feat`, T1·T2·T3·T4·T5·T7·T8)
+  - ✅ `/privacy`·`/terms` canonical — 실제로는 기존에 이미 `pageMetadata()` 적용돼 있어 재현되지 않음을 확인, 재발 방지 주석만 추가(`fix`, T6)
+  - ✅ Vitest 유닛(배경 URL 검증·합성/배지 분기 판단) + Playwright E2E 골든패스(블로그 상세 og:title/twitter:card/og:image 200 응답) 추가(`test`, T10)
+  - ⬜ **배포 후 수동 검증 남음(G6)**: 카카오톡 공유 디버거·X Card Validator·Facebook Sharing Debugger·LinkedIn Post Inspector + 카카오 OG 캐시 초기화 + 실기기 카카오톡 3종(홈/블로그/성공사례) 확인 전까지는 완료로 보지 않음
+  - ⏸️ T9(`twitter:site` 핸들)은 회사 공식 X 계정 보유 여부 마케팅팀 확인 대기 — 블로커 아님, 확인되면 후속 `feat` 커밋
+  - 스키마 변경 없음
+
+### 개선이 필요한 항목 🔧
 
 현재 없음 — 이전에 추적하던 항목(CSP 미적용, OTP 무효화 재검토, BlockNote 레거시 정리, `/admin/inquiries` 구 리다이렉트 제거)이 모두 해결되었습니다.
 
@@ -99,11 +109,15 @@
 
 ## 4. 향후 계획 💡
 
+> Phase 1 잔여 3개 항목(뉴스레터 구독/소셜 메타태그 강화/전환 퍼널 대시보드)의 착수 순서·설계 방향은
+> `docs/superpowers/plans/2026-08-05-phase1-remaining-action-plan.md` 참고 (2026-08-05 작성)
+> — 이 중 **소셜 메타태그 강화는 2026-08-06 착수** (위 2번 🚧 및 `docs/superpowers/specs/2026-08-06-social-meta-design.md` 참고)
+
 ### 중기 (3~6개월)
 
 - 💡 **뉴스레터 구독** — 블로그 독자 이메일 구독 기능 (Resend Audiences 활용)
 - 💡 **댓글/반응 기능** — 블로그 글에 좋아요 또는 댓글 기능
-- 💡 **소셜 메타태그 강화** — 블로그·성공사례별 Twitter Card 커스텀 이미지
+- 🚧 **소셜 메타태그 강화** — 코드 구현·테스트 완료, 배포 후 실채널 검증 대기 (위 2번 참고)
 - 💡 **관리자 패널 다크모드** — 공개 페이지는 완료(위 1번 참고), `/admin/**`은 범위 밖으로 남겨둠
 
 ### 장기 (6개월+)
