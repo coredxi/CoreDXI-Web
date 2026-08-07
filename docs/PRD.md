@@ -1,6 +1,6 @@
 # CoreDXI-Web PRD (Product Requirements Document)
 
-> 최종 업데이트: 2026-06-30
+> 최종 업데이트: 2026-08-07
 > 작성 기준: 코드베이스 분석 (Next.js App Router, `src/` 구조)
 
 ---
@@ -120,6 +120,14 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 - 블로그 글 상세에 JSON-LD (Article) 삽입
 - 루트 `layout.tsx`에 Organization JSON-LD
 - 네이버 서치어드바이저 메타태그 포함
+
+**소셜 메타태그 강화 (2026-08-06 착수, 2026-08-07 코드 구현·테스트 완료, 🚧 배포 후 실채널 검증 대기)** — 설계: `docs/superpowers/specs/2026-08-06-social-meta-design.md` / 트레이드오프: `docs/superpowers/specs/2026-08-06-social-meta-tradeoffs.md`
+
+- 블로그 커버·성공사례 썸네일을 배경으로 합성한 1200×630 OG 카드 생성 (커버 없으면 브랜드 배지형 폴백)
+- 파일 기반 `opengraph-image.tsx` ↔ config 기반 `openGraph.images` 우선순위 충돌 해소, `og:image`/`twitter:image` 일원화
+- `/privacy`·`/terms` canonical — 이미 `pageMetadata()` 적용돼 있어 재발 방지 주석만 보완
+- 배경 URL SSRF 방지 화이트리스트, Vitest 유닛 + Playwright E2E 골든패스 추가
+- 남은 것: 카카오톡·X·LinkedIn·Facebook 공유 디버거 실채널 검증 및 카카오 OG 캐시 초기화(배포 후 수동), `twitter:site` 핸들(회사 X 계정 보유 여부 마케팅팀 확인 대기)
 
 ---
 
