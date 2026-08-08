@@ -70,7 +70,7 @@
 - ✅ **Tiptap 단일화** — BlockNote 완전 제거(에디터·리더·`@blocknote/*` 의존성 4개). 실 DB 확인 결과 BlockNote 포맷 글 0건이라 안전하게 제거, 전체 글 Tiptap 포맷
 - ✅ 비개발자용 `CONTENT_GUIDE.md` 작성 (홍보팀 가이드)
 - ✅ 브랜드 컬러·디자인 시스템 (`globals.css`, `--primary: #1E4E8C`)
-- ✅ **Vitest 유닛 테스트 116개** (OTP, SSRF 가드, 문의 액션, SEO, rate-limit, 답장 템플릿, blog/cases 검색, page-content, CMS 액션, 일반 회원 로그인 rate limiting, OTP 인증 rate limiting, OG 배경 URL 검증·합성/배지 분기 판단)
+- ✅ **Vitest 유닛 테스트 135개** (OTP, SSRF 가드, 문의 액션, SEO, rate-limit, 답장 템플릿, blog/cases 검색, page-content, CMS 액션, 일반 회원 로그인 rate limiting, OTP 인증 rate limiting, OG 배경 URL 검증·합성/배지 분기 판단, 뉴스레터 구독, GA4 이벤트 전송·스크롤 임계값 계산)
 - ✅ **Playwright E2E 골든패스 5개** (문의 제출, 관리자 로그인 성공/실패, 블로그 발행, 블로그 소셜 메타 — 관리자 테스트는 `E2E_ADMIN_EMAIL/PASSWORD` 없으면 자동 skip)
 - ✅ CI(`ci.yml`)에 lint + typecheck + test 스텝 추가 (기존엔 build만 실행)
 - ✅ `.env.example` 생성, README 전면 현행화 (npm/포트3100/Turbopack/Supabase/Sentry/GA4/테스트 반영)
@@ -86,7 +86,7 @@
   - Vitest 유닛(배경 URL 검증·합성/배지 분기 판단) + Playwright E2E 골든패스(블로그 상세 og:title/twitter:card/og:image 200 응답) 추가(`test`, T10)
   - 프로덕션 배포 후 카카오톡 공유 디버거·Facebook Sharing Debugger·LinkedIn Post Inspector + 실기기 카카오톡 3종(홈/블로그/성공사례) 전부 정상 렌더링 확인 완료(2026-08-07). X는 공개 Card Validator가 폐지되어 실기기 확인으로 대체
   - ✅ **후속 항목도 완료**: 마케팅팀이 회사 공식 X 계정(`@coredxi`) 확인 → `layout.tsx` 전역 `twitter.site`에 핸들 추가(`feat: 전역 twitter:site 메타 핸들 추가`, 커밋 `aacf0b0`, 2026-08-07)
-- 🚧 **뉴스레터 구독 (Phase 1 마지막 잔여 항목, 구현 완료 · 테스트/배포 대기)** — 2026-08-08 착수. 설계: `docs/superpowers/specs/2026-08-08-newsletter-design.md`
+- ✅ **뉴스레터 구독** — 2026-08-08 완료(구현·검증·배포). 설계: `docs/superpowers/specs/2026-08-08-newsletter-design.md`
   - `NewsletterSubscriber` Prisma 모델 신설(수동 `migration.sql`, `prisma migrate dev` 미사용) + `RateLimitHit` 재사용 rate limiting(IP당 1시간 5회, 문의 폼과 동일 기준)
   - Footer에 전 페이지 공통 구독 폼(`NewsletterSubscribeForm`) + 필수 동의 체크박스, 구독 확인 메일(Resend) 발송
   - `RESEND_AUDIENCE_ID` 설정 시 Resend Audiences 자동 동기화, 미설정 시에도 로컬 DB만으로 기능 100% 동작(그레이스풀 디그레이드)
@@ -95,6 +95,10 @@
   - Vitest 유닛 테스트 추가(`src/actions/newsletter.test.ts`, `contact.test.ts`와 동일 모킹 패턴)
   - ⏸️ **남은 작업(이 세션에서는 불가능 — 로컬 개발자/Claude Code가 수행)**: `pnpm install` 후 lint/typecheck/vitest 실행 확인, `prisma migrate deploy`로 실제 DB 반영, Resend Audience 생성 시 `RESEND_AUDIENCE_ID` 환경변수 설정(선택), git 커밋·배포, Playwright E2E 골든패스 추가 여부 검토
   - **범위 제외 결정(2026-08-08)**: 실제 뉴스레터 발송(콘텐츠 생성·발행 주기·자동 알림 vs 다이제스트 선택)은 본 프로젝트(AX Growth Engine Phase 1~3)에서 다루지 않는다. 이번 항목은 "구독자를 모으는 것"까지가 완료 기준이며, 발송 파이프라인은 별도 프로젝트/트랙으로 독립해 추후 재검토한다. `docs/superpowers/specs/2026-08-08-newsletter-design.md` 8번 완료 기준도 이 범위로 확정됨
+- ✅ **GA4 전환 이벤트 태깅 (Phase 1 마지막 잔여 항목 — 1단계)** — 2026-08-08 완료. 설계: `docs/superpowers/specs/2026-08-08-ga4-event-tracking-design.md`
+  - `cta_click`(전환 CTA 6곳) / `contact_submit` / `newsletter_subscribe` / `scroll_depth`(25/50/75/100%, 전체 공개 페이지) 4종 이벤트 태깅
+  - `src/lib/ga4-events.ts`(전송 유틸) + `src/lib/scroll-depth.ts`(임계값 계산 순수 함수) Vitest 단위 테스트 추가
+  - ⏸️ **남은 작업**: 2~3주 데이터 누적 후 2단계(퍼널 시각화 UI) 별도 설계·구현, 배포 후 브라우저 개발자 도구 Network 탭·GA4 실시간 보고서에서 4종 이벤트 실제 수신 확인 (수동, 아직 미실시)
 
 ## 2. 개선이 필요한 항목 🔧
 
@@ -114,7 +118,7 @@
 
 > Phase 1 잔여 3개 항목(뉴스레터 구독/소셜 메타태그 강화/전환 퍼널 대시보드)의 착수 순서·설계 방향은
 > `docs/superpowers/plans/2026-08-05-phase1-remaining-action-plan.md` 참고 (2026-08-05 작성)
-> — **소셜 메타태그 강화는 2026-08-07 완료**, **뉴스레터 구독은 2026-08-08 구현 완료(테스트/배포 대기, 위 1번 🚧 참고)**, 남은 1개(전환 퍼널 대시보드)가 Phase 1 마지막 잔여 항목
+> — **소셜 메타태그 강화는 2026-08-07 완료**, **뉴스레터 구독은 2026-08-08 완료**, **전환 퍼널 대시보드는 1단계(이벤트 태깅) 2026-08-08 완료, 2단계(시각화)는 데이터 누적 후 별도 진행** — Phase 1 1단계 항목 전부 완료
 
 ### 중기 (3~6개월)
 

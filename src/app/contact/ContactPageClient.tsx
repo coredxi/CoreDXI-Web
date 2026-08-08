@@ -3,6 +3,7 @@
 import { Check, Clock, Mail } from "lucide-react";
 import { useMemo, useState } from "react";
 import { submitContactForm } from "@/actions/contact";
+import { trackEvent } from "@/lib/ga4-events";
 import { Header } from "@/components/Header";
 import { ContactFaqSection } from "@/components/contact/ContactFaqSection";
 import type { ContactFaqItem } from "@/lib/contact-faq";
@@ -77,6 +78,7 @@ export function ContactPageClient({ notificationEmail, faqItems }: Props) {
         return;
       }
 
+      trackEvent("contact_submit", {});
       alert(
         "문의가 성공적으로 접수되었습니다. 영업일 기준 1~2일 내로 연락드리겠습니다."
       );

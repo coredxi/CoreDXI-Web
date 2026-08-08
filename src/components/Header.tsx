@@ -31,6 +31,7 @@ import { useEffect, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { TrackedCtaLink } from "@/components/analytics/TrackedCtaLink";
 
 /** 로그아웃 후 이동 URL — Vercel 기본 도메인으로 붙는 것을 막고 공식 도메인으로 통일 */
 function publicLogoutUrl(): string {
@@ -192,12 +193,13 @@ export function Header() {
                   >
                     로그아웃
                   </button>
-                  <Link
+                  <TrackedCtaLink
+                    location="header"
                     href={HEADER_BUTTONS.primary.href}
                     className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-primary rounded-md shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-md hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:translate-y-0"
                   >
                     {HEADER_BUTTONS.primary.label}
-                  </Link>
+                  </TrackedCtaLink>
                 </>
               ) : (
                 <>
@@ -208,12 +210,13 @@ export function Header() {
                     {HEADER_BUTTONS.login.label}
                   </Link>
 
-                  <Link
+                  <TrackedCtaLink
+                    location="header"
                     href={HEADER_BUTTONS.primary.href}
                     className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-primary rounded-md shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-md hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary active:translate-y-0"
                   >
                     {HEADER_BUTTONS.primary.label}
-                  </Link>
+                  </TrackedCtaLink>
                 </>
               )}
             </div>
@@ -301,13 +304,14 @@ export function Header() {
                 >
                   로그아웃
                 </button>
-                <Link
+                <TrackedCtaLink
+                  location="header"
                   href={HEADER_BUTTONS.primary.href}
                   className="flex items-center justify-center px-4 py-3 text-base font-semibold text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors"
                   onClick={closeMenu}
                 >
                   {HEADER_BUTTONS.primary.label}
-                </Link>
+                </TrackedCtaLink>
               </>
             ) : (
               <>
@@ -318,13 +322,14 @@ export function Header() {
                 >
                   {HEADER_BUTTONS.login.label}
                 </Link>
-                <Link
+                <TrackedCtaLink
+                  location="header"
                   href={HEADER_BUTTONS.primary.href}
                   className="flex items-center justify-center px-4 py-3 text-base font-semibold text-white bg-primary rounded-xl hover:bg-primary/90 transition-colors"
                   onClick={closeMenu}
                 >
                   {HEADER_BUTTONS.primary.label}
-                </Link>
+                </TrackedCtaLink>
               </>
             )}
           </div>

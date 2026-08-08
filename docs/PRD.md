@@ -147,6 +147,8 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 패키지 매니저 | pnpm + Turbopack | - |
 | 배포 | Vercel | - |
 
+- **GA4 전환 이벤트 태깅 완료 (2026-08-08)** — `cta_click`/`contact_submit`/`newsletter_subscribe`/`scroll_depth` 4종 커스텀 이벤트. 설계: `docs/superpowers/specs/2026-08-08-ga4-event-tracking-design.md`. 시각화 대시보드는 데이터 누적 후 별도 진행
+
 ### 6-2. 데이터베이스 스키마 (Prisma)
 
 | 모델 | 용도 |

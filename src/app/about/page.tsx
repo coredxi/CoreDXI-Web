@@ -6,6 +6,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { getPageContent } from "@/lib/page-content";
 import { ABOUT_CONTENT_DEFAULTS } from "@/lib/page-content/about";
+import { TrackedCtaLink } from "@/components/analytics/TrackedCtaLink";
 
 export const revalidate = 60;
 
@@ -146,13 +147,14 @@ export default async function AboutPage() {
               {content.ctaDesc}
             </p>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <Link
+              <TrackedCtaLink
                 href="/contact"
+                location="about_cta"
                 className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/30"
               >
                 도입 문의하기
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
+              </TrackedCtaLink>
               <Link
                 href="/solutions"
                 className="inline-flex items-center gap-2 rounded-xl border-2 border-primary/30 bg-card px-8 py-4 text-sm font-semibold text-primary dark:text-blue-300 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/60 hover:bg-primary/5"

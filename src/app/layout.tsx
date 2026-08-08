@@ -13,6 +13,7 @@ import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { ScrollDepthTracker } from "@/components/analytics/ScrollDepthTracker";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { buildSiteJsonLd } from "@/lib/seo-jsonld";
@@ -153,6 +154,7 @@ export default async function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} nonce={nonce}>
           <AuthProvider>
             {children}
+            <ScrollDepthTracker />
             <Toaster richColors position="top-center" />
           </AuthProvider>
         </ThemeProvider>
