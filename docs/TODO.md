@@ -70,7 +70,7 @@
 - ✅ **Tiptap 단일화** — BlockNote 완전 제거(에디터·리더·`@blocknote/*` 의존성 4개). 실 DB 확인 결과 BlockNote 포맷 글 0건이라 안전하게 제거, 전체 글 Tiptap 포맷
 - ✅ 비개발자용 `CONTENT_GUIDE.md` 작성 (홍보팀 가이드)
 - ✅ 브랜드 컬러·디자인 시스템 (`globals.css`, `--primary: #1E4E8C`)
-- ✅ **Vitest 유닛 테스트 116개** (OTP, SSRF 가드, 문의 액션, SEO, rate-limit, 답장 템플릿, blog/cases 검색, page-content, CMS 액션, 일반 회원 로그인 rate limiting, OTP 인증 rate limiting, OG 배경 URL 검증·합성/배지 분기 판단)
+- ✅ **Vitest 유닛 테스트 135개** (OTP, SSRF 가드, 문의 액션, SEO, rate-limit, 답장 템플릿, blog/cases 검색, page-content, CMS 액션, 일반 회원 로그인 rate limiting, OTP 인증 rate limiting, OG 배경 URL 검증·합성/배지 분기 판단, 뉴스레터 구독, GA4 이벤트 전송·스크롤 임계값 계산)
 - ✅ **Playwright E2E 골든패스 5개** (문의 제출, 관리자 로그인 성공/실패, 블로그 발행, 블로그 소셜 메타 — 관리자 테스트는 `E2E_ADMIN_EMAIL/PASSWORD` 없으면 자동 skip)
 - ✅ CI(`ci.yml`)에 lint + typecheck + test 스텝 추가 (기존엔 build만 실행)
 - ✅ `.env.example` 생성, README 전면 현행화 (npm/포트3100/Turbopack/Supabase/Sentry/GA4/테스트 반영)
@@ -86,7 +86,7 @@
   - Vitest 유닛(배경 URL 검증·합성/배지 분기 판단) + Playwright E2E 골든패스(블로그 상세 og:title/twitter:card/og:image 200 응답) 추가(`test`, T10)
   - 프로덕션 배포 후 카카오톡 공유 디버거·Facebook Sharing Debugger·LinkedIn Post Inspector + 실기기 카카오톡 3종(홈/블로그/성공사례) 전부 정상 렌더링 확인 완료(2026-08-07). X는 공개 Card Validator가 폐지되어 실기기 확인으로 대체
   - ✅ **후속 항목도 완료**: 마케팅팀이 회사 공식 X 계정(`@coredxi`) 확인 → `layout.tsx` 전역 `twitter.site`에 핸들 추가(`feat: 전역 twitter:site 메타 핸들 추가`, 커밋 `aacf0b0`, 2026-08-07)
-- ✅ **뉴스레터 구독 (Phase 1 마지막 잔여 항목)** — 2026-08-08 완료(구현·검증·배포). 설계: `docs/superpowers/specs/2026-08-08-newsletter-design.md`
+- ✅ **뉴스레터 구독** — 2026-08-08 완료(구현·검증·배포). 설계: `docs/superpowers/specs/2026-08-08-newsletter-design.md`
   - `NewsletterSubscriber` Prisma 모델 신설(수동 `migration.sql`, `prisma migrate dev` 미사용) + `RateLimitHit` 재사용 rate limiting(IP당 1시간 5회, 문의 폼과 동일 기준)
   - Footer에 전 페이지 공통 구독 폼(`NewsletterSubscribeForm`) + 필수 동의 체크박스, 구독 확인 메일(Resend) 발송
   - `RESEND_AUDIENCE_ID` 설정 시 Resend Audiences 자동 동기화, 미설정 시에도 로컬 DB만으로 기능 100% 동작(그레이스풀 디그레이드)
@@ -98,7 +98,7 @@
 - ✅ **GA4 전환 이벤트 태깅 (Phase 1 마지막 잔여 항목 — 1단계)** — 2026-08-08 완료. 설계: `docs/superpowers/specs/2026-08-08-ga4-event-tracking-design.md`
   - `cta_click`(전환 CTA 6곳) / `contact_submit` / `newsletter_subscribe` / `scroll_depth`(25/50/75/100%, 전체 공개 페이지) 4종 이벤트 태깅
   - `src/lib/ga4-events.ts`(전송 유틸) + `src/lib/scroll-depth.ts`(임계값 계산 순수 함수) Vitest 단위 테스트 추가
-  - ⏸️ **남은 작업**: 2~3주 데이터 누적 후 2단계(퍼널 시각화 UI) 별도 설계·구현
+  - ⏸️ **남은 작업**: 2~3주 데이터 누적 후 2단계(퍼널 시각화 UI) 별도 설계·구현, 배포 후 브라우저 개발자 도구 Network 탭·GA4 실시간 보고서에서 4종 이벤트 실제 수신 확인 (수동, 아직 미실시)
 
 ## 2. 개선이 필요한 항목 🔧
 

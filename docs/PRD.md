@@ -122,7 +122,6 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 - 루트 `layout.tsx`에 Organization JSON-LD
 - 네이버 서치어드바이저 메타태그 포함
 - **소셜 메타태그 강화 완료 (2026-08-07)** — 블로그 커버·성공사례 썸네일을 배경으로 합성한 1200×630 OG 카드(커버 없으면 브랜드 배지형 폴백), 파일 기반/config 기반 이미지 충돌 해소, SSRF 방지 URL 화이트리스트, `/privacy`·`/terms` canonical 보완. 배포 후 카카오톡·Facebook·LinkedIn 디버거 + 실기기 카카오톡 3종 검증까지 완료(`docs/superpowers/specs/2026-08-06-social-meta-design.md` 참고). `twitter:site` 핸들(`@coredxi`)도 마케팅팀 확인 후 `layout.tsx`에 반영 완료(2026-08-07) — 후속 항목 없음
-- **GA4 전환 이벤트 태깅 완료 (2026-08-08)** — `cta_click`/`contact_submit`/`newsletter_subscribe`/`scroll_depth` 4종 커스텀 이벤트. 설계: `docs/superpowers/specs/2026-08-08-ga4-event-tracking-design.md`. 시각화 대시보드는 데이터 누적 후 별도 진행
 
 ---
 
@@ -147,6 +146,8 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 분석 | Google Analytics 4 (Data API) | - |
 | 패키지 매니저 | pnpm + Turbopack | - |
 | 배포 | Vercel | - |
+
+- **GA4 전환 이벤트 태깅 완료 (2026-08-08)** — `cta_click`/`contact_submit`/`newsletter_subscribe`/`scroll_depth` 4종 커스텀 이벤트. 설계: `docs/superpowers/specs/2026-08-08-ga4-event-tracking-design.md`. 시각화 대시보드는 데이터 누적 후 별도 진행
 
 ### 6-2. 데이터베이스 스키마 (Prisma)
 

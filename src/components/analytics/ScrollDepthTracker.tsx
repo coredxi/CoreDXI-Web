@@ -15,30 +15,43 @@ export function ScrollDepthTracker() {
   const firedRef = useRef<Set<ScrollThreshold>>(new Set());
 
   useEffect(() => {
+    // 관리자 페이지는 방문자 퍼널 분석 대상이 아님 — /admin 경로는 스크롤 추적을 건너뛴다
+    if (pathname.startsWith("/admin")) return;
+
     firedRef.current = new Set();
     let ticking = false;
+    let rafId = 0;
 
     function handleScroll() {
       if (ticking) return;
       ticking = true;
-      window.requestAnimationFrame(() => {
-        const doc = document.documentElement;
-        const scrollableHeight = doc.scrollHeight - doc.clientHeight;
-        const percent =
-          scrollableHeight <= 0
-            ? 100
-            : Math.round((window.scrollY / scrollableHeight) * 100);
+      rafId = window.requestAnimationFrame(() => {
+        try {
+          const doc = document.documentElement;
+          const scrollableHeight = doc.scrollHeight - doc.clientHeight;
+          // 페이지가 화면보다 짧아 스크롤이 불가능하면 이미 전부 읽은 것으로 간주해 100%로 처리한다
+          const percent =
+            scrollableHeight <= 0
+              ? 100
+              : Math.round((window.scrollY / scrollableHeight) * 100);
 
-        for (const threshold of getNewlyReachedThresholds(percent, firedRef.current)) {
-          firedRef.current.add(threshold);
-          trackEvent("scroll_depth", { percent: threshold });
+          for (const threshold of getNewlyReachedThresholds(percent, firedRef.current)) {
+            firedRef.current.add(threshold);
+            trackEvent("scroll_depth", { percent: threshold });
+          }
+        } finally {
+          ticking = false;
         }
-        ticking = false;
       });
     }
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    // 스크롤이 아예 발생하지 않는 짧은 페이지도 측정하도록 마운트 직후 한 번 실행한다
+    handleScroll();
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.cancelAnimationFrame(rafId);
+    };
   }, [pathname]);
 
   return null;
