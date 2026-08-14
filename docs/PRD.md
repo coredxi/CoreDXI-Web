@@ -1,6 +1,6 @@
 # CoreDXI-Web PRD (Product Requirements Document)
 
-> 최종 업데이트: 2026-08-08
+> 최종 업데이트: 2026-08-14
 > 작성 기준: 코드베이스 분석 (Next.js App Router, `src/` 구조)
 
 ---
@@ -23,6 +23,12 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | **마케팅 목표** | 블로그 콘텐츠 마케팅을 통한 SEO 트래픽 확보, 성공사례 노출 |
 | **운영 목표** | 비개발자(홍보팀)도 콘텐츠를 자체 편집 가능한 CMS 제공 |
 | **기술 목표** | Next.js 15 App Router 기반의 고성능·SEO 최적화 웹사이트 구축 |
+
+**리드 유입 채널(2026-08-14 확인)**: coredxi.com이 서비스해야 하는 리드는 두 갈래다.
+① **지인 소개·네트워킹** — 이미 신뢰가 형성된 상태로 유입, 사이트는 "확인" 역할.
+② **크몽·숨고 리스팅 + 콘텐츠 팔로워** — 사전 신뢰 없는 콜드 인바운드, 사이트는 "발견·전환" 역할.
+두 채널은 규모만 다를 뿐 동일한 역량(AI/AX 전환 컨설팅 및 서비스 구축)을 판매하므로, 블로그
+콘텐츠 전략은 두 채널 모두에 통하는 단일 신뢰 자산을 지향한다. 상세: `docs/superpowers/specs/2026-08-14-content-brand-strategy-design.md`
 
 ---
 
@@ -61,7 +67,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 솔루션 | `/solutions` | AI 협업 자동화·AX 컨설팅·엔터프라이즈 AI 플랫폼 3종 카드, 4단계 도입 프로세스 |
 | 성공사례 목록 | `/cases` | Prisma `Portfolio` DB → 카드 그리드 |
 | 성공사례 상세 | `/cases/[id]` | 썸네일·동영상 embed·본문, 동적 SEO 메타데이터 |
-| 블로그 목록 | `/blog` | 발행 글 목록 + URL 검색 필터(`?q=`) |
+| 블로그 목록 | `/blog` | 발행 글 목록 + URL 검색 필터(`?q=`). **2026-08-14 기준 게시물 전량 삭제 상태(재발행 준비 중)** — 경위·재건 전략은 `docs/superpowers/specs/2026-08-14-content-brand-strategy-design.md` 참고 |
 | 블로그 상세 | `/blog/[slug]` | Tiptap/BlockNote 본문 렌더, JSON-LD |
 | 블로그 카테고리 | `/blog/category/[slug]` | 카테고리별 필터링 |
 | 문의하기 | `/contact` | 문의 폼(Supabase 저장) + 알림 이메일(Resend) |
