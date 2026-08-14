@@ -15,8 +15,9 @@
 ## 2. 현재 단계 (5단계 파이프라인)
 
 - 현재: 홍보 — 핵심 기능(마케팅 페이지·CMS·인증·인프라)은 이미 배포 완료된 상태이며, 지금은 전환율·리텐션을 끌어올리는 홍보/그로스 단계
-- 이번 분기 목표: Phase 1 로드맵 전체 완료 — CSP Enforcing 전환, 뉴스레터 구독(Resend Audiences), 블로그/성공사례 소셜 메타태그 강화, 전환 퍼널 분석 대시보드 구축
-- 완료 기준(Definition of Done): 위 Phase 1 항목 4개가 모두 프로덕션에 배포되고, 문의 전환율·소스별 전환율이 관리자 대시보드에서 정량적으로 확인 가능해지면 Phase 2(CMS 구조 편집, 댓글/반응, 관리자 다크모드, 예약 시스템)로 이동
+- 이번 분기 목표: Phase 1 로드맵 4개 항목 중 3개(CSP Enforcing 전환, 뉴스레터 구독, 소셜 메타태그 강화) 완료. 남은 것은 전환 퍼널 분석 대시보드 2단계(시각화 UI, 2026-08-22~29경 착수 예정)뿐
+- 완료 기준(Definition of Done): 전환 퍼널 분석 대시보드가 프로덕션에 배포되고, 문의 전환율·소스별 전환율이 관리자 대시보드에서 정량적으로 확인 가능해지면 Phase 2(CMS 구조 편집, 댓글/반응, 관리자 다크모드, 예약 시스템)로 이동
+- 병행 트랙(Phase 1 DoD에는 미포함, 상시 콘텐츠 운영으로 취급): 2026-08-14 블로그 게시물 전량 삭제 후 재건, 2026-08-15 4편 발행 완료 — "선택적 콘텐츠 브릿지" 전략대로 대시보드 2단계 착수 전 콘텐츠 재입고 선완료(데이터 대표성 확보). 상세: `docs/superpowers/specs/2026-08-14-content-brand-strategy-design.md`
 
 ## 3. 기술 스택 · 환경
 
@@ -26,7 +27,7 @@
 - 외부 연동:
   - Supabase — PostgreSQL DB + Storage(`blog-images` 버킷) + `contacts`/`contact_settings` 직접 생성 테이블
   - Google/Kakao/Naver OAuth — 일반 회원 로그인
-  - Resend — OTP·문의 알림 이메일 (향후 Audiences로 뉴스레터 확장 예정)
+  - Resend — OTP·문의 알림 이메일 + 뉴스레터 구독 확인 메일. `RESEND_AUDIENCE_ID` 설정 시 Audiences 자동 동기화(선택, 2026-08-08 완료)
   - Google Analytics 4 — gtag + Data API(관리자 대시보드 실시간 지표)
   - Sentry — 에러 모니터링(트레이스 샘플링 20%)
   - Notion — 개발 워크플로 기록 전용(git post-commit 훅). DB: `NOTION_PROJECTS_DB_ID`, `NOTION_DOCUMENTS_DB_ID`, `NOTION_TASKS_DB_ID`, `NOTION_BUGTRACKER_DB_ID`, `NOTION_DEPLOYMENTLOG_DB_ID`, `NOTION_PORTFOLIO_DB_ID`, `NOTION_TEMPLATESTOOLS_DB_ID` (세일즈 CRM 연동 확장 여부는 2026-07-07 보류 결정, 필요 시 재검토)
@@ -62,6 +63,8 @@ scripts/            # Notion 연동용 Python 스크립트 (개발 워크플로 
 - 이 프로젝트에서 나올 콘텐츠 소재: Phase 1~3 구축 과정(CSP 전환, 뉴스레터 오픈, 퍼널 대시보드 도입 등), 문의 전환율 개선 Before/After 사례
 - 홍보 채널: CoreDXI 자사 블로그(`/blog`)
 - 배포 단계 도달 시 홍보 단계를 건너뛰지 않는다 — 콘텐츠 수정은 `CONTENT_GUIDE.md`를 최신화하며 진행, 신규 CMS 기능 추가 시마다 가이드 문서도 함께 갱신
+- 콘텐츠 소싱 원칙(2026-08-14 명문화): 외부 사이트 복붙 금지. 신규 글은 (a) 검증된 리서치 파이프라인 산출물 재가공 또는 (b) 출처 표기를 갖춘 직접 리서치로만 작성 — 상세 `CONTENT_GUIDE.md` 16번
+- 2026-08-14 기준 블로그 게시물 전량 삭제 후 재건 중 — 바이라인은 "CoreDXI 팀" 명의로 통일, 재건 전략은 `docs/superpowers/specs/2026-08-14-content-brand-strategy-design.md` 참고
 
 ## 7. 세션 로그 (기록 에이전트)
 
@@ -71,8 +74,9 @@ scripts/            # Notion 연동용 Python 스크립트 (개발 워크플로 
 
 ## 8. 백로그 · 다음 할 일
 
-- [ ] CSP Report-Only → Enforcing 전환 (위반 로그 검토 후 즉시 진행 가능)
-- [ ] 뉴스레터 구독 기능 — Resend Audiences 연동, 블로그 하단/팝업 구독 폼
-- [ ] 블로그·성공사례별 OG/Twitter Card 커스텀 이미지 (소셜 메타태그 강화)
-- [ ] 전환 퍼널 분석 대시보드 — GA4 이벤트(문의 클릭, 스크롤 depth, CTA 클릭) 태깅 후 관리자 대시보드 시각화
+- [x] CSP Report-Only → Enforcing 전환 (2026-08-05 완료)
+- [x] 뉴스레터 구독 기능 — Footer 전체 페이지 공통 구독 폼(팝업 아님), `RESEND_AUDIENCE_ID` 설정 시에만 Resend Audiences 선택적 동기화 (2026-08-08 완료. 실제 발송 파이프라인은 범위 제외, 별도 트랙)
+- [x] 블로그·성공사례별 OG/Twitter Card 커스텀 이미지 (소셜 메타태그 강화, 2026-08-07 완료)
+- [ ] 전환 퍼널 분석 대시보드 — GA4 이벤트 태깅(1단계, 2026-08-08 완료) 후 관리자 대시보드 시각화(2단계, 2026-08-22~29경 착수 예정)
+- [x] 블로그 콘텐츠 재건 — 2026-08-14 게시물 전량 삭제(외부 복붙 콘텐츠 확인) 후 naver-blog ①클러스터(AI/Claude 생산성) 4편을 CoreDXI 톤으로 재가공해 "AI 실무 활용" 카테고리로 발행 (2026-08-15 완료. 등록 자동화 스크립트 `scripts/publish-blog-drafts.ts` 신규 추가, 발행 과정에서 발견한 프로덕션 500 에러·썸네일 크롭 버그도 함께 수정)
 - 아이디어 주차장(당장 스코프에 넣지 않음): CMS 구조 편집 확장(카드 개수·순서), 블로그 댓글/반응 기능, 관리자 패널(`/admin/**`) 다크모드, 예약/미팅 시스템(Calendly 연동 검토), 회원 전용 콘텐츠 영역, 다국어(i18n) 지원, Notion-세일즈 CRM 연동 재검토

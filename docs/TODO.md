@@ -105,8 +105,9 @@
 
 - 🔧 **블로그 콘텐츠 전량 소실 및 재건 (2026-08-14)** — coredxi.com 블로그 게시물 다수가 외부 콘텐츠를 복사·붙여넣기한 것으로 확인되어 관리자 페이지에서 전체 삭제. 발단은 사용자의 별도 프로젝트(애드센스 포트폴리오)에서 `fiftyvibe.kr` 애드센스 거절을 계기로 같은 구글 계정에 있던 coredxi.com을 점검하며 발견된 것. coredxi.com은 애드센스 수익화 목적이 아니므로 애드센스 제외 자체는 로드맵에 영향 없음. 재건 전략(브랜드 구조·콘텐츠 소싱·재발 방지책)은 설계 문서로 확정: `docs/superpowers/specs/2026-08-14-content-brand-strategy-design.md`, 실행 순서: `docs/superpowers/plans/2026-08-14-content-rebuild-action-plan.md`, 소싱 정책은 `CONTENT_GUIDE.md` 16번에 반영 완료
   - ✅ **2026-08-14 결정·확인 완료**: 바이라인은 대표 실명 병기 없이 "CoreDXI 팀" 명의로 통일 / 크몽·숨고 리스팅은 AI·AX 컨설팅으로 명확히 포지셔닝되어 있음을 사용자가 확인 / 삭제된 블로그 URL은 `sitemap.ts`(PUBLISHED만 동적 조회) + `blog/[slug]/page.tsx`의 `notFound()` 처리로 이미 정상 404 — 코드 조사로 확인, 추가 조치 불필요
-  - ⏸️ **남은 작업**: naver-blog ①클러스터(AI/Claude 생산성) 3~5편을 CoreDXI 톤으로 재가공해 순차 발행 — 유일한 잔여 항목(담당: 홍보팀/콘텐츠기획)
-  - **2026-08-14 상세 액션플랜 작성**: 후보 5편 정리, 편당 재가공 체크리스트, 3주 타임라인(항목4 퍼널 대시보드 2단계와 병행) — `docs/superpowers/plans/2026-08-14-phase1-item4-5-action-plan.md` 참고. naver-blog 폴더는 이 세션에서 직접 접근 불가해 최종 3~5편 확정은 콘텐츠기획이 로컬에서 진행 필요
+  - **2026-08-14 상세 액션플랜 작성**: 후보 5편 정리, 편당 재가공 체크리스트, 3주 타임라인(항목4 퍼널 대시보드 2단계와 병행) — `docs/superpowers/plans/2026-08-14-phase1-item4-5-action-plan.md` 참고
+  - ✅ **①클러스터 재가공·발행 완료 (2026-08-15)** — 후보 5편 중 3편(클로드 코워크 사용법·Notion 업무 자동화·클로드 메모리 기능) + 후보 외 대체 1편(클로드 잘 쓰는 법 5단계) 총 4편을 CoreDXI 톤으로 재가공(1인칭→법인 주어, 바이라인 "CoreDXI 팀", 출처·확인일자 유지)해 신규 카테고리 "AI 실무 활용"으로 발행 완료. `scripts/publish-blog-drafts.ts`(신규)로 마크다운→Tiptap JSON 변환·브랜드 톤 SVG 이미지 생성(커버+섹션별, `src/lib/blog-card-image.ts`)·DRAFT 등록을 자동화, 관리자 검수 후 발행은 사람이 진행
+  - ✅ **발행 과정에서 발견한 프로덕션 버그 2건 수정**: (1) 목록 카드 썸네일이 `aspect-[16/10]` 크롭에 걸려 텍스트가 잘리던 문제 — 이미지 생성 시 안전 여백(160px) 확보로 해결. (2) `/blog/[slug]` 상세 페이지가 빌드 이후 새로 발행된 글에서 500 에러(`DYNAMIC_SERVER_USAGE`, CSP nonce용 `headers()`와 `generateStaticParams()`+ISR 충돌) — `dynamic = "force-dynamic"`으로 수정, PR #1로 `main`에 핫픽스 배포·확인 완료. `/cases/[slug]`에도 동일 계열 잠재 이슈가 남아있어 후속 조치 권장(별도 트랙)
 
 ---
 
