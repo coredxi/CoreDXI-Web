@@ -1,7 +1,7 @@
 # CoreDXI-Web TODO
 
 > 최종 업데이트: 2026-08-14
-> 코드베이스 분석 기반 — 실제 구현 상태를 반영합니다. (2026-06-30 → 2026-07-07 종합 고도화 세션, 2026-07-19 rate limiting·다크모드 세션, 2026-08-05 CSP Enforcing 전환, 2026-08-06 소셜 메타태그 강화 착수, 2026-08-07 배포·전채널 검증까지 완료, 2026-08-08 뉴스레터 구독 구현, 2026-08-14 블로그 콘텐츠 전량 삭제·재건 전략 수립)
+> 코드베이스 분석 기반 — 실제 구현 상태를 반영합니다. (2026-06-30 → 2026-07-07 종합 고도화 세션, 2026-07-19 rate limiting·다크모드 세션, 2026-08-05 CSP Enforcing 전환, 2026-08-06 소셜 메타태그 강화 착수, 2026-08-07 배포·전채널 검증까지 완료, 2026-08-08 뉴스레터 구독 구현, 2026-08-14 블로그 콘텐츠 전량 삭제·재건 전략 수립 + 전환 퍼널 대시보드 2단계·블로그 하단 CTA 구현)
 
 ---
 
@@ -27,7 +27,7 @@
 - ✅ 성공사례 목록 (`/cases`) — Prisma DB 기반 카드 그리드, **업종·솔루션 유형 필터** (ISR + 클라이언트 필터)
 - ✅ 성공사례 상세 (`/cases/[id]`) — 동영상 embed, 동적 SEO 메타데이터 (ISR)
 - ✅ 블로그 목록 (`/blog`) — 발행 글 목록, **서버사이드 검색**(`/api/blog/search`, 제목·요약·카테고리 ILIKE) (ISR)
-- ✅ 블로그 상세 (`/blog/[slug]`) — Tiptap/BlockNote 본문 렌더, JSON-LD, `generateStaticParams()`로 사전 빌드
+- ✅ 블로그 상세 (`/blog/[slug]`) — Tiptap/BlockNote 본문 렌더, JSON-LD, `generateStaticParams()`로 사전 빌드, 하단 CTA(`BlogPostCta` — 문의 유도 + 뉴스레터 앵커 링크, `cta_location: "blog_post_bottom"`, 2026-08-14 추가)
 - ✅ 블로그 카테고리 (`/blog/category/[slug]`) — 카테고리별 필터링 + 카테고리 스코프 검색 (ISR)
 - ✅ 문의하기 (`/contact`) — 폼 제출, Supabase 저장, Resend 알림 이메일, **IP당 1시간 5회 rate limit**
 - ✅ 이용약관 (`/terms`), 개인정보처리방침 (`/privacy`)
@@ -45,7 +45,7 @@
 
 ### 관리자 CMS 패널
 
-- ✅ 대시보드 (`/admin/dashboard`) — 통계 카드, GA4 분석 패널, 퀵액션, **활동 로그 실 DB 연동**(블로그+문의 통합)
+- ✅ 대시보드 (`/admin/dashboard`) — 통계 카드, GA4 분석 패널(방문자 요약·인기 페이지·**전환 퍼널**), 퀵액션, **활동 로그 실 DB 연동**(블로그+문의 통합)
 - ✅ **메인 화면 관리** (`/admin/main`) — 히어로 문구·버튼·이미지·신뢰지표 편집 (PageContent 테이블)
 - ✅ **회사소개 관리** (`/admin/about`) — 히어로·미션·핵심가치·지표·CTA 문구 편집 (PageContent 테이블)
 - ✅ **솔루션 관리** (`/admin/solutions`) — 히어로·솔루션 카드 3종·프로세스 4단계·CTA 문구 편집 (PageContent 테이블)
@@ -70,7 +70,7 @@
 - ✅ **Tiptap 단일화** — BlockNote 완전 제거(에디터·리더·`@blocknote/*` 의존성 4개). 실 DB 확인 결과 BlockNote 포맷 글 0건이라 안전하게 제거, 전체 글 Tiptap 포맷
 - ✅ 비개발자용 `CONTENT_GUIDE.md` 작성 (홍보팀 가이드)
 - ✅ 브랜드 컬러·디자인 시스템 (`globals.css`, `--primary: #1E4E8C`)
-- ✅ **Vitest 유닛 테스트 135개** (OTP, SSRF 가드, 문의 액션, SEO, rate-limit, 답장 템플릿, blog/cases 검색, page-content, CMS 액션, 일반 회원 로그인 rate limiting, OTP 인증 rate limiting, OG 배경 URL 검증·합성/배지 분기 판단, 뉴스레터 구독, GA4 이벤트 전송·스크롤 임계값 계산)
+- ✅ **Vitest 유닛 테스트 140개** (OTP, SSRF 가드, 문의 액션, SEO, rate-limit, 답장 템플릿, blog/cases 검색, page-content, CMS 액션, 일반 회원 로그인 rate limiting, OTP 인증 rate limiting, OG 배경 URL 검증·합성/배지 분기 판단, 뉴스레터 구독, GA4 이벤트 전송·스크롤 임계값 계산, **전환 퍼널 계산**(`funnel-calc.ts`))
 - ✅ **Playwright E2E 골든패스 5개** (문의 제출, 관리자 로그인 성공/실패, 블로그 발행, 블로그 소셜 메타 — 관리자 테스트는 `E2E_ADMIN_EMAIL/PASSWORD` 없으면 자동 skip)
 - ✅ CI(`ci.yml`)에 lint + typecheck + test 스텝 추가 (기존엔 build만 실행)
 - ✅ `.env.example` 생성, README 전면 현행화 (npm/포트3100/Turbopack/Supabase/Sentry/GA4/테스트 반영)
@@ -98,13 +98,15 @@
 - ✅ **GA4 전환 이벤트 태깅 (Phase 1 마지막 잔여 항목 — 1단계)** — 2026-08-08 완료. 설계: `docs/superpowers/specs/2026-08-08-ga4-event-tracking-design.md`
   - `cta_click`(전환 CTA 6곳) / `contact_submit` / `newsletter_subscribe` / `scroll_depth`(25/50/75/100%, 전체 공개 페이지) 4종 이벤트 태깅
   - `src/lib/ga4-events.ts`(전송 유틸) + `src/lib/scroll-depth.ts`(임계값 계산 순수 함수) Vitest 단위 테스트 추가
-  - ⏸️ **남은 작업**: 2~3주 데이터 누적 후 2단계(퍼널 시각화 UI) 별도 설계·구현, 배포 후 브라우저 개발자 도구 Network 탭·GA4 실시간 보고서에서 4종 이벤트 실제 수신 확인 (수동, 아직 미실시). **2026-08-14 추가**: 이 대기 기간과 아래 블로그 콘텐츠 재건 스프린트를 병행 진행할 것(순서·근거는 `docs/superpowers/plans/2026-08-14-content-rebuild-action-plan.md` 참고) — 블로그가 빈 상태로 누적되면 데이터 대표성이 떨어짐
+  - ✅ **2단계(퍼널 시각화 UI) 구현 완료 (2026-08-14)** — `src/lib/ga4/get-funnel-metrics.ts`(GA4 Data API 조회) + `src/lib/ga4/funnel-calc.ts`(순수 계산 함수, 단위 테스트) + `Ga4FunnelPanel.tsx`(`Ga4AnalyticsPanel` 통합, 신규 차트 라이브러리 없이 커스텀 CSS 가로 바). 이벤트 카운트 기반 근사 퍼널(방문→스크롤 참여→CTA 클릭→문의 제출) + 뉴스레터 구독 건수 별도 병기, 최근 30일 고정. 스크롤 깊이(`percent`) 구간 세분화는 GA4 커스텀 디멘션 등록 확인 전까지 보류(이벤트 총합만 사용, 설계 3번 결정사항). 설계: `docs/superpowers/specs/2026-08-14-funnel-dashboard-stage2-design.md`, 실행 순서: `docs/superpowers/plans/2026-08-14-phase1-item4-5-action-plan.md` 2번 표
+  - ⏸️ **남은 작업(데이터 2주+ 누적 후 진행 — 액션플랜 2번 표 순서 1, 5~7)**: GA4 콘솔에서 `percent`/`cta_location`/`source` 커스텀 디멘션 등록 여부 확인, 로컬에서 실 GA4 데이터로 대시보드 렌더링 확인, `pnpm lint && npx tsc --noEmit && pnpm test` 재확인 후 PR·배포, 배포 후 GA4 실시간 보고서에서 `blog_post_bottom` CTA 및 4종 이벤트 실제 수신 확인
 
 ## 2. 개선이 필요한 항목 🔧
 
 - 🔧 **블로그 콘텐츠 전량 소실 및 재건 (2026-08-14)** — coredxi.com 블로그 게시물 다수가 외부 콘텐츠를 복사·붙여넣기한 것으로 확인되어 관리자 페이지에서 전체 삭제. 발단은 사용자의 별도 프로젝트(애드센스 포트폴리오)에서 `fiftyvibe.kr` 애드센스 거절을 계기로 같은 구글 계정에 있던 coredxi.com을 점검하며 발견된 것. coredxi.com은 애드센스 수익화 목적이 아니므로 애드센스 제외 자체는 로드맵에 영향 없음. 재건 전략(브랜드 구조·콘텐츠 소싱·재발 방지책)은 설계 문서로 확정: `docs/superpowers/specs/2026-08-14-content-brand-strategy-design.md`, 실행 순서: `docs/superpowers/plans/2026-08-14-content-rebuild-action-plan.md`, 소싱 정책은 `CONTENT_GUIDE.md` 16번에 반영 완료
   - ✅ **2026-08-14 결정·확인 완료**: 바이라인은 대표 실명 병기 없이 "CoreDXI 팀" 명의로 통일 / 크몽·숨고 리스팅은 AI·AX 컨설팅으로 명확히 포지셔닝되어 있음을 사용자가 확인 / 삭제된 블로그 URL은 `sitemap.ts`(PUBLISHED만 동적 조회) + `blog/[slug]/page.tsx`의 `notFound()` 처리로 이미 정상 404 — 코드 조사로 확인, 추가 조치 불필요
   - ⏸️ **남은 작업**: naver-blog ①클러스터(AI/Claude 생산성) 3~5편을 CoreDXI 톤으로 재가공해 순차 발행 — 유일한 잔여 항목(담당: 홍보팀/콘텐츠기획)
+  - **2026-08-14 상세 액션플랜 작성**: 후보 5편 정리, 편당 재가공 체크리스트, 3주 타임라인(항목4 퍼널 대시보드 2단계와 병행) — `docs/superpowers/plans/2026-08-14-phase1-item4-5-action-plan.md` 참고. naver-blog 폴더는 이 세션에서 직접 접근 불가해 최종 3~5편 확정은 콘텐츠기획이 로컬에서 진행 필요
 
 ---
 
@@ -122,7 +124,7 @@
 
 > Phase 1 잔여 3개 항목(뉴스레터 구독/소셜 메타태그 강화/전환 퍼널 대시보드)의 착수 순서·설계 방향은
 > `docs/superpowers/plans/2026-08-05-phase1-remaining-action-plan.md` 참고 (2026-08-05 작성)
-> — **소셜 메타태그 강화는 2026-08-07 완료**, **뉴스레터 구독은 2026-08-08 완료**, **전환 퍼널 대시보드는 1단계(이벤트 태깅) 2026-08-08 완료, 2단계(시각화)는 데이터 누적 후 별도 진행** — Phase 1 1단계 항목 전부 완료
+> — **소셜 메타태그 강화는 2026-08-07 완료**, **뉴스레터 구독은 2026-08-08 완료**, **전환 퍼널 대시보드는 1단계(이벤트 태깅) 2026-08-08 완료, 2단계(시각화 UI) 구현 2026-08-14 완료** — 실 데이터 검증·배포는 데이터 2주+ 누적 후 진행(위 참고), 이 항목만 완료되면 Phase 1 공식 종료 → Phase 2 이동 검토
 
 ### 중기 (3~6개월)
 

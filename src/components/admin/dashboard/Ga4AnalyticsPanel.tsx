@@ -9,6 +9,7 @@ import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { formatKstDateTime } from "@/lib/format-kst-date";
 import { getGa4DashboardMetrics } from "@/lib/ga4/get-dashboard-metrics";
+import { Ga4FunnelPanel } from "./Ga4FunnelPanel";
 import { Ga4StatsGrid } from "./Ga4StatsGrid";
 import { Ga4TopPagesTable } from "./Ga4TopPagesTable";
 
@@ -105,6 +106,7 @@ export async function Ga4AnalyticsPanel() {
 
       <Ga4StatsGrid summary={data.summary} />
       <Ga4TopPagesTable pages={data.topPages} />
+      <Ga4FunnelPanel />
     </section>
   );
 }
