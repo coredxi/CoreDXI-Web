@@ -71,3 +71,7 @@ ck.txt
 *.cookies.txt
 
 .theme-check/
+
+# Python 캐시 (scripts/ 아래 notion_post_commit.py 등 실행 시 생성)
+__pycache__/
+*.pyc
