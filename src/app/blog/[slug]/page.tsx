@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { BlogPostCta } from "@/components/blog/BlogPostCta";
 import { BlogPostContentServer } from "@/components/editor/BlogPostContentServer";
 import { prisma } from "@/lib/prisma";
 import { buildBreadcrumbJsonLd } from "@/lib/seo-jsonld";
@@ -155,6 +156,8 @@ export default async function BlogPostPage({ params }: PageProps) {
       <div className="mt-10 rounded-xl border border-border bg-card p-4 shadow-sm md:p-8">
         <BlogPostContentServer content={content} />
       </div>
+
+      <BlogPostCta />
     </article>
   );
 }
