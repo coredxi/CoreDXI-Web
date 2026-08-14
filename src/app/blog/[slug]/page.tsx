@@ -10,24 +10,16 @@ import { siteUrl } from "@/lib/seo";
 import { normalizeBlogContent } from "@/types/blocknote";
 import { formatKstDateLong } from "@/lib/format-kst-date";
 
-export const revalidate = 60;
+// 이 페이지는 CSP nonce(요청마다 미들웨어가 새로 발급 — src/middleware.ts)를
+// headers()로 읽어 JSON-LD <script> 태그에 넣는다. nonce는 태생적으로 요청 단위라
+// ISR(정적 캐싱)과 양립할 수 없다: generateStaticParams()에 없는 경로(빌드 이후
+// 새로 발행된 글)를 Vercel이 온디맨드로 "정적" 생성하려 할 때 headers() 호출이
+// DYNAMIC_SERVER_USAGE로 실패해 500이 났다(2026-08-15 확인, main에 fix/blog-detail-500
+// 으로 핫픽스 반영됨 — PR #1). 항상 요청마다 새로 렌더링하도록 강제해 크래시와
+// "캐시된 페이지의 nonce가 그 요청의 실제 CSP 헤더 nonce와 어긋나는" 문제를 함께 없앤다.
+export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ slug: string }> };
-
-export async function generateStaticParams() {
-  try {
-    const posts = await prisma.blogPost.findMany({
-      where: { status: "PUBLISHED" },
-      select: { slug: true },
-    });
-    return posts.map((post) => ({ slug: post.slug }));
-  } catch (e) {
-    // 빌드 환경에서 DB 연결이 일시적으로 실패해도 전체 빌드가 죽지 않도록 함.
-    // dynamicParams(기본 true)로 인해 각 글은 첫 요청 시 온디맨드로 렌더된다.
-    console.error("[blog/[slug]] generateStaticParams DB query failed:", e);
-    return [];
-  }
-}
 
 export async function generateMetadata({
   params,
