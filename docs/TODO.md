@@ -99,7 +99,8 @@
   - `cta_click`(전환 CTA 6곳) / `contact_submit` / `newsletter_subscribe` / `scroll_depth`(25/50/75/100%, 전체 공개 페이지) 4종 이벤트 태깅
   - `src/lib/ga4-events.ts`(전송 유틸) + `src/lib/scroll-depth.ts`(임계값 계산 순수 함수) Vitest 단위 테스트 추가
   - ✅ **2단계(퍼널 시각화 UI) 구현 완료 (2026-08-14)** — `src/lib/ga4/get-funnel-metrics.ts`(GA4 Data API 조회) + `src/lib/ga4/funnel-calc.ts`(순수 계산 함수, 단위 테스트) + `Ga4FunnelPanel.tsx`(`Ga4AnalyticsPanel` 통합, 신규 차트 라이브러리 없이 커스텀 CSS 가로 바). 이벤트 카운트 기반 근사 퍼널(방문→스크롤 참여→CTA 클릭→문의 제출) + 뉴스레터 구독 건수 별도 병기, 최근 30일 고정. 스크롤 깊이(`percent`) 구간 세분화는 GA4 커스텀 디멘션 등록 확인 전까지 보류(이벤트 총합만 사용, 설계 3번 결정사항). 설계: `docs/superpowers/specs/2026-08-14-funnel-dashboard-stage2-design.md`, 실행 순서: `docs/superpowers/plans/2026-08-14-phase1-item4-5-action-plan.md` 2번 표
-  - ⏸️ **남은 작업(데이터 2주+ 누적 후 진행 — 액션플랜 2번 표 순서 1, 5~7)**: GA4 콘솔에서 `percent`/`cta_location`/`source` 커스텀 디멘션 등록 여부 확인, 로컬에서 실 GA4 데이터로 대시보드 렌더링 확인, `pnpm lint && npx tsc --noEmit && pnpm test` 재확인 후 PR·배포, 배포 후 GA4 실시간 보고서에서 `blog_post_bottom` CTA 및 4종 이벤트 실제 수신 확인
+  - ✅ **GA4 커스텀 디멘션 등록 확인·완료 (2026-08-16)** — 미등록 상태였음을 확인, 사용자가 GA4 관리 콘솔에서 `percent`/`cta_location`/`source` 3개를 이벤트 범위로 신규 등록(스크린샷 확인 완료). 등록 시점 이후 이벤트부터만 소급 없이 집계되므로 파라미터 단위 조회는 2026-08-16부터 가능 — 설계 3번 결정사항(스크롤 세분화는 범위 밖, 총합만 사용)은 스코프 확장 금지 원칙에 따라 그대로 유지
+  - ⏸️ **남은 작업(데이터 2주+ 누적 후 진행 — 액션플랜 2번 표 순서 5~7)**: 로컬에서 실 GA4 데이터로 대시보드 렌더링 확인, `pnpm lint && npx tsc --noEmit && pnpm test` 재확인 후 PR·배포, 배포 후 GA4 실시간 보고서에서 `blog_post_bottom` CTA 및 4종 이벤트 실제 수신 확인
 
 ## 2. 개선이 필요한 항목 🔧
 
