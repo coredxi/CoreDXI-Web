@@ -9,7 +9,18 @@ import { buildBreadcrumbJsonLd, buildCaseStudyJsonLd } from "@/lib/seo-jsonld";
 import { siteUrl } from "@/lib/seo";
 import { getVideoEmbedUrl } from "@/lib/video-embed";
 
-export const revalidate = 60;
+// 이 페이지는 CSP nonce(요청마다 미들웨어가 새로 발급 — src/middleware.ts)를
+// headers()로 읽어 JSON-LD <script> 태그에 넣는다. headers() 호출 자체가 이미
+// 이 라우트를 항상 동적 렌더링으로 만들어(2026-08-15 로컬 프로덕션 빌드로 확인:
+// `next build` 결과 이 라우트는 이미 "ƒ Dynamic"이고 응답은 매번
+// Cache-Control: private, no-store — 즉 예전 revalidate=60은 실질적으로
+// 죽은 설정이었고, 오늘 기준으로는 크래시도 캐시된 nonce 불일치도 재현되지
+// 않는다). 다만 `/blog/[slug]`는 이 위에 generateStaticParams()까지 얹혀 있어
+// 실제로 DYNAMIC_SERVER_USAGE 500이 났던 전례가 있다(2026-08-15, PR #1). 이
+// 라우트에 훗날 generateStaticParams()가 추가되면 동일하게 크래시할 잠재
+// 위험이 있어, 그 조합을 원천 차단하고 죽은 revalidate 설정도 함께 정리하는
+// 차원에서 선제적으로 force-dynamic을 명시한다(현재 동작에는 변화 없음).
+export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
