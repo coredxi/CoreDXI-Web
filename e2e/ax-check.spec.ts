@@ -39,7 +39,9 @@ test("AX 체크 제출 골든패스", async ({ page }) => {
   // 마지막 단계: 연락처 + 동의
   await page.getByLabel("회사명").fill(company);
   await page.getByLabel("성함").fill("테스트담당자");
-  await page.getByLabel("이메일").fill(`e2e-ax-check-${Date.now()}@example.com`);
+  await page
+    .getByLabel("이메일", { exact: true })
+    .fill(`e2e-ax-check-${Date.now()}@example.com`);
   await page
     .getByRole("checkbox", { name: /개인정보 수집·이용에 동의합니다/ })
     .click();
