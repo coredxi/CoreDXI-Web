@@ -36,7 +36,7 @@ Phase 1 잔여(퍼널 대시보드 실측, 08/29 점검)는 이 트랙과 병행
 | 순서 | 항목 | 담당 | 산출물 | 상태 |
 |---|---|---|---|---|
 | 0-1 | 설계 문서·액션플랜·PRD/TODO/기획서/CLAUDE.md 선반영, Notion 계획·업무 DB 등록 | AI 비서 세션 | 이 문서 외 5개 파일 | ✅ 2026-08-22 |
-| 0-2 | **영업이사 30분 인터뷰** — (a) 첫 타깃 10개사 리스트(업종·규모·관계), (b) 고객에게 하는 첫 멘트, (c) 고객이 가장 자주 묻는 질문 3개, (d) 고객이 쓰는 업무 용어(예: "준공 서류", "실사") | 사용자 + 영업이사 | 인터뷰 메모(Notion 작업 로그) | ⬜ |
+| 0-2 | **영업이사 서면(메일) 인터뷰**(대면 30분 인터뷰 대체, 2026-08-24 변경) — 질문지 발송 후 8/27까지 답변 수집: (a) 첫 타깃 10개사 리스트(업종·규모·관계), (b) 고객에게 하는 첫 멘트, (c) 고객이 가장 자주 묻는 질문 3개, (d) 고객이 쓰는 업무 용어(예: "준공 서류", "실사") | 사용자 + 영업이사 | 인터뷰 메모(Notion 작업 로그) | ⬜ (진행 중) |
 | 0-3 | 인터뷰 반영해 질문지 v1 문구·선택지 확정 (설계 3번 표가 초안) | 사용자/AI 비서 | `src/lib/ax-check/catalog.ts` 데이터 초안 | ⬜ |
 | 0-4 | 솔루션 소개서 1장(PDF) 초안 — 대상 업종 1줄, 우리가 하는 것 4단계, 레퍼런스 2건(익명), 진단 링크 QR, 영업이사 연락처 | AI 비서(`coredxi-consulting-pptx` 스킬 기반 1p) → 사용자 검토 | `public/docs/coredxi-ax-consulting-onepager.pdf` | ⬜ |
 | 0-5 | 영업이사용 `?ref=` 코드 확정(예: `sales-kim`) + 관리자 계정(EDITOR) 발급 + `SALES_NOTIFY_EMAIL` 환경변수 값 확정 | 사용자 | Vercel 환경변수 | ✅ 2026-08-26 — ref=`sales-kim`, EDITOR 계정 `obaamg1017@coredxi.com`을 `scripts/create-sales-editor-account.ts`로 생성(임시 비밀번호는 사용자에게 별도 전달, 커밋·문서에 미포함), `SALES_NOTIFY_EMAIL=devcoredxi00@coredxi.com`을 `.env.local` + Vercel Production/Preview 환경변수에 등록 완료 |
