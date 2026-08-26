@@ -168,6 +168,21 @@ model OtpCode {
 }
 
 // =====================================================
+// PasswordResetToken — Admin·User 공통 비밀번호 재설정(이메일 링크, 1시간 유효)
+// (docs/superpowers/specs/2026-08-26-password-reset-design.md 참고)
+// accountType 컬럼 없음 — 소비 시 Admin → User 순으로 조회해 일치하는 쪽을 갱신한다.
+// =====================================================
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+// =====================================================
 // PageContent — 홈/소개/솔루션 등 정적 페이지 CMS (범용 key-value)
 // page 값: "home" | "about" | "solutions"
 // =====================================================
