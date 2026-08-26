@@ -123,9 +123,17 @@ export default function AdminLoginPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="admin-login-password" className="text-sm font-medium">
-                {ADMIN_LOGIN_CONTENT.passwordLabel}
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="admin-login-password" className="text-sm font-medium">
+                  {ADMIN_LOGIN_CONTENT.passwordLabel}
+                </Label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
+                >
+                  비밀번호를 잊으셨나요?
+                </Link>
+              </div>
               <Input
                 id="admin-login-password"
                 type="password"

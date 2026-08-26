@@ -87,6 +87,8 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 회원가입 | `/signup` | 이메일 → OTP 6자리 인증 → 이름·비밀번호 3단계 |
 | 관리자 로그인 | `/admin/login` | Credentials (이메일+비밀번호) |
 | 최초 설정 | `/setup` | DB에 Admin이 없을 때만 접근 가능한 초기 관리자 생성 |
+| 비밀번호 재설정 요청 | `/forgot-password` | 이메일 링크 방식, Admin·User 공통(계정 존재 여부 비노출). 설계: `docs/superpowers/specs/2026-08-26-password-reset-design.md` |
+| 새 비밀번호 설정 | `/reset-password/[token]` | 1시간 유효·1회용 토큰 확인 후 비밀번호 변경 |
 
 **인증 라이브러리**: NextAuth v5 (Auth.js)
 **보호 경로**: `src/middleware.ts` — `/admin/*` 경로는 `SUPER_ADMIN` 또는 `EDITOR` Role만 접근 허용
@@ -170,6 +172,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | `User` | 일반 회원 (NextAuth) |
 | `Account`, `Session`, `VerificationToken` | NextAuth 어댑터 |
 | `OtpCode` | 회원가입 이메일 OTP |
+| `PasswordResetToken` | Admin·User 공통 비밀번호 재설정 링크 토큰(1시간 유효, 1회용, 2026-08-26 추가) |
 | `Portfolio` | 성공사례 CMS |
 | `BlogPost` | 블로그 글 (Tiptap JSON 본문) |
 | `BlogCategory` | 블로그 카테고리 |

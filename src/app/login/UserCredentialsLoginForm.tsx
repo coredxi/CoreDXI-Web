@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
@@ -159,9 +160,17 @@ export function UserCredentialsLoginForm({ callbackUrl }: Props) {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="user-password" className="text-sm font-medium">
-                비밀번호
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="user-password" className="text-sm font-medium">
+                  비밀번호
+                </Label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
+                >
+                  비밀번호를 잊으셨나요?
+                </Link>
+              </div>
               <div className="relative">
                 <Input
                   id="user-password"
