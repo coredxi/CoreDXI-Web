@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { BlogPostCta } from "@/components/blog/BlogPostCta";
 import { BlogPostContentServer } from "@/components/editor/BlogPostContentServer";
 import { prisma } from "@/lib/prisma";
 import { buildBreadcrumbJsonLd } from "@/lib/seo-jsonld";
@@ -13,9 +14,9 @@ import { formatKstDateLong } from "@/lib/format-kst-date";
 // headers()로 읽어 JSON-LD <script> 태그에 넣는다. nonce는 태생적으로 요청 단위라
 // ISR(정적 캐싱)과 양립할 수 없다: generateStaticParams()에 없는 경로(빌드 이후
 // 새로 발행된 글)를 Vercel이 온디맨드로 "정적" 생성하려 할 때 headers() 호출이
-// DYNAMIC_SERVER_USAGE로 실패해 500이 났다(2026-08-15 확인). 항상 요청마다
-// 새로 렌더링하도록 강제해 크래시와 "캐시된 페이지의 nonce가 그 요청의 실제 CSP
-// 헤더 nonce와 어긋나는" 문제를 함께 없앤다.
+// DYNAMIC_SERVER_USAGE로 실패해 500이 났다(2026-08-15 확인, main에 fix/blog-detail-500
+// 으로 핫픽스 반영됨 — PR #1). 항상 요청마다 새로 렌더링하도록 강제해 크래시와
+// "캐시된 페이지의 nonce가 그 요청의 실제 CSP 헤더 nonce와 어긋나는" 문제를 함께 없앤다.
 export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ slug: string }> };
@@ -147,6 +148,8 @@ export default async function BlogPostPage({ params }: PageProps) {
       <div className="mt-10 rounded-xl border border-border bg-card p-4 shadow-sm md:p-8">
         <BlogPostContentServer content={content} />
       </div>
+
+      <BlogPostCta />
     </article>
   );
 }

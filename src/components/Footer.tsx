@@ -17,7 +17,10 @@ export function Footer() {
             </p>
           </div>
 
-          <NewsletterSubscribeForm source="footer" className="w-full max-w-sm" />
+          {/* id="newsletter" — 블로그 글 하단 CTA(BlogPostCta) 등에서 앵커 링크(#newsletter)로 이동시키는 대상 */}
+          <div id="newsletter" className="w-full max-w-sm scroll-mt-24">
+            <NewsletterSubscribeForm source="footer" className="w-full" />
+          </div>
 
           <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-muted-foreground">
             <Link

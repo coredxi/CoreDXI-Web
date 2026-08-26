@@ -68,7 +68,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 성공사례 목록 | `/cases` | Prisma `Portfolio` DB → 카드 그리드 |
 | 성공사례 상세 | `/cases/[id]` | 썸네일·동영상 embed·본문, 동적 SEO 메타데이터 |
 | 블로그 목록 | `/blog` | 발행 글 목록 + URL 검색 필터(`?q=`). **2026-08-14 기준 게시물 전량 삭제 상태(재발행 준비 중)** — 경위·재건 전략은 `docs/superpowers/specs/2026-08-14-content-brand-strategy-design.md` 참고 |
-| 블로그 상세 | `/blog/[slug]` | Tiptap/BlockNote 본문 렌더, JSON-LD |
+| 블로그 상세 | `/blog/[slug]` | Tiptap/BlockNote 본문 렌더, JSON-LD, 하단 CTA(`BlogPostCta` — 문의 유도 + 뉴스레터 앵커 링크, `cta_location: "blog_post_bottom"`) |
 | 블로그 카테고리 | `/blog/category/[slug]` | 카테고리별 필터링 |
 | 문의하기 | `/contact` | 문의 폼(Supabase 저장) + 알림 이메일(Resend) |
 | 이용약관 | `/terms` | 정적 법적 문서 |
@@ -93,7 +93,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 
 | 메뉴 | 경로 | 상태 | 기능 |
 |------|------|------|------|
-| 대시보드 | `/admin/dashboard` | ✅ 완료 | 통계 카드(블로그·문의·포트폴리오·회원 수), GA4 분석, 퀵액션, 활동 로그 |
+| 대시보드 | `/admin/dashboard` | ✅ 완료 | 통계 카드(블로그·문의·포트폴리오·회원 수), GA4 분석(방문자 요약·인기 페이지·전환 퍼널), 퀵액션, 활동 로그 |
 | 홈 페이지 편집 | `/admin/main` | ⬜ 플레이스홀더 | 히어로 섹션 CMS (미구현) |
 | 회사소개 편집 | `/admin/about` | ⬜ 플레이스홀더 | About 페이지 CMS (미구현) |
 | 솔루션 편집 | `/admin/solutions` | ⬜ 플레이스홀더 | Solutions 페이지 CMS (미구현) |
@@ -155,7 +155,8 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 패키지 매니저 | pnpm + Turbopack | - |
 | 배포 | Vercel | - |
 
-- **GA4 전환 이벤트 태깅 완료 (2026-08-08)** — `cta_click`/`contact_submit`/`newsletter_subscribe`/`scroll_depth` 4종 커스텀 이벤트. 설계: `docs/superpowers/specs/2026-08-08-ga4-event-tracking-design.md`. 시각화 대시보드는 데이터 누적 후 별도 진행
+- **GA4 전환 이벤트 태깅 완료 (2026-08-08)** — `cta_click`/`contact_submit`/`newsletter_subscribe`/`scroll_depth` 4종 커스텀 이벤트. 설계: `docs/superpowers/specs/2026-08-08-ga4-event-tracking-design.md`
+- **전환 퍼널 분석 대시보드 2단계(시각화 UI) 구현 완료 (2026-08-14)** — `/admin/dashboard`의 `Ga4FunnelPanel`이 최근 30일 이벤트 카운트 기반 근사 퍼널(방문→스크롤 참여→CTA 클릭→문의 제출)과 뉴스레터 구독 건수를 가로 바 형태로 표시. GA4 정식 Funnel Exploration이 아닌 eventCount/sessions 근사치이며, 스크롤 깊이(`percent`) 구간 세분화는 커스텀 디멘션 등록 확인 전까지 보류(이벤트 총합만 사용). 설계: `docs/superpowers/specs/2026-08-14-funnel-dashboard-stage2-design.md`. 실측(실 GA4 데이터 렌더링·배포 후 실시간 이벤트 확인)은 데이터 2주 누적 후 별도 진행(`docs/superpowers/plans/2026-08-14-phase1-item4-5-action-plan.md` 2번 표 순서 5~7)
 
 ### 6-2. 데이터베이스 스키마 (Prisma)
 
