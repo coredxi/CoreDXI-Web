@@ -42,6 +42,7 @@
 - ✅ OAuth 리다이렉트 URI 안내 컴포넌트 (`OAuthRedirectHelp`)
 - ✅ 잘못된 쿠키 초기화 API (`/api/auth/reset`)
 - ✅ 환경 진단 API (`/api/auth/health`)
+- ✅ **비밀번호 재설정(이메일 링크)** — `/forgot-password`(요청) + `/reset-password/[token]`(재설정), Admin·User 공통 1개 플로우, 계정 존재 여부 비노출, 1시간 유효·1회용 토큰, IP·이메일 이중 rate limit. 영업이사 EDITOR 계정 생성 시 재설정 수단이 전혀 없다는 게 드러나 신설(2026-08-26). 설계: `docs/superpowers/specs/2026-08-26-password-reset-design.md`, 브랜치: `feat/password-reset-flow`(AX 체크와 독립)
 
 ### 관리자 CMS 패널
 
@@ -70,8 +71,8 @@
 - ✅ **Tiptap 단일화** — BlockNote 완전 제거(에디터·리더·`@blocknote/*` 의존성 4개). 실 DB 확인 결과 BlockNote 포맷 글 0건이라 안전하게 제거, 전체 글 Tiptap 포맷
 - ✅ 비개발자용 `CONTENT_GUIDE.md` 작성 (홍보팀 가이드)
 - ✅ 브랜드 컬러·디자인 시스템 (`globals.css`, `--primary: #1E4E8C`)
-- ✅ **Vitest 유닛 테스트 135개** (OTP, SSRF 가드, 문의 액션, SEO, rate-limit, 답장 템플릿, blog/cases 검색, page-content, CMS 액션, 일반 회원 로그인 rate limiting, OTP 인증 rate limiting, OG 배경 URL 검증·합성/배지 분기 판단, 뉴스레터 구독, GA4 이벤트 전송·스크롤 임계값 계산)
-- ✅ **Playwright E2E 골든패스 5개** (문의 제출, 관리자 로그인 성공/실패, 블로그 발행, 블로그 소셜 메타 — 관리자 테스트는 `E2E_ADMIN_EMAIL/PASSWORD` 없으면 자동 skip)
+- ✅ **Vitest 유닛 테스트 155개** (OTP, SSRF 가드, 문의 액션, SEO, rate-limit, 답장 템플릿, blog/cases 검색, page-content, CMS 액션, 일반 회원 로그인 rate limiting, OTP 인증 rate limiting, OG 배경 URL 검증·합성/배지 분기 판단, 뉴스레터 구독, GA4 이벤트 전송·스크롤 임계값 계산, 비밀번호 재설정 토큰·서버 액션)
+- ✅ **Playwright E2E 골든패스 7개** (문의 제출, 관리자 로그인 성공/실패, 블로그 발행, 블로그 소셜 메타, 비밀번호 재설정 성공/만료 토큰 — 관리자 테스트는 `E2E_ADMIN_EMAIL/PASSWORD` 없으면 자동 skip)
 - ✅ CI(`ci.yml`)에 lint + typecheck + test 스텝 추가 (기존엔 build만 실행)
 - ✅ `.env.example` 생성, README 전면 현행화 (npm/포트3100/Turbopack/Supabase/Sentry/GA4/테스트 반영)
 - ✅ **관리자 로그인·문의 폼·회원가입 OTP 인증 rate limiting** (Prisma `RateLimitHit` 테이블 기반)
