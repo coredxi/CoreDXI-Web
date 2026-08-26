@@ -34,4 +34,15 @@ describe("trackEvent", () => {
 
     expect(gtagMock).toHaveBeenCalledWith("event", "scroll_depth", { percent: 50 });
   });
+
+  it("sends ax_check_submit with the ref code as source", () => {
+    const gtagMock = vi.fn();
+    vi.stubGlobal("window", { gtag: gtagMock });
+
+    trackEvent("ax_check_submit", { source: "sales-kim" });
+
+    expect(gtagMock).toHaveBeenCalledWith("event", "ax_check_submit", {
+      source: "sales-kim",
+    });
+  });
 });

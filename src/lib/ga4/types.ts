@@ -33,6 +33,9 @@ export type Ga4FunnelStage = {
 export type Ga4FunnelMetrics = {
   stages: Ga4FunnelStage[];
   newsletterSubscribeCount: number; // 퍼널과 별개 지표(카드 1개로 병기)
+  // AX 체크(인터뷰 깔때기) 제출 건수 — 퍼널 단계 재정의 없이 별도 지표로 병기.
+  // 설계: 2026-08-22-sales-funnel-ax-check-design.md 7번
+  axCheckSubmitCount: number;
   periodDays: 30;
   fetchedAt: string;
 };

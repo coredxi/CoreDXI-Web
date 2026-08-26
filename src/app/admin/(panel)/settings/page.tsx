@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Send, Shield, UserPlus, Users } from "lucide-react";
+import { ClipboardCheck, Send, Shield, UserPlus, Users } from "lucide-react";
 
 const SETTING_LINKS = [
   {
@@ -25,6 +25,12 @@ const SETTING_LINKS = [
     description: "블로그 뉴스레터 구독자 수와 목록을 확인합니다.",
     href: "/admin/newsletter",
     icon: Send,
+  },
+  {
+    title: "AX 체크 리드",
+    description: "AX 체크 응답 등급·상태를 확인하고 관리합니다.",
+    href: "/admin/leads",
+    icon: ClipboardCheck,
   },
 ] as const;
 

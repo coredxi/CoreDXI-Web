@@ -25,6 +25,8 @@ const FUNNEL_EVENT_NAMES = [
   "cta_click",
   "contact_submit",
   "newsletter_subscribe",
+  // AX 체크 제출 — 퍼널 단계로 편입하지 않고 뉴스레터 구독처럼 별도 병기(스코프 확장 금지).
+  "ax_check_submit",
 ] as const;
 
 function createAnalyticsClient(): BetaAnalyticsDataClient | null {
@@ -113,6 +115,7 @@ export async function getGa4FunnelMetrics(): Promise<Ga4FunnelFetchResult> {
     const data: Ga4FunnelMetrics = {
       stages: buildFunnelStages(sessions, eventCounts),
       newsletterSubscribeCount: eventCounts.newsletter_subscribe ?? 0,
+      axCheckSubmitCount: eventCounts.ax_check_submit ?? 0,
       periodDays: 30,
       fetchedAt: new Date().toISOString(),
     };

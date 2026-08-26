@@ -1,6 +1,6 @@
 # CoreDXI-Web PRD (Product Requirements Document)
 
-> 최종 업데이트: 2026-08-14
+> 최종 업데이트: 2026-08-22
 > 작성 기준: 코드베이스 분석 (Next.js App Router, `src/` 구조)
 
 ---
@@ -29,6 +29,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 ② **크몽·숨고 리스팅 + 콘텐츠 팔로워** — 사전 신뢰 없는 콜드 인바운드, 사이트는 "발견·전환" 역할.
 두 채널은 규모만 다를 뿐 동일한 역량(AI/AX 전환 컨설팅 및 서비스 구축)을 판매하므로, 블로그
 콘텐츠 전략은 두 채널 모두에 통하는 단일 신뢰 자산을 지향한다. 상세: `docs/superpowers/specs/2026-08-14-content-brand-strategy-design.md`
+③ **영업이사 아웃바운드(2026-08-22 추가)** — 2026-08-18 합류한 영업이사가 카카오톡·메일로 "솔루션 소개서 1장 + AX 체크 링크(`/ax-check?ref=`)"를 보내는 채널. 주 타깃은 **IT·통신·영상음향(AV) 시스템 구축 서비스 업체의 대표·영업 담당자**. 사이트의 역할은 "대화의 시작점 + 리드 구조화(핫/웜/콜드)". 중점 솔루션은 **"중소기업 AI 도입·AX 전환 컨설팅"** 단일 오퍼로 집중한다. 상세: `docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md`
 
 ---
 
@@ -36,7 +37,8 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 
 | 사용자 유형 | 설명 |
 |-------------|------|
-| **잠재 고객** | B2B 기업의 의사결정자(임원, 사업 담당자) — 솔루션·성공사례·문의 페이지 이용 |
+| **잠재 고객** | B2B 기업의 의사결정자(임원, 사업 담당자) — 솔루션·성공사례·문의 페이지 이용. **1순위 세그먼트(2026-08-22)**: IT·통신·AV 시스템 구축 업체 대표·영업 담당자 — `/ax-check` 인터뷰 깔때기 이용 |
+| **영업이사** | 관리자 패널(EDITOR)에서 `/admin/leads` 리드 조회·등급 확인·상태 변경, `?ref=` 링크 발송 |
 | **홍보·마케팅팀** | 블로그 작성, 성공사례 등록, 메인 텍스트·이미지 수정 |
 | **개발·운영팀** | 관리자 계정 관리, 고객 데이터 조회, 인프라 모니터링 |
 | **일반 회원** | OAuth·이메일 가입, 특정 콘텐츠 접근 (현재 제한적) |
@@ -64,7 +66,9 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 |--------|------|-----------|
 | 홈 | `/` | 히어로 섹션, 성공사례 미리보기(3건), 최신 블로그(5건), Mini About CTA |
 | 회사 소개 | `/about` | 미션·핵심가치·KPI 수치(50+, 98%, 3배)·CTA |
-| 솔루션 | `/solutions` | AI 협업 자동화·AX 컨설팅·엔터프라이즈 AI 플랫폼 3종 카드, 4단계 도입 프로세스 |
+| 솔루션 | `/solutions` | AI 협업 자동화·AX 컨설팅·엔터프라이즈 AI 플랫폼 3종 카드, 4단계 도입 프로세스. **2026-09 재편 예정(Phase 1.5 2단계)**: "중소기업 AI 도입·AX 전환 컨설팅" 단일 오퍼 — 진단→설계→구축→교육 4단계 + 대상 업종 블록 + AX 체크 CTA |
+| AX 체크(인터뷰 깔때기) | `/ax-check` | **신규(Phase 1.5 1단계, 2026-09-05 목표)** 8문항 전부 선택지·3분 질문지, `?ref=` 영업이사 식별, 제출 즉시 화면에 "AX 우선 과제 3가지"(규칙 기반) + 상세본 메일, 선택 동의 시 뉴스레터 구독 연동. 설계: `docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md` |
+| AX 체크 결과 재열람 | `/ax-check/result/[token]` | 메일 링크용 토큰 페이지 |
 | 성공사례 목록 | `/cases` | Prisma `Portfolio` DB → 카드 그리드 |
 | 성공사례 상세 | `/cases/[id]` | 썸네일·동영상 embed·본문, 동적 SEO 메타데이터 |
 | 블로그 목록 | `/blog` | 발행 글 목록 + URL 검색 필터(`?q=`). **2026-08-14 기준 게시물 전량 삭제 상태(재발행 준비 중)** — 경위·재건 전략은 `docs/superpowers/specs/2026-08-14-content-brand-strategy-design.md` 참고 |
@@ -101,6 +105,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 블로그 관리 | `/admin/blog` | ✅ 완료 | 글 목록·신규 작성(Tiptap 에디터)·수정·발행 |
 | 블로그 주제 관리 | `/admin/blog/topics` | ✅ 완료 | 카테고리 CRUD |
 | 문의 관리 | `/admin/contact` | ✅ 완료 | 문의 목록·상태 변경·알림 이메일 설정 |
+| 리드 관리 | `/admin/leads` | 🚧 Phase 1.5 | AX 체크 응답 목록(등급 HOT/WARM/COLD·상태·ref), 상세·메모·상태 변경·CSV·삭제 — 영업이사용 |
 | 관리자 계정 | `/admin/users` | ✅ 완료 | 관리자 목록·Role 변경(SUPER_ADMIN/EDITOR/VIEWER) |
 | 관리자 등록 | `/admin/register` | ✅ 완료 | 새 관리자 생성 |
 | 고객 관리 | `/admin/customers` | ✅ 완료 | 일반 회원 목록·상세·수정·삭제 |
@@ -156,6 +161,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 배포 | Vercel | - |
 
 - **GA4 전환 이벤트 태깅 완료 (2026-08-08)** — `cta_click`/`contact_submit`/`newsletter_subscribe`/`scroll_depth` 4종 커스텀 이벤트. 설계: `docs/superpowers/specs/2026-08-08-ga4-event-tracking-design.md`
+- **영업 지원 트랙(Phase 1.5) 착수 (2026-08-22)** — 영업이사 합류에 맞춰 `/ax-check` 인터뷰 깔때기·`/admin/leads`·솔루션 단일 오퍼 재편·팔로업 뉴스레터 발송·미팅 예약을 3단계(09/05·09/26·10/31)로 진행. **2026-08-08 "뉴스레터 발송 범위 제외" 결정은 철회**하되 목적을 "리드 팔로업 월 1회"로 좁힘. GA4는 `ax_check_submit` 이벤트 신설(`source` 디멘션 재사용). 설계: `docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md`, 실행: `docs/superpowers/plans/2026-08-22-sales-enablement-action-plan.md`
 - **전환 퍼널 분석 대시보드 2단계(시각화 UI) 구현 완료 (2026-08-14)** — `/admin/dashboard`의 `Ga4FunnelPanel`이 최근 30일 이벤트 카운트 기반 근사 퍼널(방문→스크롤 참여→CTA 클릭→문의 제출)과 뉴스레터 구독 건수를 가로 바 형태로 표시. GA4 정식 Funnel Exploration이 아닌 eventCount/sessions 근사치이며, 스크롤 깊이(`percent`) 구간 세분화는 커스텀 디멘션 등록 확인 전까지 보류(이벤트 총합만 사용). 설계: `docs/superpowers/specs/2026-08-14-funnel-dashboard-stage2-design.md`. 실측(실 GA4 데이터 렌더링·배포 후 실시간 이벤트 확인)은 데이터 2주 누적 후 별도 진행(`docs/superpowers/plans/2026-08-14-phase1-item4-5-action-plan.md` 2번 표 순서 5~7)
 
 ### 6-2. 데이터베이스 스키마 (Prisma)
@@ -171,7 +177,8 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | `BlogPost` | 블로그 글 (Tiptap JSON 본문) |
 | `BlogCategory` | 블로그 카테고리 |
 | `RateLimitHit` | 관리자 로그인·문의 폼·뉴스레터 구독 등 요청 빈도 제한 기록 |
-| `NewsletterSubscriber` | 뉴스레터 구독자(2026-08-08 구현·검증·DB 반영 완료, `docs/superpowers/specs/2026-08-08-newsletter-design.md` 참고) |
+| `NewsletterSubscriber` | 뉴스레터 구독자(2026-08-08 구현·검증·DB 반영 완료, `docs/superpowers/specs/2026-08-08-newsletter-design.md` 참고). AX 체크 선택 동의 시 `source="ax-check"`로 합류 |
+| `AxCheckResponse` | **코드·마이그레이션 SQL 작성 완료(2026-08-25), DB 반영은 `prisma migrate deploy` 실행 대기** AX 체크 응답·등급(HOT/WARM/COLD)·상태(NEW/CONTACTED/MEETING/CLOSED)·요약·영업 메모 |
 
 **Supabase 테이블** (Prisma 외):
 

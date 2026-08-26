@@ -80,6 +80,15 @@ export default function PrivacyPage() {
                       </td>
                     </tr>
                     <tr>
+                      <td className="border border-border px-4 py-2">AX 체크(인터뷰 진단)</td>
+                      <td className="border border-border px-4 py-2">
+                        회사명, 성함, 이메일 주소, 휴대전화(선택), 진단 응답 내용
+                      </td>
+                      <td className="border border-border px-4 py-2">
+                        AX 체크 진단 양식(/ax-check)
+                      </td>
+                    </tr>
+                    <tr>
                       <td className="border border-border px-4 py-2">서비스 이용</td>
                       <td className="border border-border px-4 py-2">
                         접속 IP, 쿠키, 서비스 이용 기록(자동 수집)
@@ -101,6 +110,10 @@ export default function PrivacyPage() {
                 <li>고객 문의 응대: 문의 접수 및 답변, 불만 처리</li>
                 <li>서비스 개선: 서비스 이용 분석, 오류 개선, 신규 기능 개발</li>
                 <li>마케팅 및 광고(별도 동의 시): 서비스 안내, 이벤트 정보 발송</li>
+                <li>
+                  AX 체크 진단 제공: 진단 결과 안내 및 후속 컨설팅 상담을 위한
+                  담당자 연락
+                </li>
               </ul>
             </section>
 
@@ -125,6 +138,10 @@ export default function PrivacyPage() {
                   뉴스레터 구독을 위해 수집된 이메일 주소는 구독을 해지하는
                   즉시 파기됩니다. 모든 뉴스레터 메일에는 구독 해지 링크가
                   포함되어 있습니다.
+                </li>
+                <li>
+                  AX 체크(인터뷰 진단) 응답으로 수집된 정보는 진단 결과 발송 후
+                  1년간 보관되며, 이용자가 삭제를 요청하는 경우 즉시 파기됩니다.
                 </li>
               </ol>
             </section>

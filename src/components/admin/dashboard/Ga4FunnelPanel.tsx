@@ -6,7 +6,7 @@
  * 설계: docs/superpowers/specs/2026-08-14-funnel-dashboard-stage2-design.md 4-4
  */
 
-import { Mail } from "lucide-react";
+import { ClipboardCheck, Mail } from "lucide-react";
 import { getGa4FunnelMetrics } from "@/lib/ga4/get-funnel-metrics";
 
 export async function Ga4FunnelPanel() {
@@ -36,13 +36,24 @@ export async function Ga4FunnelPanel() {
             eventCount 기반 · scroll_depth / cta_click / contact_submit
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-          <Mail className="size-4 text-[#1E4E8C]" aria-hidden />
-          <div className="text-xs">
-            <p className="font-medium text-slate-900">
-              뉴스레터 구독 {data.newsletterSubscribeCount.toLocaleString("ko-KR")}건
-            </p>
-            <p className="text-slate-400">퍼널 단계 아님 · 별도 지표</p>
+        <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+            <Mail className="size-4 text-[#1E4E8C]" aria-hidden />
+            <div className="text-xs">
+              <p className="font-medium text-slate-900">
+                뉴스레터 구독 {data.newsletterSubscribeCount.toLocaleString("ko-KR")}건
+              </p>
+              <p className="text-slate-400">퍼널 단계 아님 · 별도 지표</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+            <ClipboardCheck className="size-4 text-[#1E4E8C]" aria-hidden />
+            <div className="text-xs">
+              <p className="font-medium text-slate-900">
+                AX 체크 제출 {data.axCheckSubmitCount.toLocaleString("ko-KR")}건
+              </p>
+              <p className="text-slate-400">퍼널 단계 아님 · 별도 지표</p>
+            </div>
           </div>
         </div>
       </div>

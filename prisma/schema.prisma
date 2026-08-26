@@ -227,3 +227,45 @@ model NewsletterSubscriber {
 
   @@index([status])
 }
+
+// =====================================================
+// AxCheckResponse — 영업 지원 트랙(Phase 1.5) AX 체크(인터뷰 깔때기) 리드
+// (docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md 참고)
+// =====================================================
+enum LeadGrade {
+  HOT
+  WARM
+  COLD
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  MEETING
+  CLOSED
+}
+
+model AxCheckResponse {
+  id             String     @id @default(cuid())
+  refCode        String? // ?ref= (영업이사 식별, 예: sales-kim)
+  company        String
+  name           String
+  email          String
+  phone          String?
+  answers        Json // { q1: "...", q3: ["...","..."], ... } — catalogVersion 함께 저장
+  catalogVersion String // 질문지 버전 (v1-draft)
+  grade          LeadGrade
+  score          Int // 규칙 점수(정렬용)
+  summary        Json // 화면/메일에 보여준 우선 과제 3개 (재현 가능하도록 저장)
+  status         LeadStatus @default(NEW)
+  note           String?    @db.Text // 영업이사 메모
+  marketingOptIn Boolean    @default(false) // 선택 동의 → NewsletterSubscriber 연동 여부
+  resultToken    String     @unique // /ax-check/result/[token] 재열람용(메일 링크)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([grade, createdAt])
+  @@index([status])
+  @@index([refCode])
+  @@index([email])
+}

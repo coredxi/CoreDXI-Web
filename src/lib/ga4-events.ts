@@ -11,6 +11,9 @@ type AnalyticsEventMap = {
   contact_submit: Record<string, never>;
   newsletter_subscribe: { source: string };
   scroll_depth: { percent: 25 | 50 | 75 | 100 };
+  // AX 체크(인터뷰 깔때기) 제출 — source는 ?ref= 코드(영업이사 식별), 2026-08-16 등록한
+  // 기존 커스텀 디멘션(source)을 재사용한다. 설계: 2026-08-22-sales-funnel-ax-check-design.md 7번
+  ax_check_submit: { source: string };
 };
 
 declare global {
