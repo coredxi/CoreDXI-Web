@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { getSupabaseStorageHost, isAllowedOgBackgroundUrl } from "./url-safety";
 import { decideOgBackgroundDataUri, loadOgBackgroundDataUri } from "./og-background";
+import { OG_LOGO_DATA_URI } from "./og-logo";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
@@ -93,26 +94,14 @@ export async function createOgImageResponse({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 10,
-                backgroundColor: BRAND,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <div
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: "50%",
-                  border: "3px solid white",
-                }}
-              />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element -- next/og(satori) 렌더 트리는 next/image를 지원하지 않음 */}
+            <img
+              src={OG_LOGO_DATA_URI}
+              alt=""
+              width={48}
+              height={48}
+              style={{ display: "flex" }}
+            />
             <span
               style={{
                 fontSize: 34,
