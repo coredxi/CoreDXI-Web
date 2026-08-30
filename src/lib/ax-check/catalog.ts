@@ -231,3 +231,24 @@ export const SALES_SIGNATURE = {
   phone: "010-0000-0000",
   email: "sales@coredxi.com",
 } as const;
+
+/**
+ * /ax-check 페이지 상단 인트로 섹션 문구 — v1-draft. 홍보팀이 이 상수만 수정하면
+ * 화면에 바로 반영된다(CONTENT_GUIDE.md 17번 참고).
+ */
+export const INTRO_COPY = {
+  eyebrow: "CoreDXI AX 전환 컨설팅",
+  headline:
+    "코어디엑스아이는 중소기업의 AI 도입·AX 전환을 설계부터 교육까지 함께하는 컨설팅 회사입니다.",
+  description:
+    "복잡한 협업은 심플하게, 반복 업무는 줄이는 일 — 진단부터 설계·구축·교육까지 4단계로 함께합니다.",
+  steps: ["진단", "설계", "구축", "교육"],
+  reassurances: [
+    "AI를 몰라도 됩니다 — 모든 질문이 선택지로 되어 있습니다.",
+    "3분, 8개 질문이면 끝납니다.",
+    "제출한다고 영업 전화가 자동으로 가지 않습니다 — 결과는 화면에서 바로 확인하시고, 상세 진단서는 담당 이사가 직접 검토해 메일로 보내드립니다.",
+  ],
+  previewLabel: "제출 즉시 화면에서 바로 확인",
+  previewExample: "예: '제안서·견적서 자동 초안 생성' — 최근 1년 제안서 20건 정리부터 시작",
+  cta: "3분 진단 시작하기",
+} as const;

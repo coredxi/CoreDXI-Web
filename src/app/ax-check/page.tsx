@@ -3,11 +3,12 @@ import { pageMetadata } from "@/lib/seo";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { AxCheckForm } from "./AxCheckForm";
+import { AxCheckIntro } from "./AxCheckIntro";
 
 export const metadata: Metadata = pageMetadata({
   title: "AX 체크 — 3분 AI 도입 진단",
   description:
-    "8개 질문에 답하면 귀사의 AX(AI 전환) 우선 과제 3가지를 바로 확인할 수 있습니다.",
+    "중소기업의 AI 도입·AX 전환을 함께하는 CoreDXI가 8개 질문으로 귀사의 우선 과제 3가지를 무료로 진단해 드립니다.",
   path: "/ax-check",
 });
 
@@ -29,7 +30,10 @@ export default async function AxCheckPage({ searchParams }: Props) {
       <Header />
       <main className="min-h-screen bg-background pt-24 pb-24">
         <div className="mx-auto max-w-2xl px-6 py-8">
-          <AxCheckForm refCode={refCode} />
+          <AxCheckIntro />
+          <div id="ax-check-form">
+            <AxCheckForm refCode={refCode} />
+          </div>
         </div>
       </main>
       <Footer />
