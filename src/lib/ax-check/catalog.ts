@@ -220,3 +220,14 @@ export const TIMING_NEAR_TERM = new Set(["within_3_months", "this_year"]);
 export const TIMING_CONSIDERING = new Set(["within_3_months", "this_year", "next_year"]);
 /** Q8 값 중 HOT 판정에 필요한 "의사결정 권한이 있는" 집합. */
 export const AUTHORITY_DECISIVE = new Set(["self_decide", "ceo_report"]);
+
+/**
+ * 이메일 초안 서명 블록 — v1-draft 값. 영업이사 실제 이름·연락처로 교체 필요
+ * (교체는 이 상수만 수정하면 됨, 코드 변경 불필요).
+ */
+export const SALES_SIGNATURE = {
+  name: "김영업",
+  title: "영업이사",
+  phone: "010-0000-0000",
+  email: "sales@coredxi.com",
+} as const;
