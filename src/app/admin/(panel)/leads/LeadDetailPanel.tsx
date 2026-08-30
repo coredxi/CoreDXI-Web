@@ -7,6 +7,7 @@ import { AX_CHECK_QUESTIONS, getOptionLabel, getQuestionById } from "@/lib/ax-ch
 import type { AxCheckLeadRecord, LeadStatus } from "@/lib/ax-check/types";
 import { LEAD_STATUS_OPTIONS } from "@/lib/ax-check/types";
 import { LeadGradeBadge } from "./LeadGradeBadge";
+import { EmailDraftPanel } from "./EmailDraftPanel";
 
 type Props = {
   lead: AxCheckLeadRecord;
@@ -200,6 +201,8 @@ export function LeadDetailPanel({
           </button>
         </div>
       </div>
+
+      <EmailDraftPanel lead={lead} />
     </div>
   );
 }
