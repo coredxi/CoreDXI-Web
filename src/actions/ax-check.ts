@@ -4,7 +4,8 @@
  * ax-check.ts — AX 체크(인터뷰 깔때기) 서버 액션
  *
  * submitAxCheck: 검증 → rate limit → 규칙 기반 요약(summarize.ts) → 저장 →
- * 선택 동의 시 뉴스레터 구독 연동 → 고객 상세본 메일 + 영업이사 알림 메일.
+ * 선택 동의 시 뉴스레터 구독 연동 → 영업이사 알림 메일(고객 발송용 이메일 초안 동봉,
+ * 고객에게는 자동 발송하지 않음 — email-draft.ts 참고).
  * 관리자용 listAxCheckResponses/updateAxCheckStatus/updateAxCheckNote/deleteAxCheckResponse는
  * requireAdmin 게이트(contact.ts·newsletter.ts와 동일 패턴).
  *
@@ -25,6 +26,7 @@ import {
   type AxCheckQuestion,
 } from "@/lib/ax-check/catalog";
 import { summarizeAxCheck } from "@/lib/ax-check/summarize";
+import { buildCustomerEmailDraft } from "@/lib/ax-check/email-draft";
 import { generateAxCheckResultToken } from "@/lib/ax-check/result-token";
 import type {
   AxCheckAnswers,
@@ -44,6 +46,29 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[0-9+\-\s()]{7,20}$/;
 const OTHER_TEXT_MAX_LENGTH = 200;
 const LEAD_STATUS_SET = new Set<string>(LEAD_STATUS_OPTIONS.map((o) => o.value));
+
+/**
+ * 구버전(roadmap 도입 전, ~2026-08-30) 응답 호환 처리 — 당시 summary.priorities는
+ * { title, why, firstStep, expectedEffect } 형태였다. 새 필드가 없으면 최소한으로
+ * 채워 넣어 화면·이메일 초안이 크래시 없이 렌더링되도록 한다.
+ */
+function normalizeLegacyPriorities(raw: unknown): AxCheckLeadRecord["priorities"] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => {
+    const p = item as Partial<AxCheckLeadRecord["priorities"][number]> & { firstStep?: string };
+    if (Array.isArray(p.roadmap) && p.roadmap.length === 3) {
+      return p as AxCheckLeadRecord["priorities"][number];
+    }
+    return {
+      title: p.title ?? "",
+      why: p.why ?? "",
+      echo: p.echo ?? "",
+      industryExample: p.industryExample ?? null,
+      roadmap: [p.firstStep ?? "—", "—", "—"] as const,
+      expectedEffect: p.expectedEffect ?? "",
+    };
+  });
+}
 
 async function requireAdmin(): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await auth();
@@ -86,33 +111,6 @@ function validateAnswers(answers: AxCheckAnswers): string | null {
   }
 
   return null;
-}
-
-function buildDetailMailText(params: {
-  company: string;
-  name: string;
-  resultUrl: string;
-  priorities: { title: string; why: string; firstStep: string; expectedEffect: string }[];
-}): string {
-  const { company, name, resultUrl, priorities } = params;
-  const priorityLines = priorities.flatMap((p, i) => [
-    `${i + 1}. ${p.title}`,
-    `   - 배경: ${p.why}`,
-    `   - 첫 단계: ${p.firstStep}`,
-    `   - 기대 효과: ${p.expectedEffect}`,
-    "",
-  ]);
-
-  return [
-    `${company} ${name}님, AX 체크에 참여해 주셔서 감사합니다.`,
-    "",
-    "귀사의 AX 우선 과제로 아래 항목을 제안드립니다.",
-    "",
-    ...priorityLines,
-    "CoreDXI는 진단(2주) → 설계 → 구축 → 교육 순서로 프로젝트를 진행합니다.",
-    "담당 영업이사가 곧 연락드릴 예정이며, 아래 링크에서 이 결과를 언제든 다시 확인하실 수 있습니다.",
-    resultUrl,
-  ].join("\n");
 }
 
 export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSubmitResult> {
@@ -191,14 +189,13 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
   const siteUrl = process.env.NEXTAUTH_URL ?? "https://www.coredxi.com";
   const resultUrl = `${siteUrl}/ax-check/result/${resultToken}`;
 
-  const customerMailResult = await sendResendEmail({
-    to: email,
-    subject: "[CoreDXI] AX 체크 결과 — 귀사의 우선 과제 3가지",
-    text: buildDetailMailText({ company, name, resultUrl, priorities }),
-  });
-  if (!customerMailResult.success) {
-    console.error("[submitAxCheck] customer email failed:", customerMailResult.error);
-  }
+  // 고객에게는 자동 발송하지 않는다 — 영업이사가 아래 초안을 검토·수정 후 직접 보낸다
+  // (2026-08-30 결정, docs/superpowers/specs/2026-08-30-ax-check-experience-upgrade-design.md 5번).
+  const emailDraft = buildCustomerEmailDraft(
+    input.answers,
+    { priorities, grade, score, catalogVersion },
+    { company, name }
+  );
 
   const salesNotifyEmail =
     process.env.SALES_NOTIFY_EMAIL?.trim() || (await getContactNotificationEmail());
@@ -215,8 +212,16 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
         `연락처: ${phone || "-"}`,
         `유입 경로(ref): ${refCode ?? "-"}`,
         `등급: ${grade}`,
+        `결과 재열람 링크: ${resultUrl}`,
         "",
-        "관리자 페이지(/admin/leads)에서 전체 답변을 확인해 주세요.",
+        "관리자 페이지(/admin/leads)에서 전체 답변과 이메일 초안을 확인·복사할 수 있습니다.",
+        "아래는 고객에게 보낼 이메일 초안입니다 — 검토·수정 후 직접 발송해 주세요.",
+        "",
+        "==================== 고객용 이메일 초안: 제목 ====================",
+        emailDraft.subject,
+        "",
+        "==================== 고객용 이메일 초안: 본문 ====================",
+        emailDraft.body,
       ].join("\n"),
       replyTo: email,
     });
@@ -244,10 +249,10 @@ export async function getAxCheckResultByToken(token: string): Promise<AxCheckRes
       return { success: false, error: "유효하지 않은 결과 링크입니다." };
     }
 
-    const summary = response.summary as { priorities: AxCheckLeadRecord["priorities"] };
+    const summary = response.summary as unknown as { priorities: AxCheckLeadRecord["priorities"] };
     return {
       success: true,
-      data: { company: response.company, priorities: summary.priorities ?? [] },
+      data: { company: response.company, priorities: normalizeLegacyPriorities(summary.priorities) },
     };
   } catch (e) {
     console.error("[getAxCheckResultByToken]", e);
@@ -275,7 +280,7 @@ export async function listAxCheckResponses(): Promise<AxCheckListResult> {
     });
 
     const leads: AxCheckLeadRecord[] = sorted.map((r) => {
-      const summary = r.summary as { priorities: AxCheckLeadRecord["priorities"] };
+      const summary = r.summary as unknown as { priorities: AxCheckLeadRecord["priorities"] };
       return {
         id: r.id,
         refCode: r.refCode,
@@ -287,7 +292,7 @@ export async function listAxCheckResponses(): Promise<AxCheckListResult> {
         catalogVersion: r.catalogVersion,
         grade: r.grade,
         score: r.score,
-        priorities: summary.priorities ?? [],
+        priorities: normalizeLegacyPriorities(summary.priorities),
         status: r.status,
         note: r.note,
         marketingOptIn: r.marketingOptIn,

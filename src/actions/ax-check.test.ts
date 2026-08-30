@@ -170,7 +170,7 @@ describe("submitAxCheck rate limiting", () => {
 });
 
 describe("submitAxCheck happy path", () => {
-  it("saves the response, emails the customer and sales notify address", async () => {
+  it("saves the response and emails only the sales notify address (no customer auto-send)", async () => {
     const result = await submitAxCheck(validInput());
 
     expect(result.success).toBe(true);
@@ -189,13 +189,26 @@ describe("submitAxCheck happy path", () => {
       })
     );
 
-    expect(sendResendEmailMock).toHaveBeenCalledWith(
-      expect.objectContaining({ to: "user@example.com" })
-    );
+    // 고객에게는 자동 발송하지 않는다 — sendResendEmail 호출은 영업이사 알림 1건뿐.
+    expect(sendResendEmailMock).toHaveBeenCalledTimes(1);
     expect(sendResendEmailMock).toHaveBeenCalledWith(
       expect.objectContaining({ to: "contact@coredxi.com" })
     );
+    expect(sendResendEmailMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ to: "user@example.com" })
+    );
     expect(subscribeNewsletterMock).not.toHaveBeenCalled();
+  });
+
+  it("includes the customer email draft in the sales notify email body", async () => {
+    await submitAxCheck(validInput());
+
+    const salesCall = sendResendEmailMock.mock.calls.find(
+      (call) => call[0].to === "contact@coredxi.com"
+    );
+    expect(salesCall).toBeDefined();
+    expect(salesCall![0].text).toContain("고객용 이메일 초안");
+    expect(salesCall![0].text).toContain("테스트회사 홍길동님, 안녕하세요.");
   });
 
   it("uses SALES_NOTIFY_EMAIL over the contact settings fallback when set", async () => {
@@ -215,7 +228,7 @@ describe("submitAxCheck happy path", () => {
     expect(subscribeNewsletterMock).toHaveBeenCalledWith("user@example.com", "ax-check");
   });
 
-  it("still succeeds when the customer email fails to send", async () => {
+  it("still succeeds when the sales notify email fails to send", async () => {
     sendResendEmailMock.mockResolvedValue({ success: false, error: "boom" });
 
     const result = await submitAxCheck(validInput());
@@ -246,16 +259,46 @@ describe("getAxCheckResultByToken", () => {
   });
 
   it("returns company and priorities only (no email/grade leaked)", async () => {
+    const priority = {
+      title: "제안서 자동화",
+      why: "이유",
+      echo: "echo",
+      industryExample: null,
+      roadmap: ["1주차", "1개월차", "3개월차"],
+      expectedEffect: "효과",
+    };
     prismaMock.axCheckResponse.findUnique.mockResolvedValue({
       company: "테스트회사",
-      summary: { priorities: [{ title: "제안서 자동화" }] },
+      summary: { priorities: [priority] },
     });
 
     const result = await getAxCheckResultByToken("token-1");
 
     expect(result).toEqual({
       success: true,
-      data: { company: "테스트회사", priorities: [{ title: "제안서 자동화" }] },
+      data: { company: "테스트회사", priorities: [priority] },
+    });
+  });
+
+  it("normalizes a legacy (pre-roadmap) priority shape instead of crashing", async () => {
+    prismaMock.axCheckResponse.findUnique.mockResolvedValue({
+      company: "테스트회사",
+      summary: {
+        priorities: [
+          { title: "제안서 자동화", why: "이유", firstStep: "구버전 첫 단계", expectedEffect: "효과" },
+        ],
+      },
+    });
+
+    const result = await getAxCheckResultByToken("token-legacy");
+
+    expect(result.success).toBe(true);
+    if (!result.success) throw new Error("unreachable");
+    expect(result.data.priorities[0]).toMatchObject({
+      title: "제안서 자동화",
+      echo: "",
+      industryExample: null,
+      roadmap: ["구버전 첫 단계", "—", "—"],
     });
   });
 });

@@ -75,3 +75,6 @@ ck.txt
 # Python 캐시 (scripts/ 아래 notion_post_commit.py 등 실행 시 생성)
 __pycache__/
 *.pyc
+
+# Superpowers subagent-driven-development 작업 공간 (플랜별 원장·브리프·리뷰 산출물)
+.superpowers/

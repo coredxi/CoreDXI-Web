@@ -5,7 +5,7 @@
  * 동일한 카드 UI를 공유한다. [홍보팀] 카드 문구 자체는 src/lib/ax-check/catalog.ts에서 관리합니다.
  */
 
-import { ArrowRight, Lightbulb, Mail } from "lucide-react";
+import { ArrowRight, Lightbulb } from "lucide-react";
 import { TrackedCtaLink } from "@/components/analytics/TrackedCtaLink";
 import type { AxCheckPriority } from "@/lib/ax-check/summarize";
 
@@ -21,11 +21,11 @@ export function AxCheckPriorityCards({ company, priorities }: Props) {
         <span className="inline-flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Lightbulb className="size-6" aria-hidden="true" />
         </span>
-        <h1 className="mt-4 text-lg font-bold text-foreground">
+        <h2 className="mt-4 text-lg font-bold text-foreground">
           {company ? `${company}의 ` : ""}AX 우선 과제 3가지
-        </h1>
+        </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          상세 진단은 입력하신 메일로 보내드렸습니다.
+          상세 진단서는 담당 이사가 직접 검토해 1영업일 내 메일로 보내드립니다.
         </p>
       </div>
 
@@ -41,11 +41,23 @@ export function AxCheckPriorityCards({ company, priorities }: Props) {
               </span>
               {priority.title}
             </p>
+            <p className="mt-2 text-xs font-medium text-primary">{priority.echo}</p>
+            {priority.industryExample ? (
+              <p className="mt-1 text-xs text-muted-foreground">{priority.industryExample}</p>
+            ) : null}
             <p className="mt-2 text-sm text-muted-foreground">{priority.why}</p>
-            <dl className="mt-3 space-y-1 text-xs text-muted-foreground">
+            <dl className="mt-3 space-y-1.5 text-xs text-muted-foreground">
               <div className="flex gap-1.5">
-                <dt className="shrink-0 font-medium text-foreground">첫 단계</dt>
-                <dd>{priority.firstStep}</dd>
+                <dt className="shrink-0 font-medium text-foreground">첫 1주</dt>
+                <dd>{priority.roadmap[0]}</dd>
+              </div>
+              <div className="flex gap-1.5">
+                <dt className="shrink-0 font-medium text-foreground">첫 1개월</dt>
+                <dd>{priority.roadmap[1]}</dd>
+              </div>
+              <div className="flex gap-1.5">
+                <dt className="shrink-0 font-medium text-foreground">3개월</dt>
+                <dd>{priority.roadmap[2]}</dd>
               </div>
               <div className="flex gap-1.5">
                 <dt className="shrink-0 font-medium text-foreground">기대 효과</dt>
@@ -65,10 +77,6 @@ export function AxCheckPriorityCards({ company, priorities }: Props) {
           담당자와 상담하기
           <ArrowRight className="size-4" aria-hidden="true" />
         </TrackedCtaLink>
-        <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-          <Mail className="size-3.5 shrink-0" aria-hidden="true" />
-          이 결과는 메일로도 보내드렸으니 언제든 다시 확인하실 수 있어요.
-        </p>
       </div>
     </div>
   );

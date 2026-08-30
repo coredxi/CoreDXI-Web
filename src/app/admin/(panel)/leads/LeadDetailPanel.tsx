@@ -7,6 +7,7 @@ import { AX_CHECK_QUESTIONS, getOptionLabel, getQuestionById } from "@/lib/ax-ch
 import type { AxCheckLeadRecord, LeadStatus } from "@/lib/ax-check/types";
 import { LEAD_STATUS_OPTIONS } from "@/lib/ax-check/types";
 import { LeadGradeBadge } from "./LeadGradeBadge";
+import { EmailDraftPanel } from "./EmailDraftPanel";
 
 type Props = {
   lead: AxCheckLeadRecord;
@@ -171,8 +172,14 @@ export function LeadDetailPanel({
               <p className="font-semibold text-slate-900">
                 {i + 1}. {p.title}
               </p>
+              <p className="mt-1 text-xs text-indigo-600">{p.echo}</p>
+              {p.industryExample ? (
+                <p className="mt-1 text-xs text-slate-500">{p.industryExample}</p>
+              ) : null}
               <p className="mt-1 text-xs text-slate-500">{p.why}</p>
-              <p className="mt-1 text-xs text-slate-600">첫 단계: {p.firstStep}</p>
+              <p className="mt-1 text-xs text-slate-600">첫 1주: {p.roadmap[0]}</p>
+              <p className="text-xs text-slate-600">첫 1개월: {p.roadmap[1]}</p>
+              <p className="text-xs text-slate-600">3개월: {p.roadmap[2]}</p>
               <p className="text-xs text-slate-600">기대 효과: {p.expectedEffect}</p>
             </li>
           ))}
@@ -200,6 +207,8 @@ export function LeadDetailPanel({
           </button>
         </div>
       </div>
+
+      <EmailDraftPanel lead={lead} />
     </div>
   );
 }

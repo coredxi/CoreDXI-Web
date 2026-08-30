@@ -11,11 +11,19 @@
 import {
   AUTHORITY_DECISIVE,
   CATALOG_VERSION,
-  DATA_PREP_PREFIX,
+  DATA_PREP_STEP_LABEL,
+  EFFECT_DISCLAIMER,
   EXPECTED_EFFECT_TONE_SUFFIX,
   GRADE_BASE_SCORE,
+  getOptionLabel,
+  getQuestionById,
+  INDUSTRY_TASK_EXAMPLES,
+  NO_AI_EXPERIENCE,
+  NO_AI_EXPERIENCE_STEP_LABEL,
   Q3_MAX_SELECT,
   Q5_NEEDS_DATA_PREP,
+  SMALL_TEAM_SIZE,
+  SMALL_TEAM_STEP_LABEL,
   TASK_CARDS,
   TIMING_CONSIDERING,
   TIMING_NEAR_TERM,
@@ -36,7 +44,17 @@ export type AxCheckAnswers = {
   q8: string;
 };
 
-export type AxCheckPriority = AxCheckTaskCard;
+export type AxCheckPriority = {
+  title: string;
+  why: string;
+  /** 답변 인용 근거 문장 — "'제안서·견적서 작성'을(를) 가장 시간이 많이 드는 업무로 꼽아주셨습니다." */
+  echo: string;
+  /** Q1(업종) 기준 구체 예시 1문장. 매핑이 없는 업종("위 복합"/"기타" 등)이면 null. */
+  industryExample: string | null;
+  /** 미니 로드맵 3단계: [첫 1주, 첫 1개월, 3개월] — Q2·Q4·Q5 분기 접두어가 이미 반영됨. */
+  roadmap: readonly [string, string, string];
+  expectedEffect: string;
+};
 
 export type AxCheckSummary = {
   priorities: AxCheckPriority[];
@@ -63,23 +81,54 @@ function computeScore(grade: CatalogLeadGrade, selectedCount: number): number {
   return GRADE_BASE_SCORE[grade] + Math.min(selectedCount, Q3_MAX_SELECT) * 10;
 }
 
+function buildEcho(taskValue: string, answers: AxCheckAnswers): string {
+  const label =
+    taskValue === "other" && answers.q3Other?.trim()
+      ? answers.q3Other.trim()
+      : getOptionLabel(getQuestionById("q3"), taskValue);
+  return `'${label}'을(를) 가장 시간이 많이 드는 업무로 꼽아주셨습니다.`;
+}
+
+function withPrefixes(base: string, prefixes: string[]): string {
+  return prefixes.length > 0 ? `${prefixes.join(" → ")} → ${base}` : base;
+}
+
+function buildRoadmap(card: AxCheckTaskCard, answers: AxCheckAnswers): [string, string, string] {
+  const week1Prefixes: string[] = [];
+  if (NO_AI_EXPERIENCE.has(answers.q4)) week1Prefixes.push(NO_AI_EXPERIENCE_STEP_LABEL);
+  if (Q5_NEEDS_DATA_PREP.has(answers.q5)) week1Prefixes.push(DATA_PREP_STEP_LABEL);
+
+  const month1Prefixes: string[] = [];
+  if (SMALL_TEAM_SIZE.has(answers.q2)) month1Prefixes.push(SMALL_TEAM_STEP_LABEL);
+
+  return [
+    withPrefixes(card.roadmap[0], week1Prefixes),
+    withPrefixes(card.roadmap[1], month1Prefixes),
+    card.roadmap[2],
+  ];
+}
+
 function buildPriority(taskValue: string, answers: AxCheckAnswers): AxCheckPriority {
   const card = TASK_CARDS[taskValue] ?? TASK_CARDS.other!;
-  const needsDataPrep = Q5_NEEDS_DATA_PREP.has(answers.q5);
   const toneSuffix = EXPECTED_EFFECT_TONE_SUFFIX[answers.q6] ?? "";
+  const industryExample = INDUSTRY_TASK_EXAMPLES[answers.q1]?.[taskValue] ?? null;
 
   return {
     title: card.title,
     why: card.why,
-    firstStep: needsDataPrep ? `${DATA_PREP_PREFIX}${card.firstStep}` : card.firstStep,
-    expectedEffect: `${card.expectedEffect}${toneSuffix}`,
+    echo: buildEcho(taskValue, answers),
+    industryExample,
+    roadmap: buildRoadmap(card, answers),
+    expectedEffect: `${card.expectedEffect}${toneSuffix}${EFFECT_DISCLAIMER}`,
   };
 }
 
 /**
  * answers → 우선 과제 최대 3개 + 등급 + 점수.
- * Q3에서 고른 업무(최대 3개)마다 과제 카드를 매핑하고, Q5가 "흩어져 있음/잘 모름"이면
- * 모든 카드의 firstStep 앞에 "데이터 정리 1주"를 붙인다. Q6에 따라 expectedEffect 톤을 맞춘다.
+ * Q3에서 고른 업무(최대 3개)마다 과제 카드를 매핑하고, 선택 라벨을 인용한 echo 문장과
+ * Q1 업종별 예시(industryExample)를 붙인다. roadmap 3단계는 Q4가 "전혀 없음"이면 1주차에
+ * 기초 교육을, Q5가 "흩어져 있음/잘 모름"이면 데이터 정리를, Q2가 "10명 미만"이면 1개월차에
+ * SaaS 우선 문구를 접두어로 붙인다. Q6에 따라 expectedEffect 톤을 맞추고 면책 문구를 더한다.
  */
 export function summarizeAxCheck(answers: AxCheckAnswers): AxCheckSummary {
   const selectedTasks = answers.q3.slice(0, Q3_MAX_SELECT);
