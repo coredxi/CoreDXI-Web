@@ -125,8 +125,10 @@ function buildPriority(taskValue: string, answers: AxCheckAnswers): AxCheckPrior
 
 /**
  * answers → 우선 과제 최대 3개 + 등급 + 점수.
- * Q3에서 고른 업무(최대 3개)마다 과제 카드를 매핑하고, Q5가 "흩어져 있음/잘 모름"이면
- * 모든 카드의 firstStep 앞에 "데이터 정리 1주"를 붙인다. Q6에 따라 expectedEffect 톤을 맞춘다.
+ * Q3에서 고른 업무(최대 3개)마다 과제 카드를 매핑하고, 선택 라벨을 인용한 echo 문장과
+ * Q1 업종별 예시(industryExample)를 붙인다. roadmap 3단계는 Q4가 "전혀 없음"이면 1주차에
+ * 기초 교육을, Q5가 "흩어져 있음/잘 모름"이면 데이터 정리를, Q2가 "10명 미만"이면 1개월차에
+ * SaaS 우선 문구를 접두어로 붙인다. Q6에 따라 expectedEffect 톤을 맞추고 면책 문구를 더한다.
  */
 export function summarizeAxCheck(answers: AxCheckAnswers): AxCheckSummary {
   const selectedTasks = answers.q3.slice(0, Q3_MAX_SELECT);

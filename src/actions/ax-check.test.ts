@@ -259,16 +259,46 @@ describe("getAxCheckResultByToken", () => {
   });
 
   it("returns company and priorities only (no email/grade leaked)", async () => {
+    const priority = {
+      title: "제안서 자동화",
+      why: "이유",
+      echo: "echo",
+      industryExample: null,
+      roadmap: ["1주차", "1개월차", "3개월차"],
+      expectedEffect: "효과",
+    };
     prismaMock.axCheckResponse.findUnique.mockResolvedValue({
       company: "테스트회사",
-      summary: { priorities: [{ title: "제안서 자동화" }] },
+      summary: { priorities: [priority] },
     });
 
     const result = await getAxCheckResultByToken("token-1");
 
     expect(result).toEqual({
       success: true,
-      data: { company: "테스트회사", priorities: [{ title: "제안서 자동화" }] },
+      data: { company: "테스트회사", priorities: [priority] },
+    });
+  });
+
+  it("normalizes a legacy (pre-roadmap) priority shape instead of crashing", async () => {
+    prismaMock.axCheckResponse.findUnique.mockResolvedValue({
+      company: "테스트회사",
+      summary: {
+        priorities: [
+          { title: "제안서 자동화", why: "이유", firstStep: "구버전 첫 단계", expectedEffect: "효과" },
+        ],
+      },
+    });
+
+    const result = await getAxCheckResultByToken("token-legacy");
+
+    expect(result.success).toBe(true);
+    if (!result.success) throw new Error("unreachable");
+    expect(result.data.priorities[0]).toMatchObject({
+      title: "제안서 자동화",
+      echo: "",
+      industryExample: null,
+      roadmap: ["구버전 첫 단계", "—", "—"],
     });
   });
 });

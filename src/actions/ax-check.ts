@@ -4,7 +4,8 @@
  * ax-check.ts — AX 체크(인터뷰 깔때기) 서버 액션
  *
  * submitAxCheck: 검증 → rate limit → 규칙 기반 요약(summarize.ts) → 저장 →
- * 선택 동의 시 뉴스레터 구독 연동 → 고객 상세본 메일 + 영업이사 알림 메일.
+ * 선택 동의 시 뉴스레터 구독 연동 → 영업이사 알림 메일(고객 발송용 이메일 초안 동봉,
+ * 고객에게는 자동 발송하지 않음 — email-draft.ts 참고).
  * 관리자용 listAxCheckResponses/updateAxCheckStatus/updateAxCheckNote/deleteAxCheckResponse는
  * requireAdmin 게이트(contact.ts·newsletter.ts와 동일 패턴).
  *
@@ -45,6 +46,29 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[0-9+\-\s()]{7,20}$/;
 const OTHER_TEXT_MAX_LENGTH = 200;
 const LEAD_STATUS_SET = new Set<string>(LEAD_STATUS_OPTIONS.map((o) => o.value));
+
+/**
+ * 구버전(roadmap 도입 전, ~2026-08-30) 응답 호환 처리 — 당시 summary.priorities는
+ * { title, why, firstStep, expectedEffect } 형태였다. 새 필드가 없으면 최소한으로
+ * 채워 넣어 화면·이메일 초안이 크래시 없이 렌더링되도록 한다.
+ */
+function normalizeLegacyPriorities(raw: unknown): AxCheckLeadRecord["priorities"] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => {
+    const p = item as Partial<AxCheckLeadRecord["priorities"][number]> & { firstStep?: string };
+    if (Array.isArray(p.roadmap) && p.roadmap.length === 3) {
+      return p as AxCheckLeadRecord["priorities"][number];
+    }
+    return {
+      title: p.title ?? "",
+      why: p.why ?? "",
+      echo: p.echo ?? "",
+      industryExample: p.industryExample ?? null,
+      roadmap: [p.firstStep ?? "—", "—", "—"] as const,
+      expectedEffect: p.expectedEffect ?? "",
+    };
+  });
+}
 
 async function requireAdmin(): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await auth();
@@ -228,7 +252,7 @@ export async function getAxCheckResultByToken(token: string): Promise<AxCheckRes
     const summary = response.summary as unknown as { priorities: AxCheckLeadRecord["priorities"] };
     return {
       success: true,
-      data: { company: response.company, priorities: summary.priorities ?? [] },
+      data: { company: response.company, priorities: normalizeLegacyPriorities(summary.priorities) },
     };
   } catch (e) {
     console.error("[getAxCheckResultByToken]", e);
@@ -268,7 +292,7 @@ export async function listAxCheckResponses(): Promise<AxCheckListResult> {
         catalogVersion: r.catalogVersion,
         grade: r.grade,
         score: r.score,
-        priorities: summary.priorities ?? [],
+        priorities: normalizeLegacyPriorities(summary.priorities),
         status: r.status,
         note: r.note,
         marketingOptIn: r.marketingOptIn,

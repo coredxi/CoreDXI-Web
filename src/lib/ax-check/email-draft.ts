@@ -58,7 +58,7 @@ export function buildCustomerEmailDraft(
   ].join("\n");
 
   return {
-    subject: `[CoreDXI] ${company} AX 체크 결과 — 귀사의 우선 과제 3가지`,
+    subject: `[CoreDXI] ${company} AX 체크 결과 — 귀사의 우선 과제 ${summary.priorities.length}가지`,
     body,
   };
 }

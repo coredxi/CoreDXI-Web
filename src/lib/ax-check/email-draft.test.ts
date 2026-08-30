@@ -47,7 +47,7 @@ describe("buildCustomerEmailDraft", () => {
       baseSummary(),
       { company: "테스트회사", name: "홍길동" }
     );
-    expect(draft.subject).toBe("[CoreDXI] 테스트회사 AX 체크 결과 — 귀사의 우선 과제 3가지");
+    expect(draft.subject).toBe("[CoreDXI] 테스트회사 AX 체크 결과 — 귀사의 우선 과제 1가지");
   });
 
   it("본문에 회사명·성함 인사말이 들어간다", () => {

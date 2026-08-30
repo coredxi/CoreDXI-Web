@@ -82,7 +82,7 @@ export const Q5_DATA_LOCATION: readonly AxCheckOption[] = [
   { value: "unknown", label: "잘 모르겠음" },
 ] as const;
 
-/** Q5가 이 값 중 하나면 모든 과제 카드의 firstStep 앞에 "데이터 정리 1주"를 붙인다. */
+/** Q5가 이 값 중 하나면 로드맵 1주차 앞에 "데이터 정리 1주"를 붙인다(summarize.ts). */
 export const Q5_NEEDS_DATA_PREP = new Set(["scattered", "unknown"]);
 
 // Q6 — AI 도입으로 가장 기대하는 효과 (메시지 톤 결정)

@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AxCheckPriorityCards } from "@/components/ax-check/AxCheckPriorityCards";
+import { AxCheckIntro } from "./AxCheckIntro";
 
 const TOTAL_STEPS = AX_CHECK_QUESTIONS.length + 1; // 8문항 + 연락처/동의 1단계
 
@@ -148,60 +149,63 @@ export function AxCheckForm({ refCode }: Props) {
   const progressPercent = Math.round(((step + 1) / TOTAL_STEPS) * 100);
 
   return (
-    <div className="mx-auto w-full max-w-md">
-      {/* ?ref= 쿼리를 화면에 노출하지 않고 폼 상태로만 보존한다 */}
-      <input type="hidden" name="ref" value={refCode ?? ""} />
+    <>
+      <AxCheckIntro />
+      <div id="ax-check-form" className="mx-auto w-full max-w-md scroll-mt-24">
+        {/* ?ref= 쿼리를 화면에 노출하지 않고 폼 상태로만 보존한다 */}
+        <input type="hidden" name="ref" value={refCode ?? ""} />
 
-      <div className="mb-6">
-        <p className="text-xs font-medium text-muted-foreground">
-          {step + 1} / {TOTAL_STEPS}
-        </p>
-        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full bg-primary transition-all duration-300"
-            style={{ width: `${progressPercent}%` }}
+        <div className="mb-6">
+          <p className="text-xs font-medium text-muted-foreground">
+            {step + 1} / {TOTAL_STEPS}
+          </p>
+          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+
+        {currentQuestion ? (
+          <QuestionStep
+            question={currentQuestion}
+            answers={answers}
+            onSingleChange={setSingleAnswer}
+            onToggleQ3={toggleQ3}
+            onOtherTextChange={(text) => setAnswers((prev) => ({ ...prev, q3Other: text }))}
           />
+        ) : (
+          <ContactStep contact={contact} setContact={setContact} />
+        )}
+
+        {error ? (
+          <p className="mt-4 text-sm text-destructive" role="alert">
+            {error}
+          </p>
+        ) : null}
+
+        <div className="mt-8 flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleBack}
+            disabled={step === 0 || isSubmitting}
+          >
+            이전
+          </Button>
+          {currentQuestion ? (
+            <Button type="button" onClick={handleNext} className="h-11 flex-1">
+              다음
+            </Button>
+          ) : (
+            <Button type="button" onClick={handleSubmit} disabled={isSubmitting} className="h-11 flex-1">
+              {isSubmitting ? "제출 중..." : "제출하기"}
+            </Button>
+          )}
         </div>
       </div>
-
-      {currentQuestion ? (
-        <QuestionStep
-          question={currentQuestion}
-          answers={answers}
-          onSingleChange={setSingleAnswer}
-          onToggleQ3={toggleQ3}
-          onOtherTextChange={(text) => setAnswers((prev) => ({ ...prev, q3Other: text }))}
-        />
-      ) : (
-        <ContactStep contact={contact} setContact={setContact} />
-      )}
-
-      {error ? (
-        <p className="mt-4 text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
-
-      <div className="mt-8 flex items-center gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleBack}
-          disabled={step === 0 || isSubmitting}
-        >
-          이전
-        </Button>
-        {currentQuestion ? (
-          <Button type="button" onClick={handleNext} className="h-11 flex-1">
-            다음
-          </Button>
-        ) : (
-          <Button type="button" onClick={handleSubmit} disabled={isSubmitting} className="h-11 flex-1">
-            {isSubmitting ? "제출 중..." : "제출하기"}
-          </Button>
-        )}
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -220,7 +224,7 @@ function QuestionStep({
 }) {
   return (
     <div>
-      <h1 className="text-lg font-bold text-foreground">{question.prompt}</h1>
+      <h2 className="text-lg font-bold text-foreground">{question.prompt}</h2>
       {question.type === "multi" ? (
         <p className="mt-1 text-xs text-muted-foreground">
           최대 {question.maxSelect}개까지 선택할 수 있어요.
@@ -305,7 +309,7 @@ function ContactStep({
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-lg font-bold text-foreground">마지막 단계예요</h1>
+        <h2 className="text-lg font-bold text-foreground">마지막 단계예요</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           진단 결과를 보내드릴 연락처를 입력해 주세요.
         </p>

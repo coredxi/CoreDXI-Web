@@ -3,7 +3,6 @@ import { pageMetadata } from "@/lib/seo";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { AxCheckForm } from "./AxCheckForm";
-import { AxCheckIntro } from "./AxCheckIntro";
 
 export const metadata: Metadata = pageMetadata({
   title: "AX 체크 — 3분 AI 도입 진단",
@@ -30,10 +29,7 @@ export default async function AxCheckPage({ searchParams }: Props) {
       <Header />
       <main className="min-h-screen bg-background pt-24 pb-24">
         <div className="mx-auto max-w-2xl px-6 py-8">
-          <AxCheckIntro />
-          <div id="ax-check-form">
-            <AxCheckForm refCode={refCode} />
-          </div>
+          <AxCheckForm refCode={refCode} />
         </div>
       </main>
       <Footer />

@@ -29,7 +29,7 @@ export function EmailDraftPanel({ lead }: Props) {
     { company: lead.company, name: lead.name }
   );
 
-  const mailtoHref = `mailto:${lead.email}?subject=${encodeURIComponent(
+  const mailtoHref = `mailto:${encodeURIComponent(lead.email)}?subject=${encodeURIComponent(
     draft.subject
   )}&body=${encodeURIComponent(draft.body)}`;
 
