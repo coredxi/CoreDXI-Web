@@ -162,7 +162,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 
 - **GA4 전환 이벤트 태깅 완료 (2026-08-08)** — `cta_click`/`contact_submit`/`newsletter_subscribe`/`scroll_depth` 4종 커스텀 이벤트. 설계: `docs/superpowers/specs/2026-08-08-ga4-event-tracking-design.md`
 - **영업 지원 트랙(Phase 1.5) 착수 (2026-08-22)** — 영업이사 합류에 맞춰 `/ax-check` 인터뷰 깔때기·`/admin/leads`·솔루션 단일 오퍼 재편·팔로업 뉴스레터 발송·미팅 예약을 3단계(09/05·09/26·10/31)로 진행. **2026-08-08 "뉴스레터 발송 범위 제외" 결정은 철회**하되 목적을 "리드 팔로업 월 1회"로 좁힘. GA4는 `ax_check_submit` 이벤트 신설(`source` 디멘션 재사용). 설계: `docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md`, 실행: `docs/superpowers/plans/2026-08-22-sales-enablement-action-plan.md`
-- **전환 퍼널 분석 대시보드 2단계(시각화 UI) 구현 완료 (2026-08-14)** — `/admin/dashboard`의 `Ga4FunnelPanel`이 최근 30일 이벤트 카운트 기반 근사 퍼널(방문→스크롤 참여→CTA 클릭→문의 제출)과 뉴스레터 구독 건수를 가로 바 형태로 표시. GA4 정식 Funnel Exploration이 아닌 eventCount/sessions 근사치이며, 스크롤 깊이(`percent`) 구간 세분화는 커스텀 디멘션 등록 확인 전까지 보류(이벤트 총합만 사용). 설계: `docs/superpowers/specs/2026-08-14-funnel-dashboard-stage2-design.md`. 실측(실 GA4 데이터 렌더링·배포 후 실시간 이벤트 확인)은 데이터 2주 누적 후 별도 진행(`docs/superpowers/plans/2026-08-14-phase1-item4-5-action-plan.md` 2번 표 순서 5~7)
+- **전환 퍼널 분석 대시보드 2단계(시각화 UI) 구현 완료 (2026-08-14)** — `/admin/dashboard`의 `Ga4FunnelPanel`이 최근 30일 이벤트 카운트 기반 근사 퍼널(방문→스크롤 참여→CTA 클릭→문의 제출)과 뉴스레터 구독 건수를 가로 바 형태로 표시. GA4 정식 Funnel Exploration이 아닌 eventCount/sessions 근사치이며, 스크롤 깊이(`percent`) 구간 세분화는 커스텀 디멘션 등록 확인 전까지 보류(이벤트 총합만 사용). 설계: `docs/superpowers/specs/2026-08-14-funnel-dashboard-stage2-design.md`. **실측(실 GA4 데이터 렌더링·배포 후 실시간 이벤트 확인) 2026-08-30 완료** — 프로덕션에서 전환 퍼널 실 데이터 확인 및 블로그 하단 CTA `cta_click`(`cta_location=blog_post_bottom`) 실시간 수신 확인(`docs/superpowers/plans/2026-08-14-phase1-item4-5-action-plan.md` 2번 표 순서 5~7). **Phase 1 공식 종료**
 
 ### 6-2. 데이터베이스 스키마 (Prisma)
 
