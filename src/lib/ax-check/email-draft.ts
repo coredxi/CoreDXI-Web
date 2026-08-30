@@ -19,11 +19,15 @@ export type AxCheckEmailDraft = {
 function formatPriorityBlock(priority: AxCheckPriority, index: number): string[] {
   return [
     `${index + 1}. ${priority.title}`,
+    `   - ${priority.echo}`,
+    priority.industryExample ? `   - ${priority.industryExample}` : null,
     `   - ${priority.why}`,
-    `   - 첫 단계: ${priority.firstStep}`,
+    `   - 첫 1주: ${priority.roadmap[0]}`,
+    `   - 첫 1개월: ${priority.roadmap[1]}`,
+    `   - 3개월: ${priority.roadmap[2]}`,
     `   - 기대 효과: ${priority.expectedEffect}`,
     "",
-  ];
+  ].filter((line): line is string => line !== null);
 }
 
 export function buildCustomerEmailDraft(

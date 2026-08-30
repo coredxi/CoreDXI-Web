@@ -41,11 +41,23 @@ export function AxCheckPriorityCards({ company, priorities }: Props) {
               </span>
               {priority.title}
             </p>
+            <p className="mt-2 text-xs font-medium text-primary">{priority.echo}</p>
+            {priority.industryExample ? (
+              <p className="mt-1 text-xs text-muted-foreground">{priority.industryExample}</p>
+            ) : null}
             <p className="mt-2 text-sm text-muted-foreground">{priority.why}</p>
-            <dl className="mt-3 space-y-1 text-xs text-muted-foreground">
+            <dl className="mt-3 space-y-1.5 text-xs text-muted-foreground">
               <div className="flex gap-1.5">
-                <dt className="shrink-0 font-medium text-foreground">첫 단계</dt>
-                <dd>{priority.firstStep}</dd>
+                <dt className="shrink-0 font-medium text-foreground">첫 1주</dt>
+                <dd>{priority.roadmap[0]}</dd>
+              </div>
+              <div className="flex gap-1.5">
+                <dt className="shrink-0 font-medium text-foreground">첫 1개월</dt>
+                <dd>{priority.roadmap[1]}</dd>
+              </div>
+              <div className="flex gap-1.5">
+                <dt className="shrink-0 font-medium text-foreground">3개월</dt>
+                <dd>{priority.roadmap[2]}</dd>
               </div>
               <div className="flex gap-1.5">
                 <dt className="shrink-0 font-medium text-foreground">기대 효과</dt>

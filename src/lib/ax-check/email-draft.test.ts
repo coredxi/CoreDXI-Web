@@ -23,13 +23,19 @@ function baseSummary(overrides: Partial<AxCheckSummary> = {}): AxCheckSummary {
       {
         title: "제안서·견적서 자동 초안 생성",
         why: "과거 제안서·견적 데이터를 기반으로 반복 작성 시간을 줄일 수 있습니다.",
-        firstStep: "최근 1년 제안서·견적서 20건 정리",
-        expectedEffect: "작성 시간 50%↓",
+        echo: "'제안서·견적서 작성'을(를) 가장 시간이 많이 드는 업무로 꼽아주셨습니다.",
+        industryExample: "예: BOM·회선 구성 기반 제안 초안 자동 생성",
+        roadmap: [
+          "최근 1년 제안서·견적서 20건 정리",
+          "표준 템플릿 3종 확정 후 AI 초안 도구로 파일럿 5건 작성",
+          "실제 제안 건에 적용해 작성 시간 정착, 월별 절감 시간 측정",
+        ],
+        expectedEffect: "작성 시간 40~60%↓ (일반적 도입 사례 기준, 실제 효과는 상담 후 안내)",
       },
     ],
     grade: "HOT",
     score: 320,
-    catalogVersion: "v1-draft",
+    catalogVersion: "v2-draft",
     ...overrides,
   };
 }
@@ -61,7 +67,7 @@ describe("buildCustomerEmailDraft", () => {
     );
     expect(draft.body).toContain("제안서·견적서 자동 초안 생성");
     expect(draft.body).toContain("최근 1년 제안서·견적서 20건 정리");
-    expect(draft.body).toContain("작성 시간 50%↓");
+    expect(draft.body).toContain("작성 시간 40~60%↓");
   });
 
   it("CoreDXI 진행 방식 문단을 포함한다", () => {
@@ -109,13 +115,17 @@ describe("buildCustomerEmailDraft", () => {
           {
             title: "제안서·견적서 자동 초안 생성",
             why: "why1",
-            firstStep: "step1",
+            echo: "echo1",
+            industryExample: null,
+            roadmap: ["step1a", "step1b", "step1c"],
             expectedEffect: "effect1",
           },
           {
             title: "입찰 공고 탐색·서류 자동화",
             why: "why2",
-            firstStep: "step2",
+            echo: "echo2",
+            industryExample: null,
+            roadmap: ["step2a", "step2b", "step2c"],
             expectedEffect: "effect2",
           },
         ],
