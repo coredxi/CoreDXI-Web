@@ -25,6 +25,7 @@ import {
   type AxCheckQuestion,
 } from "@/lib/ax-check/catalog";
 import { summarizeAxCheck } from "@/lib/ax-check/summarize";
+import { buildCustomerEmailDraft } from "@/lib/ax-check/email-draft";
 import { generateAxCheckResultToken } from "@/lib/ax-check/result-token";
 import type {
   AxCheckAnswers,
@@ -86,33 +87,6 @@ function validateAnswers(answers: AxCheckAnswers): string | null {
   }
 
   return null;
-}
-
-function buildDetailMailText(params: {
-  company: string;
-  name: string;
-  resultUrl: string;
-  priorities: { title: string; why: string; firstStep: string; expectedEffect: string }[];
-}): string {
-  const { company, name, resultUrl, priorities } = params;
-  const priorityLines = priorities.flatMap((p, i) => [
-    `${i + 1}. ${p.title}`,
-    `   - 배경: ${p.why}`,
-    `   - 첫 단계: ${p.firstStep}`,
-    `   - 기대 효과: ${p.expectedEffect}`,
-    "",
-  ]);
-
-  return [
-    `${company} ${name}님, AX 체크에 참여해 주셔서 감사합니다.`,
-    "",
-    "귀사의 AX 우선 과제로 아래 항목을 제안드립니다.",
-    "",
-    ...priorityLines,
-    "CoreDXI는 진단(2주) → 설계 → 구축 → 교육 순서로 프로젝트를 진행합니다.",
-    "담당 영업이사가 곧 연락드릴 예정이며, 아래 링크에서 이 결과를 언제든 다시 확인하실 수 있습니다.",
-    resultUrl,
-  ].join("\n");
 }
 
 export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSubmitResult> {
@@ -191,14 +165,13 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
   const siteUrl = process.env.NEXTAUTH_URL ?? "https://www.coredxi.com";
   const resultUrl = `${siteUrl}/ax-check/result/${resultToken}`;
 
-  const customerMailResult = await sendResendEmail({
-    to: email,
-    subject: "[CoreDXI] AX 체크 결과 — 귀사의 우선 과제 3가지",
-    text: buildDetailMailText({ company, name, resultUrl, priorities }),
-  });
-  if (!customerMailResult.success) {
-    console.error("[submitAxCheck] customer email failed:", customerMailResult.error);
-  }
+  // 고객에게는 자동 발송하지 않는다 — 영업이사가 아래 초안을 검토·수정 후 직접 보낸다
+  // (2026-08-30 결정, docs/superpowers/specs/2026-08-30-ax-check-experience-upgrade-design.md 5번).
+  const emailDraft = buildCustomerEmailDraft(
+    input.answers,
+    { priorities, grade, score, catalogVersion },
+    { company, name }
+  );
 
   const salesNotifyEmail =
     process.env.SALES_NOTIFY_EMAIL?.trim() || (await getContactNotificationEmail());
@@ -215,8 +188,16 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
         `연락처: ${phone || "-"}`,
         `유입 경로(ref): ${refCode ?? "-"}`,
         `등급: ${grade}`,
+        `결과 재열람 링크: ${resultUrl}`,
         "",
-        "관리자 페이지(/admin/leads)에서 전체 답변을 확인해 주세요.",
+        "관리자 페이지(/admin/leads)에서 전체 답변과 이메일 초안을 확인·복사할 수 있습니다.",
+        "아래는 고객에게 보낼 이메일 초안입니다 — 검토·수정 후 직접 발송해 주세요.",
+        "",
+        "==================== 고객용 이메일 초안: 제목 ====================",
+        emailDraft.subject,
+        "",
+        "==================== 고객용 이메일 초안: 본문 ====================",
+        emailDraft.body,
       ].join("\n"),
       replyTo: email,
     });
