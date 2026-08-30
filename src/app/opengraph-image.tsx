@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { OG_LOGO_DATA_URI } from "@/lib/og-logo";
 
 export const runtime = "edge";
 export const alt = "CoreDXI — 비즈니스의 중심을 AI로 깨우다";
@@ -25,26 +26,14 @@ export default function OgImage() {
       >
         {/* 상단: 로고 워드마크 */}
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 10,
-              backgroundColor: BRAND,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <div
-              style={{
-                width: 26,
-                height: 26,
-                borderRadius: "50%",
-                border: "3px solid white",
-              }}
-            />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element -- next/og(satori) 렌더 트리는 next/image를 지원하지 않음 */}
+          <img
+            src={OG_LOGO_DATA_URI}
+            alt=""
+            width={48}
+            height={48}
+            style={{ display: "flex" }}
+          />
           <span
             style={{
               fontSize: 34,
