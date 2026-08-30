@@ -225,7 +225,7 @@ export async function getAxCheckResultByToken(token: string): Promise<AxCheckRes
       return { success: false, error: "유효하지 않은 결과 링크입니다." };
     }
 
-    const summary = response.summary as { priorities: AxCheckLeadRecord["priorities"] };
+    const summary = response.summary as unknown as { priorities: AxCheckLeadRecord["priorities"] };
     return {
       success: true,
       data: { company: response.company, priorities: summary.priorities ?? [] },
@@ -256,7 +256,7 @@ export async function listAxCheckResponses(): Promise<AxCheckListResult> {
     });
 
     const leads: AxCheckLeadRecord[] = sorted.map((r) => {
-      const summary = r.summary as { priorities: AxCheckLeadRecord["priorities"] };
+      const summary = r.summary as unknown as { priorities: AxCheckLeadRecord["priorities"] };
       return {
         id: r.id,
         refCode: r.refCode,
