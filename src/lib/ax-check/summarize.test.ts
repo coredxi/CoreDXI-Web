@@ -76,7 +76,7 @@ describe("summarizeAxCheck — 답변 인용(echo)", () => {
   it("선택한 업무 라벨을 그대로 인용한다", () => {
     const summary = summarizeAxCheck(baseAnswers({ q3: ["quote"] }));
     expect(summary.priorities[0]?.echo).toBe(
-      "'제안서·견적서 작성'을(를) 가장 시간이 많이 드는 업무로 꼽아주셨습니다."
+      "'견적·내역서·투찰 서류 작성'을(를) 가장 시간이 많이 드는 업무로 꼽아주셨습니다."
     );
   });
 
