@@ -5,14 +5,14 @@
  * 텍스트만 수정하면 됩니다(코드 구조 변경 불필요). 수정 방법은
  * CONTENT_GUIDE.md 17번을 참고하세요.
  *
- * ⚠️ v1-draft: 아래 문구는 설계 문서(2026-08-22-sales-funnel-ax-check-design.md) 3번 표를
- * 그대로 옮긴 초안입니다. 영업이사 인터뷰(액션플랜 0-2) 결과를 받으면 이 파일의
- * 데이터만 교체합니다 — 구조 변경 없음.
+ * ✅ v2: 영업이사 인터뷰(액션플랜 0-2, 2026-08-31 회신) 반영 완료 — 실제 고객 용어로 라벨 교체,
+ * 반복 업무 2건(하자보수/정기점검 보고서, 감리·시공 체크리스트) 추가.
+ * 참고: docs/superpowers/specs/2026-08-31-sales-director-interview-response.md
  *
  * 설계: docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md 3번·4번
  */
 
-export const CATALOG_VERSION = "v2-draft";
+export const CATALOG_VERSION = "v2";
 
 export type AxCheckOption = { value: string; label: string };
 
@@ -55,12 +55,14 @@ export const Q2_COMPANY_SIZE: readonly AxCheckOption[] = [
 
 // Q3 — 가장 시간이 많이 드는 반복 업무 (최대 3개) — 우선 과제 매핑의 핵심 입력
 export const Q3_REPETITIVE_TASKS: readonly AxCheckOption[] = [
-  { value: "quote", label: "제안서·견적서 작성" },
-  { value: "bidding", label: "입찰 공고 탐색·서류 준비(나라장터 등)" },
-  { value: "site_report", label: "현장 실사 보고·도면·사진 정리" },
-  { value: "maintenance_request", label: "유지보수 민원 응대·이력 관리" },
-  { value: "delivery_docs", label: "납품·검수·준공 문서" },
-  { value: "client_management", label: "거래처 관리·후속 영업 연락" },
+  { value: "quote", label: "견적·내역서·투찰 서류 작성" },
+  { value: "bidding", label: "나라장터 입찰 공고 탐색·적격심사 서류 준비" },
+  { value: "site_report", label: "현장 답사·사진/보고서 정리" },
+  { value: "maintenance_request", label: "A/S·하자보수·월정기 점검 이력 관리" },
+  { value: "delivery_docs", label: "준공 도서·검수 서류·완공계 작성" },
+  { value: "client_management", label: "영업 롤링·바이어 관리" },
+  { value: "warranty_report", label: "하자보수/정기점검 보고서 작성" },
+  { value: "inspection_checklist", label: "감리·시공 체크리스트 정리" },
   { value: "other", label: "기타" },
 ] as const;
 
@@ -208,6 +210,26 @@ export const TASK_CARDS: Record<string, AxCheckTaskCard> = {
     ],
     expectedEffect: "후속 영업 누락 방지, 재계약률 개선",
   },
+  warranty_report: {
+    title: "하자보수·정기점검 보고서 자동 작성",
+    why: "정기점검·하자보수 현장 기록을 표준 양식 보고서로 자동 정리할 수 있는 영역입니다.",
+    roadmap: [
+      "최근 점검·하자보수 보고서 양식과 사례 정리",
+      "표준 보고서 템플릿 확정 후 2~3건 파일럿 적용",
+      "전 현장 적용, 작성 시간·누락 항목 정기 점검",
+    ],
+    expectedEffect: "보고서 작성 시간 30~50%↓, 누락 항목 방지",
+  },
+  inspection_checklist: {
+    title: "감리·시공 체크리스트 자동 정리",
+    why: "감리·시공 단계별 체크 항목을 표준화하고 누락 없이 자동 정리할 수 있습니다.",
+    roadmap: [
+      "현재 사용 중인 감리·시공 체크리스트 정리",
+      "표준 체크리스트 확정 후 현장 2~3건 파일럿 적용",
+      "전 현장 적용, 체크리스트 누락·오류 정기 점검",
+    ],
+    expectedEffect: "체크 누락 방지, 감리 대응 시간 단축",
+  },
   // Q3에서 선택지에 없는 업무를 "기타"로 응답한 경우의 기본 카드.
   other: {
     title: "업무 자동화 후보 진단",
@@ -233,6 +255,8 @@ export const INDUSTRY_TASK_EXAMPLES: Readonly<Record<string, Readonly<Record<str
     maintenance_request: "예: 회선 장애·품질 민원 자동 분류 및 이력 관리",
     delivery_docs: "예: 회선 개통·준공 확인서 자동 생성",
     client_management: "예: 통신사·대리점 재계약 시점 자동 알림",
+    warranty_report: "예: 회선·장비 정기점검 결과 보고서 자동 정리",
+    inspection_checklist: "예: 통신 인프라 시공 감리 체크리스트 자동 정리",
   },
   av: {
     quote: "예: 장비 구성표·시공 내역 기반 견적 초안 자동 생성",
@@ -241,6 +265,8 @@ export const INDUSTRY_TASK_EXAMPLES: Readonly<Record<string, Readonly<Record<str
     maintenance_request: "예: 장비 고장·A/S 민원 자동 분류 및 이력 관리",
     delivery_docs: "예: 장비 납품·준공 확인서 자동 생성",
     client_management: "예: 유지보수 계약 갱신 시점 자동 알림",
+    warranty_report: "예: AV 장비 정기점검·하자보수 보고서 자동 정리",
+    inspection_checklist: "예: AV 시공 감리 체크리스트 자동 정리",
   },
   it_si: {
     quote: "예: 시스템 구성도·라이선스 기반 제안 초안 자동 생성",
@@ -249,6 +275,8 @@ export const INDUSTRY_TASK_EXAMPLES: Readonly<Record<string, Readonly<Record<str
     maintenance_request: "예: 장애·헬프데스크 문의 자동 분류 및 이력 관리",
     delivery_docs: "예: 시스템 납품·검수 확인서 자동 생성",
     client_management: "예: 유지보수·SLA 계약 갱신 시점 자동 알림",
+    warranty_report: "예: 시스템 정기점검·하자보수 보고서 자동 정리",
+    inspection_checklist: "예: 구축 현장 감리 체크리스트 자동 정리",
   },
   maintenance_ops: {
     quote: "예: 정기 점검·운영 범위 기반 견적 초안 자동 생성",
@@ -257,6 +285,8 @@ export const INDUSTRY_TASK_EXAMPLES: Readonly<Record<string, Readonly<Record<str
     maintenance_request: "예: 운영 중 발생 민원 자동 분류 및 이력 관리",
     delivery_docs: "예: 정기 점검·운영 보고서 자동 생성",
     client_management: "예: 운영 계약 갱신·SLA 점검 시점 자동 알림",
+    warranty_report: "예: 정기점검·하자보수 결과 보고서 자동 정리",
+    inspection_checklist: "예: 운영·시공 감리 체크리스트 자동 정리",
   },
 } as const;
 
