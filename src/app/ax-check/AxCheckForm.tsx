@@ -66,6 +66,8 @@ export function AxCheckForm({ refCode }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [priorities, setPriorities] = useState<AxCheckPriority[] | null>(null);
+  // T0 요약 메일이 실제로 발송된 경우에만 결과 화면에서 "메일을 보내드렸습니다"를 표시한다.
+  const [t0Sent, setT0Sent] = useState(false);
 
   const currentQuestion: AxCheckQuestion | null =
     step < AX_CHECK_QUESTIONS.length ? AX_CHECK_QUESTIONS[step]! : null;
@@ -136,7 +138,13 @@ export function AxCheckForm({ refCode }: Props) {
       }
 
       trackEvent("ax_check_submit", { source: refCode ?? "direct" });
+      setT0Sent(result.t0Sent);
       setPriorities(result.priorities);
+    } catch (e) {
+      // 서버 액션이 예기치 않게 거절되면(네트워크·DB 장애 등) 조용히 아무것도 안 보이는
+      // 대신 사용자에게 오류를 노출한다.
+      console.error("[AxCheckForm] submit failed:", e);
+      setError("제출 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
       setIsSubmitting(false);
     }
@@ -145,9 +153,11 @@ export function AxCheckForm({ refCode }: Props) {
   if (priorities) {
     return (
       <div className="space-y-4">
-        <p className="text-center text-sm text-muted-foreground">
-          결과 요약 메일을 {contact.email}로 보내드렸습니다.
-        </p>
+        {t0Sent ? (
+          <p className="text-center text-sm text-muted-foreground">
+            결과 요약 메일을 {contact.email}로 보내드렸습니다.
+          </p>
+        ) : null}
         <AxCheckPriorityCards company={contact.company} priorities={priorities} />
       </div>
     );

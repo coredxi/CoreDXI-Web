@@ -48,7 +48,8 @@ test("AX 체크 제출 골든패스", async ({ page }) => {
 
   await page.getByRole("button", { name: "제출하기" }).click();
 
-  await expect(page.getByText("AX 우선 과제 3가지")).toBeVisible({ timeout: 10_000 });
+  // 위에서 Q3 업무를 2개 선택했으므로 제목도 실제 개수(2가지)를 따라간다.
+  await expect(page.getByText("AX 우선 과제 2가지")).toBeVisible({ timeout: 10_000 });
   await expect(
     page.getByText(
       "정리된 상세 진단서를 영업일 기준 2~3일 내 메일로 보내드립니다. 우선 과제가 뚜렷한"

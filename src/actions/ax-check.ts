@@ -26,6 +26,7 @@ import { subscribeNewsletter } from "@/actions/newsletter";
 import {
   AX_CHECK_QUESTIONS,
   Q3_MAX_SELECT,
+  SALES_SIGNATURE,
   getOptionLabel,
   getQuestionById,
   type AxCheckQuestion,
@@ -183,6 +184,8 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
   const resultUrl = `${siteUrl}/ax-check/result/${resultToken}`;
 
   // T0 — 제출 즉시 결과 요약 메일. 킬 스위치가 꺼져 있으면 보내지 않는다(완전한 8/30 수동 모드).
+  // t0Sent는 결과 화면이 "메일을 보내드렸습니다" 문구를 띄울지 판단하는 근거다.
+  let t0Sent = false;
   if (followupEnabled) {
     const t0Draft = buildT0Email(
       { priorities },
@@ -193,13 +196,20 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
       to: email,
       subject: t0Draft.subject,
       text: t0Draft.body,
-      replyTo: process.env.SALES_REPLY_TO ?? undefined,
+      // 본문 말미의 수신 거부 안내가 "이 메일에 회신"을 요청하므로 noreply로 떨어지면 안 된다.
+      replyTo: process.env.SALES_REPLY_TO ?? SALES_SIGNATURE.email,
     });
     if (t0Result.success) {
-      await prisma.axCheckResponse.update({
-        where: { id: createdId },
-        data: { t0SentAt: new Date() },
-      });
+      t0Sent = true;
+      // t0SentAt 기록 실패가 제출 전체를 실패시키면 안 된다 — 메일은 실제로 나갔다.
+      try {
+        await prisma.axCheckResponse.update({
+          where: { id: createdId },
+          data: { t0SentAt: new Date() },
+        });
+      } catch (e) {
+        console.error("[submitAxCheck] t0SentAt update failed:", e);
+      }
     } else {
       console.error("[submitAxCheck] T0 email failed:", t0Result.error);
     }
@@ -248,7 +258,7 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
     }
   }
 
-  return { success: true, priorities, resultToken };
+  return { success: true, priorities, resultToken, t0Sent };
 }
 
 export async function getAxCheckResultByToken(token: string): Promise<AxCheckResultLookupResult> {

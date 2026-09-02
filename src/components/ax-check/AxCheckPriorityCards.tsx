@@ -21,8 +21,9 @@ export function AxCheckPriorityCards({ company, priorities }: Props) {
         <span className="inline-flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
           <Lightbulb className="size-6" aria-hidden="true" />
         </span>
+        {/* 실제 선택 개수(1~3)에 맞춘다 — T0 메일 문구("우선 과제 N가지")와 어긋나면 안 된다. */}
         <h2 className="mt-4 text-lg font-bold text-foreground">
-          {company ? `${company}의 ` : ""}AX 우선 과제 3가지
+          {`${company ? `${company}의 ` : ""}AX 우선 과제 ${priorities.length}가지`}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           정리된 상세 진단서를 영업일 기준 2~3일 내 메일로 보내드립니다. 우선 과제가 뚜렷한

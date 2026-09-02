@@ -25,6 +25,14 @@ const NORMAL_CLAIM_STATUSES = ["SCHEDULED", "FAILED"] as const;
 const FORCE_CLAIM_STATUSES = ["SCHEDULED", "HELD", "SENT", "FAILED", "SKIPPED"] as const;
 const MAX_ATTEMPTS = 3;
 
+/**
+ * SENDING 상태로 이 시간 이상 방치된 행은 "발송 중 프로세스가 죽었다"고 보고 FAILED로 되돌린다.
+ * sendFollowupEmail의 try/catch는 in-process 예외만 잡을 수 있어, 함수 타임아웃·인스턴스
+ * 재활용·배포처럼 예외 없이 프로세스가 사라지는 경우엔 SENDING이 영구히 남는다.
+ */
+const STALE_SENDING_THRESHOLD_MS = 15 * 60 * 1000;
+const STALE_SENDING_ERROR = "발송 처리 중 프로세스가 중단되어 자동 복구되었습니다.";
+
 /** AX_CHECK_FOLLOWUP_ENABLED=false가 아니면 true(기본 활성). */
 export function isFollowupEnabled(): boolean {
   return process.env.AX_CHECK_FOLLOWUP_ENABLED !== "false";
@@ -137,6 +145,19 @@ export async function processDueFollowups(
   const now = opts.now ?? new Date();
   const limit = opts.limit ?? 50;
 
+  // 1단계 — 멈춘 SENDING 행 회수. 방금 회수한 행을 이번 실행에서 바로 재발송하지는 않고,
+  // 다음(또는 이번 이후) 크론에서 일반 FAILED 재시도 경로로 자연스럽게 다시 들어오게 둔다.
+  const staleCutoff = new Date(now.getTime() - STALE_SENDING_THRESHOLD_MS);
+  await prisma.axCheckResponse.updateMany({
+    where: { followupStatus: "SENDING", updatedAt: { lt: staleCutoff } },
+    data: {
+      followupStatus: "FAILED",
+      followupError: STALE_SENDING_ERROR,
+      followupAttempts: { increment: 1 },
+    },
+  });
+
+  // 2단계 — 평소의 발송 대상 조회.
   const due = await prisma.axCheckResponse.findMany({
     where: {
       OR: [

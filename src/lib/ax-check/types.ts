@@ -25,7 +25,8 @@ export type AxCheckFormInput = {
 };
 
 export type AxCheckSubmitResult =
-  | { success: true; priorities: AxCheckPriority[]; resultToken: string }
+  /** t0Sent — T0(즉시 요약) 메일이 실제로 발송됐는지. 결과 화면 문구가 이 값에 따라 달라진다. */
+  | { success: true; priorities: AxCheckPriority[]; resultToken: string; t0Sent: boolean }
   | { success: false; error: string };
 
 /** 관리자 목록/상세용 레코드 — 이메일·전화번호 등 개인정보 포함. */

@@ -58,6 +58,9 @@ const prismaMock = {
 };
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
+// catalog는 모킹하지 않는다 — 실제 SALES_SIGNATURE 값으로 replyTo 폴백을 검증한다.
+const { SALES_SIGNATURE } = await import("@/lib/ax-check/catalog");
+
 const {
   submitAxCheck,
   getAxCheckResultByToken,
@@ -107,8 +110,10 @@ beforeEach(() => {
   getContactNotificationEmailMock.mockResolvedValue("contact@coredxi.com");
   subscribeNewsletterMock.mockResolvedValue({ success: true });
   prismaMock.axCheckResponse.create.mockResolvedValue({ id: "lead-1" });
+  prismaMock.axCheckResponse.update.mockResolvedValue({});
   isFollowupEnabledMock.mockReturnValue(true);
   delete process.env.SALES_NOTIFY_EMAIL;
+  delete process.env.SALES_REPLY_TO;
 });
 
 describe("submitAxCheck validation", () => {
@@ -226,6 +231,66 @@ describe("submitAxCheck happy path", () => {
     expect(sendResendEmailMock).toHaveBeenCalledWith(
       expect.objectContaining({ to: "user@example.com" })
     );
+  });
+
+  it("T0 메일의 replyTo는 SALES_REPLY_TO 미설정 시 영업이사 주소로 떨어진다(noreply 금지)", async () => {
+    delete process.env.SALES_REPLY_TO;
+
+    const result = await submitAxCheck(validInput());
+
+    expect(result).toMatchObject({ success: true, t0Sent: true });
+    const t0Call = sendResendEmailMock.mock.calls.find(
+      (call) => call[0].to === "user@example.com"
+    );
+    expect(t0Call).toBeDefined();
+    expect(t0Call![0].replyTo).toBe(SALES_SIGNATURE.email);
+    expect(t0Call![0].replyTo).toEqual(expect.any(String));
+    expect(t0Call![0].replyTo).not.toMatch(/noreply/i);
+  });
+
+  it("SALES_REPLY_TO가 설정돼 있으면 T0 replyTo로 그 값을 쓴다", async () => {
+    process.env.SALES_REPLY_TO = "sales-reply@coredxi.com";
+
+    await submitAxCheck(validInput());
+
+    const t0Call = sendResendEmailMock.mock.calls.find(
+      (call) => call[0].to === "user@example.com"
+    );
+    expect(t0Call![0].replyTo).toBe("sales-reply@coredxi.com");
+  });
+
+  it("T0 발송에 성공하면 t0Sent=true를 반환한다", async () => {
+    const result = await submitAxCheck(validInput());
+
+    expect(result).toMatchObject({ success: true, resultToken: "generated-result-token", t0Sent: true });
+  });
+
+  it("킬 스위치가 꺼져 있으면 t0Sent=false를 반환한다", async () => {
+    isFollowupEnabledMock.mockReturnValue(false);
+
+    const result = await submitAxCheck(validInput());
+
+    expect(result.success).toBe(true);
+    if (!result.success) throw new Error("unreachable");
+    expect(result.t0Sent).toBe(false);
+  });
+
+  it("T0 발송이 실패하면 t0Sent=false를 반환한다", async () => {
+    sendResendEmailMock.mockResolvedValue({ success: false, error: "boom" });
+
+    const result = await submitAxCheck(validInput());
+
+    expect(result.success).toBe(true);
+    if (!result.success) throw new Error("unreachable");
+    expect(result.t0Sent).toBe(false);
+  });
+
+  it("t0SentAt 기록 update가 실패해도 제출은 성공으로 끝난다", async () => {
+    prismaMock.axCheckResponse.update.mockRejectedValue(new Error("db blip"));
+
+    const result = await submitAxCheck(validInput());
+
+    expect(result).toMatchObject({ success: true, t0Sent: true });
   });
 
   it("영업이사 알림 메일에는 통화 포인트·예정 시각·관리 링크가 있고 초안 전문은 없다", async () => {

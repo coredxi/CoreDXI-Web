@@ -290,4 +290,82 @@ describe("processDueFollowups", () => {
 
     expect(result).toEqual({ processed: 1, sent: 0, failed: 0, skipped: 1 });
   });
+
+  it("15분 넘게 SENDING으로 멈춘 행을 due 조회 전에 FAILED로 회수한다", async () => {
+    prismaMock.axCheckResponse.findMany.mockResolvedValue([]);
+    prismaMock.axCheckResponse.updateMany.mockResolvedValue({ count: 1 });
+    const now = new Date("2026-09-04T00:30:00Z");
+
+    await processDueFollowups({ now });
+
+    // 회수 updateMany가 첫 호출이고, due 조회(findMany)보다 먼저 일어난다.
+    expect(prismaMock.axCheckResponse.updateMany).toHaveBeenNthCalledWith(1, {
+      where: {
+        followupStatus: "SENDING",
+        updatedAt: { lt: new Date(now.getTime() - 15 * 60 * 1000) },
+      },
+      data: {
+        followupStatus: "FAILED",
+        followupError: "발송 처리 중 프로세스가 중단되어 자동 복구되었습니다.",
+        followupAttempts: { increment: 1 },
+      },
+    });
+    expect(
+      prismaMock.axCheckResponse.updateMany.mock.invocationCallOrder[0]!
+    ).toBeLessThan(prismaMock.axCheckResponse.findMany.mock.invocationCallOrder[0]!);
+  });
+
+  it("오래된 SENDING만 회수하고 최근 SENDING 행은 그대로 둔다", async () => {
+    const now = new Date("2026-09-04T00:30:00Z");
+    // 가짜 DB — updateMany의 where를 실제로 적용해 어떤 행이 회수되는지 확인한다.
+    const rows = [
+      {
+        id: "stale",
+        followupStatus: "SENDING",
+        updatedAt: new Date(now.getTime() - 30 * 60 * 1000), // 30분 전 → 회수 대상
+        followupAttempts: 0,
+        followupError: null as string | null,
+      },
+      {
+        id: "fresh",
+        followupStatus: "SENDING",
+        updatedAt: new Date(now.getTime() - 5 * 60 * 1000), // 5분 전 → 아직 진행 중일 수 있음
+        followupAttempts: 0,
+        followupError: null as string | null,
+      },
+    ];
+    prismaMock.axCheckResponse.findMany.mockResolvedValue([]);
+    prismaMock.axCheckResponse.updateMany.mockImplementation(
+      ({
+        where,
+        data,
+      }: {
+        where: { followupStatus: string; updatedAt: { lt: Date } };
+        data: { followupStatus: string; followupError: string; followupAttempts: { increment: number } };
+      }) => {
+        const matched = rows.filter(
+          (r) => r.followupStatus === where.followupStatus && r.updatedAt < where.updatedAt.lt
+        );
+        for (const row of matched) {
+          row.followupStatus = data.followupStatus;
+          row.followupError = data.followupError;
+          row.followupAttempts += data.followupAttempts.increment;
+        }
+        return Promise.resolve({ count: matched.length });
+      }
+    );
+
+    const result = await processDueFollowups({ now });
+
+    expect(rows[0]).toMatchObject({
+      id: "stale",
+      followupStatus: "FAILED",
+      followupError: "발송 처리 중 프로세스가 중단되어 자동 복구되었습니다.",
+      followupAttempts: 1,
+    });
+    expect(rows[1]).toMatchObject({ id: "fresh", followupStatus: "SENDING", followupAttempts: 0 });
+    // 방금 회수한 행을 같은 실행에서 곧바로 재발송하지 않는다.
+    expect(sendResendEmailMock).not.toHaveBeenCalled();
+    expect(result).toEqual({ processed: 0, sent: 0, failed: 0, skipped: 0 });
+  });
 });
