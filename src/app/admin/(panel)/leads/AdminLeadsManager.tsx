@@ -139,6 +139,13 @@ export function AdminLeadsManager({ initialLeads, loadError, initialSelectedId }
     return result;
   };
 
+  // 팔로업 액션(보류·해제·지금 보내기·초안 저장·초기화) 성공 후 목록 상태를 즉시 동기화한다.
+  // 이게 없으면 패널이 옛 followupStatus를 계속 보여줘 관리자가 "지금 보내기"를 중복 클릭할 수 있다.
+  const handleLeadPatch = (patch: Partial<AxCheckLeadRecord>) => {
+    if (!selectedLead) return;
+    setLeads((prev) => prev.map((l) => (l.id === selectedLead.id ? { ...l, ...patch } : l)));
+  };
+
   const handleDelete = async () => {
     if (!selectedLead) return { success: false, error: "선택된 리드가 없습니다." };
 
@@ -205,6 +212,7 @@ export function AdminLeadsManager({ initialLeads, loadError, initialSelectedId }
           onStatusChange={(status) => void handleStatusChange(status)}
           onSaveNote={handleSaveNote}
           onDelete={handleDelete}
+          onLeadPatch={handleLeadPatch}
         />
       ) : (
         <div className="rounded-xl border border-dashed border-slate-200 bg-white py-16 text-center text-sm text-slate-500">

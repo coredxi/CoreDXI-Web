@@ -15,6 +15,8 @@ type Props = {
   onStatusChange: (status: LeadStatus) => void;
   onSaveNote: (note: string) => Promise<{ success: boolean; error?: string }>;
   onDelete: () => Promise<{ success: boolean; error?: string }>;
+  /** 팔로업 액션 성공 후 상위 목록 상태를 갱신한다(EmailDraftPanel로 그대로 전달). */
+  onLeadPatch: (patch: Partial<AxCheckLeadRecord>) => void;
 };
 
 function formatAnswerValue(questionId: string, value: string | string[]): string {
@@ -31,6 +33,7 @@ export function LeadDetailPanel({
   onStatusChange,
   onSaveNote,
   onDelete,
+  onLeadPatch,
 }: Props) {
   const [note, setNote] = useState(lead.note ?? "");
   const [isSavingNote, setIsSavingNote] = useState(false);
@@ -208,7 +211,7 @@ export function LeadDetailPanel({
         </div>
       </div>
 
-      <EmailDraftPanel lead={lead} />
+      <EmailDraftPanel lead={lead} onLeadPatch={onLeadPatch} />
     </div>
   );
 }

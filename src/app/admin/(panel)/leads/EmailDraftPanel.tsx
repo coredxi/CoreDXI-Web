@@ -23,9 +23,13 @@ import { formatKstDateTime } from "@/lib/format-kst-date";
 import type { AxCheckLeadRecord } from "@/lib/ax-check/types";
 import { FollowupStatusBadge } from "./FollowupStatusBadge";
 
-type Props = { lead: AxCheckLeadRecord };
+type Props = {
+  lead: AxCheckLeadRecord;
+  /** 액션 성공 직후 상위(AdminLeadsManager) 상태를 갱신해 중복 발송 클릭을 막는다. */
+  onLeadPatch: (patch: Partial<AxCheckLeadRecord>) => void;
+};
 
-export function EmailDraftPanel({ lead }: Props) {
+export function EmailDraftPanel({ lead, onLeadPatch }: Props) {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [subjectDraft, setSubjectDraft] = useState(lead.followupSubject ?? "");
@@ -42,7 +46,9 @@ export function EmailDraftPanel({ lead }: Props) {
       catalogVersion: lead.catalogVersion,
     },
     { company: lead.company, name: lead.name },
-    { mode: "manual" }
+    // 실제 자동 발송(followup.ts)과 동일한 mode:auto — 미리보기·수정 시드가 실제 발송본과
+    // 달라지지 않도록 반드시 맞춰야 한다.
+    { mode: "auto" }
   );
 
   const hasOverride = Boolean(lead.followupSubject && lead.followupBody);
@@ -80,26 +86,48 @@ export function EmailDraftPanel({ lead }: Props) {
     }
   }
 
-  const handleHold = () => void runAction(() => holdAxCheckFollowup(lead.id));
-  const handleResume = () => void runAction(() => resumeAxCheckFollowup(lead.id));
+  const handleHold = async () => {
+    if (await runAction(() => holdAxCheckFollowup(lead.id))) {
+      onLeadPatch({ followupStatus: "HELD" });
+    }
+  };
 
-  const handleSendNow = () => {
+  const handleResume = async () => {
+    // followupScheduledAt은 서버가 재계산하므로 클라이언트에서 추측하지 않는다
+    // (다음 페이지 로드까지 잠깐 옛 값이 보일 수 있으나 상태 자체는 정확해진다).
+    if (await runAction(() => resumeAxCheckFollowup(lead.id))) {
+      onLeadPatch({ followupStatus: "SCHEDULED" });
+    }
+  };
+
+  const handleSendNow = async () => {
     const message =
       lead.followupStatus === "SENT"
         ? `${lead.company}에 팔로업 메일을 다시 보낼까요?`
         : `${lead.company}에 팔로업 메일을 지금 보낼까요?`;
     if (!confirm(message)) return;
-    void runAction(() => sendAxCheckFollowupNow(lead.id));
+    if (await runAction(() => sendAxCheckFollowupNow(lead.id))) {
+      onLeadPatch({ followupStatus: "SENT" });
+    }
   };
 
   const handleSaveDraft = async () => {
+    const trimmedSubject = subjectDraft.trim();
+    const trimmedBody = bodyDraft.trim();
     const success = await runAction(() =>
-      updateAxCheckFollowupDraft(lead.id, subjectDraft, bodyDraft)
+      updateAxCheckFollowupDraft(lead.id, trimmedSubject, trimmedBody)
     );
-    if (success) setIsEditing(false);
+    if (success) {
+      onLeadPatch({ followupSubject: trimmedSubject, followupBody: trimmedBody });
+      setIsEditing(false);
+    }
   };
 
-  const handleResetDraft = () => void runAction(() => resetAxCheckFollowupDraft(lead.id));
+  const handleResetDraft = async () => {
+    if (await runAction(() => resetAxCheckFollowupDraft(lead.id))) {
+      onLeadPatch({ followupSubject: null, followupBody: null });
+    }
+  };
 
   return (
     <div className="space-y-4 rounded-xl border border-slate-100 bg-white p-6 shadow-sm lg:col-span-2">
@@ -156,7 +184,7 @@ export function EmailDraftPanel({ lead }: Props) {
         {(lead.followupStatus === "SCHEDULED" || lead.followupStatus === "FAILED") && (
           <button
             type="button"
-            onClick={handleHold}
+            onClick={() => void handleHold()}
             disabled={isPending}
             className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -167,7 +195,7 @@ export function EmailDraftPanel({ lead }: Props) {
         {lead.followupStatus === "HELD" && (
           <button
             type="button"
-            onClick={handleResume}
+            onClick={() => void handleResume()}
             disabled={isPending}
             className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -177,7 +205,7 @@ export function EmailDraftPanel({ lead }: Props) {
         )}
         <button
           type="button"
-          onClick={handleSendNow}
+          onClick={() => void handleSendNow()}
           disabled={isPending}
           className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
@@ -198,7 +226,7 @@ export function EmailDraftPanel({ lead }: Props) {
         {hasOverride ? (
           <button
             type="button"
-            onClick={handleResetDraft}
+            onClick={() => void handleResetDraft()}
             disabled={isPending}
             className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
