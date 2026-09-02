@@ -303,81 +303,66 @@ describe("processDueFollowups", () => {
     expect(result).toEqual({ processed: 1, sent: 0, failed: 0, skipped: 1 });
   });
 
-  it("15분 넘게 SENDING으로 멈춘 행을 due 조회 전에 FAILED로 회수한다", async () => {
-    prismaMock.axCheckResponse.findMany.mockResolvedValue([]);
-    prismaMock.axCheckResponse.updateMany.mockResolvedValue({ count: 1 });
+  it("15분 넘게 SENDING으로 멈춘 행의 id를 먼저 조회하고, 그 id로만 updateMany로 회수한다", async () => {
     const now = new Date("2026-09-04T00:30:00Z");
+    prismaMock.axCheckResponse.findMany
+      .mockResolvedValueOnce([{ id: "stale-1" }]) // 1차 호출 — 멈춘 SENDING 조회
+      .mockResolvedValueOnce([]); // 2차 호출 — 평소 발송 대상 조회
+    prismaMock.axCheckResponse.updateMany.mockResolvedValue({ count: 1 });
 
     await processDueFollowups({ now });
 
-    // 회수 updateMany가 첫 호출이고, due 조회(findMany)보다 먼저 일어난다.
-    expect(prismaMock.axCheckResponse.updateMany).toHaveBeenNthCalledWith(1, {
+    expect(prismaMock.axCheckResponse.findMany).toHaveBeenNthCalledWith(1, {
       where: {
         followupStatus: "SENDING",
         updatedAt: { lt: new Date(now.getTime() - 15 * 60 * 1000) },
       },
+      select: { id: true },
+    });
+    expect(prismaMock.axCheckResponse.updateMany).toHaveBeenCalledWith({
+      where: { id: { in: ["stale-1"] } },
       data: {
         followupStatus: "FAILED",
         followupError: "발송 처리 중 프로세스가 중단되어 자동 복구되었습니다.",
         followupAttempts: { increment: 1 },
       },
     });
-    expect(
-      prismaMock.axCheckResponse.updateMany.mock.invocationCallOrder[0]!
-    ).toBeLessThan(prismaMock.axCheckResponse.findMany.mock.invocationCallOrder[0]!);
+    // 회수 updateMany가 1차 findMany 뒤, 2차 findMany(발송 대상 조회)보다 먼저 일어난다.
+    const order = {
+      findStale: prismaMock.axCheckResponse.findMany.mock.invocationCallOrder[0]!,
+      reclaim: prismaMock.axCheckResponse.updateMany.mock.invocationCallOrder[0]!,
+      findDue: prismaMock.axCheckResponse.findMany.mock.invocationCallOrder[1]!,
+    };
+    expect(order.findStale).toBeLessThan(order.reclaim);
+    expect(order.reclaim).toBeLessThan(order.findDue);
   });
 
-  it("오래된 SENDING만 회수하고 최근 SENDING 행은 그대로 둔다", async () => {
+  it("방금 회수한 id는 같은 실행의 발송 대상 조회에서 제외되어 재발송되지 않는다", async () => {
     const now = new Date("2026-09-04T00:30:00Z");
-    // 가짜 DB — updateMany의 where를 실제로 적용해 어떤 행이 회수되는지 확인한다.
-    const rows = [
-      {
-        id: "stale",
-        followupStatus: "SENDING",
-        updatedAt: new Date(now.getTime() - 30 * 60 * 1000), // 30분 전 → 회수 대상
-        followupAttempts: 0,
-        followupError: null as string | null,
-      },
-      {
-        id: "fresh",
-        followupStatus: "SENDING",
-        updatedAt: new Date(now.getTime() - 5 * 60 * 1000), // 5분 전 → 아직 진행 중일 수 있음
-        followupAttempts: 0,
-        followupError: null as string | null,
-      },
-    ];
-    prismaMock.axCheckResponse.findMany.mockResolvedValue([]);
-    prismaMock.axCheckResponse.updateMany.mockImplementation(
-      ({
-        where,
-        data,
-      }: {
-        where: { followupStatus: string; updatedAt: { lt: Date } };
-        data: { followupStatus: string; followupError: string; followupAttempts: { increment: number } };
-      }) => {
-        const matched = rows.filter(
-          (r) => r.followupStatus === where.followupStatus && r.updatedAt < where.updatedAt.lt
-        );
-        for (const row of matched) {
-          row.followupStatus = data.followupStatus;
-          row.followupError = data.followupError;
-          row.followupAttempts += data.followupAttempts.increment;
-        }
-        return Promise.resolve({ count: matched.length });
-      }
+    prismaMock.axCheckResponse.findMany
+      .mockResolvedValueOnce([{ id: "stale-1" }, { id: "stale-2" }])
+      .mockResolvedValueOnce([]);
+    prismaMock.axCheckResponse.updateMany.mockResolvedValue({ count: 2 });
+
+    await processDueFollowups({ now });
+
+    expect(prismaMock.axCheckResponse.findMany).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        where: expect.objectContaining({ id: { notIn: ["stale-1", "stale-2"] } }),
+      })
     );
-
-    const result = await processDueFollowups({ now });
-
-    expect(rows[0]).toMatchObject({
-      id: "stale",
-      followupStatus: "FAILED",
-      followupError: "발송 처리 중 프로세스가 중단되어 자동 복구되었습니다.",
-      followupAttempts: 1,
-    });
-    expect(rows[1]).toMatchObject({ id: "fresh", followupStatus: "SENDING", followupAttempts: 0 });
-    // 방금 회수한 행을 같은 실행에서 곧바로 재발송하지 않는다.
     expect(sendResendEmailMock).not.toHaveBeenCalled();
-    expect(result).toEqual({ processed: 0, sent: 0, failed: 0, skipped: 0 });
+  });
+
+  it("멈춘 SENDING 행이 없으면 회수 updateMany를 호출하지 않고, 발송 대상 조회에 id 제외 조건도 걸지 않는다", async () => {
+    const now = new Date("2026-09-04T00:30:00Z");
+    prismaMock.axCheckResponse.findMany.mockResolvedValue([]);
+
+    await processDueFollowups({ now });
+
+    expect(prismaMock.axCheckResponse.updateMany).not.toHaveBeenCalled();
+    const dueQueryArgs = prismaMock.axCheckResponse.findMany.mock.calls[1]![0] as { where: object };
+    expect(dueQueryArgs.where).not.toHaveProperty("id");
   });
 });

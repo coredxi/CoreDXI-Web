@@ -146,21 +146,32 @@ export async function processDueFollowups(
   const now = opts.now ?? new Date();
   const limit = opts.limit ?? 50;
 
-  // 1단계 — 멈춘 SENDING 행 회수. 방금 회수한 행을 이번 실행에서 바로 재발송하지는 않고,
-  // 다음(또는 이번 이후) 크론에서 일반 FAILED 재시도 경로로 자연스럽게 다시 들어오게 둔다.
+  // 1단계 — 멈춘 SENDING 행 회수. id를 먼저 확정한 뒤 그 id로만 회수(updateMany)하고,
+  // 같은 id를 2단계 발송 대상 조회에서 명시적으로 제외한다 — 방금 회수한 행은 실제로 발송이
+  // 이미 성공했었을 수도 있는 행이라, 같은 실행 안에서 곧바로 재시도하면 중복 발송 위험이
+  // 있다. 다음 크론에서 일반 FAILED 재시도 경로로 자연스럽게 다시 들어오게 둔다.
   const staleCutoff = new Date(now.getTime() - STALE_SENDING_THRESHOLD_MS);
-  await prisma.axCheckResponse.updateMany({
+  const staleSending = await prisma.axCheckResponse.findMany({
     where: { followupStatus: "SENDING", updatedAt: { lt: staleCutoff } },
-    data: {
-      followupStatus: "FAILED",
-      followupError: STALE_SENDING_ERROR,
-      followupAttempts: { increment: 1 },
-    },
+    select: { id: true },
   });
+  const staleSendingIds = staleSending.map((r) => r.id);
 
-  // 2단계 — 평소의 발송 대상 조회.
+  if (staleSendingIds.length > 0) {
+    await prisma.axCheckResponse.updateMany({
+      where: { id: { in: staleSendingIds } },
+      data: {
+        followupStatus: "FAILED",
+        followupError: STALE_SENDING_ERROR,
+        followupAttempts: { increment: 1 },
+      },
+    });
+  }
+
+  // 2단계 — 평소의 발송 대상 조회. 방금 회수한 id는 제외한다.
   const due = await prisma.axCheckResponse.findMany({
     where: {
+      ...(staleSendingIds.length > 0 ? { id: { notIn: staleSendingIds } } : {}),
       OR: [
         { followupStatus: "SCHEDULED", followupScheduledAt: { lte: now } },
         {
