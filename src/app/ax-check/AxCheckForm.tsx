@@ -143,7 +143,14 @@ export function AxCheckForm({ refCode }: Props) {
   }
 
   if (priorities) {
-    return <AxCheckPriorityCards company={contact.company} priorities={priorities} />;
+    return (
+      <div className="space-y-4">
+        <p className="text-center text-sm text-muted-foreground">
+          결과 요약 메일을 {contact.email}로 보내드렸습니다.
+        </p>
+        <AxCheckPriorityCards company={contact.company} priorities={priorities} />
+      </div>
+    );
   }
 
   const progressPercent = Math.round(((step + 1) / TOTAL_STEPS) * 100);

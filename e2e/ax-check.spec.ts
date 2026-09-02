@@ -50,7 +50,9 @@ test("AX 체크 제출 골든패스", async ({ page }) => {
 
   await expect(page.getByText("AX 우선 과제 3가지")).toBeVisible({ timeout: 10_000 });
   await expect(
-    page.getByText("상세 진단서는 담당 이사가 직접 검토해 1영업일 내 메일로 보내드립니다.")
+    page.getByText(
+      "정리된 상세 진단서를 영업일 기준 2~3일 내 메일로 보내드립니다. 우선 과제가 뚜렷한"
+    )
   ).toBeVisible();
 
   // 관리자 계정이 없는 환경(E2E_ADMIN_EMAIL 미설정)에서는 여기서 skip한다.
