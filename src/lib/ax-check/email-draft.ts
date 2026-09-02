@@ -1,14 +1,23 @@
 /**
  * email-draft.ts — AX 체크 고객용 이메일 초안 생성 (순수 함수, DB 저장 없음)
  *
- * 저장된 응답(answers·summary)으로부터 매 조회 시점에 이메일 초안을 만든다.
- * 카탈로그(catalog.ts)를 개선하면 아직 발송 전인 리드의 초안도 자동으로 좋아진다.
- * 영업이사가 이 초안을 복사해 검토·수정 후 직접 발송한다(자동 발송 없음).
+ * buildCustomerEmailDraft: T1(상세 진단) 본문. mode:"manual"(기본)은 관리자 미리보기용 —
+ * 사람이 통화에서 들은 내용을 채워 넣을 편집 슬롯([[ ]])을 남긴다. mode:"auto"는
+ * 자동 발송(followup.ts)이 실제로 쓰는 버전 — 편집 슬롯을 제거하고 안 1 여는 말/맺는 말을 쓴다.
+ * buildT0Email: T0(제출 즉시 요약) 본문 — 항상 자동 발송 전용, mode 구분 없음.
  *
- * 설계: docs/superpowers/specs/2026-08-30-ax-check-experience-upgrade-design.md 5번
+ * 저장된 응답(answers·summary)으로부터 매 조회/발송 시점에 초안을 새로 만든다.
+ * catalog.ts(FOLLOWUP_COPY)를 개선하면 아직 발송 전인 리드의 메일도 자동으로 좋아진다.
+ *
+ * 설계: docs/superpowers/specs/2026-09-02-ax-check-auto-followup-design.md 8번
  */
 
-import { getOptionLabel, getQuestionById, SALES_SIGNATURE } from "./catalog";
+import {
+  FOLLOWUP_COPY,
+  getOptionLabel,
+  getQuestionById,
+  renderSignatureBlock,
+} from "./catalog";
 import type { AxCheckAnswers, AxCheckPriority, AxCheckSummary } from "./summarize";
 
 export type AxCheckEmailDraft = {
@@ -33,12 +42,34 @@ function formatPriorityBlock(priority: AxCheckPriority, index: number): string[]
 export function buildCustomerEmailDraft(
   answers: AxCheckAnswers,
   summary: AxCheckSummary,
-  contact: { company: string; name: string }
+  contact: { company: string; name: string },
+  opts?: { mode?: "manual" | "auto" }
 ): AxCheckEmailDraft {
+  const mode = opts?.mode ?? "manual";
   const { company, name } = contact;
   const industryLabel = getOptionLabel(getQuestionById("q1"), answers.q1);
-
   const priorityLines = summary.priorities.flatMap((p, i) => formatPriorityBlock(p, i));
+  const count = summary.priorities.length;
+
+  if (mode === "auto") {
+    const body = [
+      FOLLOWUP_COPY.t1.greeting(company, name),
+      "",
+      FOLLOWUP_COPY.t1.introLine(industryLabel, count),
+      FOLLOWUP_COPY.t1.introLine2,
+      "",
+      ...priorityLines,
+      FOLLOWUP_COPY.t1.processParagraph,
+      "",
+      FOLLOWUP_COPY.t1.callToAction(company),
+      "",
+      FOLLOWUP_COPY.optOutNotice,
+      "",
+      renderSignatureBlock(),
+    ].join("\n");
+
+    return { subject: FOLLOWUP_COPY.t1.subject(company, count), body };
+  }
 
   const body = [
     `${company} ${name}님, 안녕하세요.`,
@@ -52,13 +83,50 @@ export function buildCustomerEmailDraft(
     "",
     "편하신 시간에 30분 정도 통화하며 자세히 설명드리고 싶습니다. 이 메일에 회신해 주시면 일정을 조율하겠습니다.",
     "",
-    SALES_SIGNATURE.name,
-    `${SALES_SIGNATURE.title} | CoreDXI`,
-    `${SALES_SIGNATURE.phone} | ${SALES_SIGNATURE.email}`,
+    renderSignatureBlock(),
   ].join("\n");
 
   return {
-    subject: `[CoreDXI] ${company} AX 체크 결과 — 귀사의 우선 과제 ${summary.priorities.length}가지`,
+    subject: `[CoreDXI] ${company} AX 체크 결과 — 귀사의 우선 과제 ${count}가지`,
     body,
+  };
+}
+
+export function buildT0Email(
+  summary: { priorities: AxCheckPriority[] },
+  contact: { company: string; name: string },
+  links: { resultUrl: string; brochureUrl?: string }
+): AxCheckEmailDraft {
+  const { company, name } = contact;
+  const count = summary.priorities.length;
+  const priorityLines = summary.priorities.map((p, i) => `  ${i + 1}. ${p.title}`);
+
+  const bodyLines: string[] = [
+    FOLLOWUP_COPY.t0.greeting(company, name),
+    "",
+    FOLLOWUP_COPY.t0.introLine1(company, count),
+    FOLLOWUP_COPY.t0.introLine2,
+    "",
+    ...priorityLines,
+    "",
+    `결과 다시 보기: ${links.resultUrl}`,
+  ];
+
+  if (links.brochureUrl) {
+    bodyLines.push(`CoreDXI AX 전환 컨설팅 소개서: ${links.brochureUrl}`);
+  }
+
+  bodyLines.push(
+    "",
+    FOLLOWUP_COPY.t0.followupNotice,
+    "",
+    FOLLOWUP_COPY.optOutNotice,
+    "",
+    renderSignatureBlock()
+  );
+
+  return {
+    subject: FOLLOWUP_COPY.t0.subject(company, count),
+    body: bodyLines.join("\n"),
   };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCustomerEmailDraft } from "./email-draft";
+import { buildCustomerEmailDraft, buildT0Email } from "./email-draft";
 import { SALES_SIGNATURE } from "./catalog";
 import type { AxCheckAnswers, AxCheckSummary } from "./summarize";
 
@@ -88,14 +88,17 @@ describe("buildCustomerEmailDraft", () => {
     expect(draft.body).toMatch(/\[\[.*\]\]/);
   });
 
-  it("영업이사 서명 블록(catalog.ts SALES_SIGNATURE)을 포함한다", () => {
+  it("영업이사 서명 블록 5줄(이름·직함/회사/연락처/태그라인/주소)을 포함한다", () => {
     const draft = buildCustomerEmailDraft(
       baseAnswers(),
       baseSummary(),
       { company: "테스트회사", name: "홍길동" }
     );
-    expect(draft.body).toContain(SALES_SIGNATURE.name);
-    expect(draft.body).toContain(SALES_SIGNATURE.phone);
+    expect(draft.body).toContain(`${SALES_SIGNATURE.name} ${SALES_SIGNATURE.title}`);
+    expect(draft.body).toContain(SALES_SIGNATURE.company);
+    expect(draft.body).toContain(`${SALES_SIGNATURE.phone} | ${SALES_SIGNATURE.email}`);
+    expect(draft.body).toContain(SALES_SIGNATURE.tagline);
+    expect(draft.body).toContain(SALES_SIGNATURE.addresses.join(" · "));
   });
 
   it("업종(Q1) 라벨을 본문에 반영한다", () => {
@@ -135,5 +138,102 @@ describe("buildCustomerEmailDraft", () => {
     expect(draft.body.indexOf("1. 제안서·견적서 자동 초안 생성")).toBeLessThan(
       draft.body.indexOf("2. 입찰 공고 탐색·서류 자동화")
     );
+  });
+});
+
+describe("buildCustomerEmailDraft — mode: auto", () => {
+  it("수동 편집 슬롯([[ ]])이 없다", () => {
+    const draft = buildCustomerEmailDraft(
+      baseAnswers(),
+      baseSummary(),
+      { company: "테스트회사", name: "홍길동" },
+      { mode: "auto" }
+    );
+    expect(draft.body).not.toMatch(/\[\[.*\]\]/);
+  });
+
+  it("T1 확정 제목 형식을 쓴다", () => {
+    const draft = buildCustomerEmailDraft(
+      baseAnswers(),
+      baseSummary(),
+      { company: "테스트회사", name: "홍길동" },
+      { mode: "auto" }
+    );
+    expect(draft.subject).toBe(
+      "[CoreDXI] 테스트회사 AX 체크 상세 진단 — 우선 과제 1가지와 3개월 로드맵"
+    );
+  });
+
+  it("안 1의 여는 말·맺는 말로 교체된다", () => {
+    const draft = buildCustomerEmailDraft(
+      baseAnswers(),
+      baseSummary(),
+      { company: "테스트회사", name: "홍길동" },
+      { mode: "auto" }
+    );
+    expect(draft.body).toContain("테스트회사 홍길동님, 안녕하세요. CoreDXI입니다.");
+    expect(draft.body).toContain("도구를 소개하는 데서 끝나지 않고,");
+    expect(draft.body).toContain("이 메일에 회신해 주시면 편하신 시간에 30분 통화로 테스트회사의 상황에 맞춰");
+  });
+
+  it("수신 거부 안내 문구를 포함한다", () => {
+    const draft = buildCustomerEmailDraft(
+      baseAnswers(),
+      baseSummary(),
+      { company: "테스트회사", name: "홍길동" },
+      { mode: "auto" }
+    );
+    expect(draft.body).toContain("추가 안내를 원치 않으시면 이 메일에 회신으로");
+  });
+});
+
+describe("buildCustomerEmailDraft — mode 미지정(기본값 manual)", () => {
+  it("mode를 생략하면 기존 출력과 동일하다(플레이스홀더 포함)", () => {
+    const draft = buildCustomerEmailDraft(baseAnswers(), baseSummary(), {
+      company: "테스트회사",
+      name: "홍길동",
+    });
+    expect(draft.body).toMatch(/\[\[.*\]\]/);
+    expect(draft.subject).toBe("[CoreDXI] 테스트회사 AX 체크 결과 — 귀사의 우선 과제 1가지");
+  });
+});
+
+describe("buildT0Email", () => {
+  const links = { resultUrl: "https://www.coredxi.com/ax-check/result/tok123" };
+
+  it("확정 제목 형식을 쓴다", () => {
+    const draft = buildT0Email(baseSummary(), { company: "테스트회사", name: "홍길동" }, links);
+    expect(draft.subject).toBe("[CoreDXI] 테스트회사 AX 체크 결과 — 우선 과제 1가지 정리본");
+  });
+
+  it("인사말과 우선 과제 번호 목록을 포함한다", () => {
+    const draft = buildT0Email(baseSummary(), { company: "테스트회사", name: "홍길동" }, links);
+    expect(draft.body).toContain("테스트회사 홍길동님, 안녕하세요. CoreDXI입니다.");
+    expect(draft.body).toContain("  1. 제안서·견적서 자동 초안 생성");
+  });
+
+  it("결과 재열람 링크를 포함한다", () => {
+    const draft = buildT0Email(baseSummary(), { company: "테스트회사", name: "홍길동" }, links);
+    expect(draft.body).toContain("결과 다시 보기: https://www.coredxi.com/ax-check/result/tok123");
+  });
+
+  it("brochureUrl이 있으면 소개서 링크 줄을 포함한다", () => {
+    const draft = buildT0Email(baseSummary(), { company: "테스트회사", name: "홍길동" }, {
+      ...links,
+      brochureUrl: "https://www.coredxi.com/solutions",
+    });
+    expect(draft.body).toContain(
+      "CoreDXI AX 전환 컨설팅 소개서: https://www.coredxi.com/solutions"
+    );
+  });
+
+  it("brochureUrl이 없으면 소개서 줄이 통째로 빠진다", () => {
+    const draft = buildT0Email(baseSummary(), { company: "테스트회사", name: "홍길동" }, links);
+    expect(draft.body).not.toContain("소개서");
+  });
+
+  it("서명 블록을 포함한다", () => {
+    const draft = buildT0Email(baseSummary(), { company: "테스트회사", name: "홍길동" }, links);
+    expect(draft.body).toContain(SALES_SIGNATURE.company);
   });
 });
