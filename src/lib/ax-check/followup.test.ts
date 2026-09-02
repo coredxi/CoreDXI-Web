@@ -162,6 +162,70 @@ describe("sendFollowupEmail", () => {
       data: { followupStatus: "SENDING" },
     });
   });
+
+  it("선점 이후 findUnique가 예외를 던지면 FAILED로 복구 기록하고 Sentry에 캡처한다", async () => {
+    prismaMock.axCheckResponse.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.axCheckResponse.findUnique.mockRejectedValue(new Error("db unreachable"));
+    prismaMock.axCheckResponse.update.mockResolvedValue({});
+
+    const result = await sendFollowupEmail("lead-1");
+
+    expect(result).toEqual({ success: false, error: "db unreachable" });
+    expect(prismaMock.axCheckResponse.update).toHaveBeenCalledWith({
+      where: { id: "lead-1" },
+      data: {
+        followupStatus: "FAILED",
+        followupError: "db unreachable",
+        followupAttempts: { increment: 1 },
+      },
+    });
+    expect(captureExceptionMock).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ tags: { feature: "ax-check-followup" } })
+    );
+  });
+
+  it("발송 성공 후 SENT로 갱신하는 update가 예외를 던지면 FAILED로 복구 기록한다(재시도 시 중복 발송 가능성은 수용된 트레이드오프)", async () => {
+    prismaMock.axCheckResponse.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.axCheckResponse.findUnique.mockResolvedValue(baseRecord());
+    prismaMock.axCheckResponse.update
+      .mockRejectedValueOnce(new Error("write failed after send"))
+      .mockResolvedValueOnce({});
+
+    const result = await sendFollowupEmail("lead-1");
+
+    expect(result).toEqual({ success: false, error: "write failed after send" });
+    expect(prismaMock.axCheckResponse.update).toHaveBeenNthCalledWith(2, {
+      where: { id: "lead-1" },
+      data: {
+        followupStatus: "FAILED",
+        followupError: "write failed after send",
+        followupAttempts: { increment: 1 },
+      },
+    });
+    expect(captureExceptionMock).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ tags: { feature: "ax-check-followup" } })
+    );
+  });
+
+  it("복구 기록 write마저 실패하면 예외를 삼키고 별도 태그로 Sentry에 캡처한다", async () => {
+    prismaMock.axCheckResponse.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.axCheckResponse.findUnique.mockRejectedValue(new Error("db unreachable"));
+    prismaMock.axCheckResponse.update.mockRejectedValue(new Error("recovery write also failed"));
+
+    const result = await sendFollowupEmail("lead-1");
+
+    expect(result).toEqual({ success: false, error: "db unreachable" });
+    expect(captureExceptionMock).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ tags: { feature: "ax-check-followup" } })
+    );
+    expect(captureExceptionMock).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ tags: { feature: "ax-check-followup-recovery" } })
+    );
+  });
 });
 
 describe("processDueFollowups", () => {

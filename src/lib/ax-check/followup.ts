@@ -45,59 +45,86 @@ export async function sendFollowupEmail(
     return { success: false, error: CLAIM_LOST_ERROR };
   }
 
-  const record = await prisma.axCheckResponse.findUnique({ where: { id } });
-  if (!record) {
-    return { success: false, error: "리드를 찾을 수 없습니다." };
-  }
+  try {
+    const record = await prisma.axCheckResponse.findUnique({ where: { id } });
+    if (!record) {
+      return { success: false, error: "리드를 찾을 수 없습니다." };
+    }
 
-  let subject = record.followupSubject;
-  let body = record.followupBody;
+    let subject = record.followupSubject;
+    let body = record.followupBody;
 
-  if (!subject || !body) {
-    const summary = record.summary as unknown as { priorities: unknown };
-    const draft = buildCustomerEmailDraft(
-      record.answers as AxCheckAnswers,
-      {
-        priorities: normalizeLegacyPriorities(summary.priorities),
-        grade: record.grade,
-        score: record.score,
-        catalogVersion: record.catalogVersion,
-      },
-      { company: record.company, name: record.name },
-      { mode: "auto" }
-    );
-    subject = subject ?? draft.subject;
-    body = body ?? draft.body;
-  }
+    if (!subject || !body) {
+      const summary = record.summary as unknown as { priorities: unknown };
+      const draft = buildCustomerEmailDraft(
+        record.answers as AxCheckAnswers,
+        {
+          priorities: normalizeLegacyPriorities(summary.priorities),
+          grade: record.grade,
+          score: record.score,
+          catalogVersion: record.catalogVersion,
+        },
+        { company: record.company, name: record.name },
+        { mode: "auto" }
+      );
+      subject = subject ?? draft.subject;
+      body = body ?? draft.body;
+    }
 
-  const result = await sendResendEmail({
-    to: record.email,
-    subject,
-    text: body,
-    replyTo: process.env.SALES_REPLY_TO ?? SALES_SIGNATURE.email,
-  });
+    const result = await sendResendEmail({
+      to: record.email,
+      subject,
+      text: body,
+      replyTo: process.env.SALES_REPLY_TO ?? SALES_SIGNATURE.email,
+    });
 
-  if (result.success) {
+    if (result.success) {
+      await prisma.axCheckResponse.update({
+        where: { id },
+        data: { followupStatus: "SENT", followupSentAt: new Date(), followupError: null },
+      });
+      return { success: true };
+    }
+
     await prisma.axCheckResponse.update({
       where: { id },
-      data: { followupStatus: "SENT", followupSentAt: new Date(), followupError: null },
+      data: {
+        followupStatus: "FAILED",
+        followupError: result.error,
+        followupAttempts: { increment: 1 },
+      },
     });
-    return { success: true };
-  }
+    Sentry.captureException(new Error(`ax-check followup send failed: ${result.error}`), {
+      tags: { feature: "ax-check-followup" },
+      extra: { id },
+    });
+    return { success: false, error: result.error };
+  } catch (e) {
+    const message =
+      e instanceof Error ? e.message : "팔로업 발송 중 알 수 없는 오류가 발생했습니다.";
+    Sentry.captureException(e, {
+      tags: { feature: "ax-check-followup" },
+      extra: { id },
+    });
 
-  await prisma.axCheckResponse.update({
-    where: { id },
-    data: {
-      followupStatus: "FAILED",
-      followupError: result.error,
-      followupAttempts: { increment: 1 },
-    },
-  });
-  Sentry.captureException(new Error(`ax-check followup send failed: ${result.error}`), {
-    tags: { feature: "ax-check-followup" },
-    extra: { id },
-  });
-  return { success: false, error: result.error };
+    try {
+      await prisma.axCheckResponse.update({
+        where: { id },
+        data: {
+          followupStatus: "FAILED",
+          followupError: message,
+          followupAttempts: { increment: 1 },
+        },
+      });
+    } catch (recoveryError) {
+      Sentry.captureException(recoveryError, {
+        tags: { feature: "ax-check-followup-recovery" },
+        extra: { id },
+      });
+    }
+
+    return { success: false, error: message };
+  }
 }
 
 export async function processDueFollowups(
