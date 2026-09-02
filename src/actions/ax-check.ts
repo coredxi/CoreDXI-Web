@@ -3,13 +3,16 @@
 /**
  * ax-check.ts — AX 체크(인터뷰 깔때기) 서버 액션
  *
- * submitAxCheck: 검증 → rate limit → 규칙 기반 요약(summarize.ts) → 저장 →
- * 선택 동의 시 뉴스레터 구독 연동 → 영업이사 알림 메일(고객 발송용 이메일 초안 동봉,
- * 고객에게는 자동 발송하지 않음 — email-draft.ts 참고).
+ * submitAxCheck: 검증 → rate limit → 규칙 기반 요약(summarize.ts) → 저장(followupScheduledAt·
+ * followupStatus 계산 포함) → 선택 동의 시 뉴스레터 구독 연동 → 킬 스위치가 켜져 있으면 고객에게
+ * T0 요약 메일 즉시 발송(email-draft.ts의 buildT0Email) → 영업이사 알림 메일(통화 포인트·
+ * 상세 진단 예정 시각·관리 링크만 포함, 고객 발송용 초안 전문은 동봉하지 않음). T1(상세 진단)
+ * 자동 발송은 followup.ts가 크론/관리자 액션으로 별도 처리한다.
  * 관리자용 listAxCheckResponses/updateAxCheckStatus/updateAxCheckNote/deleteAxCheckResponse는
  * requireAdmin 게이트(contact.ts·newsletter.ts와 동일 패턴).
  *
- * 설계: docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md 4번·5번·7번
+ * 설계: docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md 4번·5번·7번,
+ * docs/superpowers/specs/2026-09-02-ax-check-auto-followup-design.md
  */
 
 import { auth } from "@/auth";
@@ -23,11 +26,15 @@ import { subscribeNewsletter } from "@/actions/newsletter";
 import {
   AX_CHECK_QUESTIONS,
   Q3_MAX_SELECT,
+  getOptionLabel,
+  getQuestionById,
   type AxCheckQuestion,
 } from "@/lib/ax-check/catalog";
 import { normalizeLegacyPriorities, summarizeAxCheck } from "@/lib/ax-check/summarize";
-import { buildCustomerEmailDraft } from "@/lib/ax-check/email-draft";
+import { buildT0Email } from "@/lib/ax-check/email-draft";
 import { generateAxCheckResultToken } from "@/lib/ax-check/result-token";
+import { computeFollowupScheduledAt, formatKstFollowupSchedule } from "@/lib/ax-check/business-days";
+import { isFollowupEnabled } from "@/lib/ax-check/followup";
 import type {
   AxCheckAnswers,
   AxCheckFormInput,
@@ -133,8 +140,12 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
   const { priorities, grade, score, catalogVersion } = summarizeAxCheck(input.answers);
   const resultToken = generateAxCheckResultToken();
 
+  const followupEnabled = isFollowupEnabled();
+  const followupScheduledAt = computeFollowupScheduledAt(new Date());
+
+  let createdId: string;
   try {
-    await prisma.axCheckResponse.create({
+    const created = await prisma.axCheckResponse.create({
       data: {
         refCode,
         company,
@@ -148,8 +159,12 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
         summary: { priorities },
         marketingOptIn: input.marketingOptIn,
         resultToken,
+        followupStatus: followupEnabled ? "SCHEDULED" : "HELD",
+        followupScheduledAt,
       },
+      select: { id: true },
     });
+    createdId = created.id;
   } catch (e) {
     console.error("[submitAxCheck]", e);
     return { success: false, error: "제출 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." };
@@ -166,20 +181,44 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
   const siteUrl = process.env.NEXTAUTH_URL ?? "https://www.coredxi.com";
   const resultUrl = `${siteUrl}/ax-check/result/${resultToken}`;
 
-  // 고객에게는 자동 발송하지 않는다 — 영업이사가 아래 초안을 검토·수정 후 직접 보낸다
-  // (2026-08-30 결정, docs/superpowers/specs/2026-08-30-ax-check-experience-upgrade-design.md 5번).
-  const emailDraft = buildCustomerEmailDraft(
-    input.answers,
-    { priorities, grade, score, catalogVersion },
-    { company, name }
-  );
+  // T0 — 제출 즉시 결과 요약 메일. 킬 스위치가 꺼져 있으면 보내지 않는다(완전한 8/30 수동 모드).
+  if (followupEnabled) {
+    const t0Draft = buildT0Email(
+      { priorities },
+      { company, name },
+      { resultUrl, brochureUrl: process.env.AX_CHECK_BROCHURE_URL || undefined }
+    );
+    const t0Result = await sendResendEmail({
+      to: email,
+      subject: t0Draft.subject,
+      text: t0Draft.body,
+      replyTo: process.env.SALES_REPLY_TO ?? undefined,
+    });
+    if (t0Result.success) {
+      await prisma.axCheckResponse.update({
+        where: { id: createdId },
+        data: { t0SentAt: new Date() },
+      });
+    } else {
+      console.error("[submitAxCheck] T0 email failed:", t0Result.error);
+    }
+  }
 
+  // 영업이사 알림 메일 — 통화 포인트 3줄 + 예정 발송 시각 + 관리 링크. 초안 전문은 동봉하지 않는다.
   const salesNotifyEmail =
     process.env.SALES_NOTIFY_EMAIL?.trim() || (await getContactNotificationEmail());
   if (salesNotifyEmail) {
+    const q3Labels = input.answers.q3
+      .slice(0, 2)
+      .map((v) => getOptionLabel(getQuestionById("q3"), v));
+    const q7Label = getOptionLabel(getQuestionById("q7"), input.answers.q7);
+    const q8Label = getOptionLabel(getQuestionById("q8"), input.answers.q8);
+    const adminLink = `${siteUrl}/admin/leads?lead=${createdId}`;
+    const subjectPrefix = grade === "HOT" ? "[CoreDXI][HOT]" : "[CoreDXI]";
+
     const salesMailResult = await sendResendEmail({
       to: salesNotifyEmail,
-      subject: `[CoreDXI] 새 AX 체크 리드 - ${grade} - ${company}`,
+      subject: `${subjectPrefix} 새 AX 체크 리드 - ${grade} - ${company}`,
       text: [
         "새 AX 체크 응답이 접수되었습니다.",
         "",
@@ -189,16 +228,17 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
         `연락처: ${phone || "-"}`,
         `유입 경로(ref): ${refCode ?? "-"}`,
         `등급: ${grade}`,
+        "",
+        "통화 포인트",
+        `- 가장 시간이 드는 업무: ${q3Labels.join(", ")}`,
+        `- 검토 시점: ${q7Label}`,
+        `- 의사결정 구조: ${q8Label}`,
+        "",
+        followupEnabled
+          ? `상세 진단 메일 예정: ${formatKstFollowupSchedule(followupScheduledAt)}`
+          : "상세 진단 메일: 자동 발송 꺼짐(HELD) — 관리자 페이지에서 직접 처리해 주세요.",
+        `보류·수정·지금 보내기: ${adminLink}`,
         `결과 재열람 링크: ${resultUrl}`,
-        "",
-        "관리자 페이지(/admin/leads)에서 전체 답변과 이메일 초안을 확인·복사할 수 있습니다.",
-        "아래는 고객에게 보낼 이메일 초안입니다 — 검토·수정 후 직접 발송해 주세요.",
-        "",
-        "==================== 고객용 이메일 초안: 제목 ====================",
-        emailDraft.subject,
-        "",
-        "==================== 고객용 이메일 초안: 본문 ====================",
-        emailDraft.body,
       ].join("\n"),
       replyTo: email,
     });

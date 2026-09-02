@@ -34,6 +34,16 @@ vi.mock("@/lib/ax-check/result-token", () => ({
   generateAxCheckResultToken: () => "generated-result-token",
 }));
 
+vi.mock("@/lib/ax-check/business-days", () => ({
+  computeFollowupScheduledAt: () => new Date("2026-09-04T00:30:00.000Z"),
+  formatKstFollowupSchedule: () => "2026-09-04(금) 09:30",
+}));
+
+const isFollowupEnabledMock = vi.fn();
+vi.mock("@/lib/ax-check/followup", () => ({
+  isFollowupEnabled: () => isFollowupEnabledMock(),
+}));
+
 const prismaMock = {
   axCheckResponse: {
     create: vi.fn(),
@@ -88,7 +98,8 @@ beforeEach(() => {
   sendResendEmailMock.mockResolvedValue({ success: true });
   getContactNotificationEmailMock.mockResolvedValue("contact@coredxi.com");
   subscribeNewsletterMock.mockResolvedValue({ success: true });
-  prismaMock.axCheckResponse.create.mockResolvedValue({});
+  prismaMock.axCheckResponse.create.mockResolvedValue({ id: "lead-1" });
+  isFollowupEnabledMock.mockReturnValue(true);
   delete process.env.SALES_NOTIFY_EMAIL;
 });
 
@@ -170,45 +181,70 @@ describe("submitAxCheck rate limiting", () => {
 });
 
 describe("submitAxCheck happy path", () => {
-  it("saves the response and emails only the sales notify address (no customer auto-send)", async () => {
+  it("응답을 저장하고 followupScheduledAt·followupStatus(SCHEDULED)를 계산해 저장한다", async () => {
     const result = await submitAxCheck(validInput());
 
     expect(result.success).toBe(true);
-    if (!result.success) throw new Error("unreachable");
-    expect(result.resultToken).toBe("generated-result-token");
-    expect(result.priorities).toHaveLength(2);
-
     expect(prismaMock.axCheckResponse.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          company: "테스트회사",
-          email: "user@example.com",
-          grade: expect.any(String),
-          resultToken: "generated-result-token",
+          followupStatus: "SCHEDULED",
+          followupScheduledAt: new Date("2026-09-04T00:30:00.000Z"),
         }),
       })
     );
+  });
 
-    // 고객에게는 자동 발송하지 않는다 — sendResendEmail 호출은 영업이사 알림 1건뿐.
+  it("킬 스위치가 꺼져 있으면 followupStatus를 HELD로 저장하고 T0을 보내지 않는다", async () => {
+    isFollowupEnabledMock.mockReturnValue(false);
+
+    await submitAxCheck(validInput());
+
+    expect(prismaMock.axCheckResponse.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ followupStatus: "HELD" }),
+      })
+    );
+    // T0 미발송 + 영업이사 알림만 발송 → sendResendEmail 1회
     expect(sendResendEmailMock).toHaveBeenCalledTimes(1);
     expect(sendResendEmailMock).toHaveBeenCalledWith(
       expect.objectContaining({ to: "contact@coredxi.com" })
     );
-    expect(sendResendEmailMock).not.toHaveBeenCalledWith(
-      expect.objectContaining({ to: "user@example.com" })
-    );
-    expect(subscribeNewsletterMock).not.toHaveBeenCalled();
   });
 
-  it("includes the customer email draft in the sales notify email body", async () => {
+  it("고객에게 T0 요약 메일을 즉시 발송한다", async () => {
+    await submitAxCheck(validInput());
+
+    expect(sendResendEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "user@example.com" })
+    );
+  });
+
+  it("영업이사 알림 메일에는 통화 포인트·예정 시각·관리 링크가 있고 초안 전문은 없다", async () => {
     await submitAxCheck(validInput());
 
     const salesCall = sendResendEmailMock.mock.calls.find(
       (call) => call[0].to === "contact@coredxi.com"
     );
     expect(salesCall).toBeDefined();
-    expect(salesCall![0].text).toContain("고객용 이메일 초안");
-    expect(salesCall![0].text).toContain("테스트회사 홍길동님, 안녕하세요.");
+    const text = salesCall![0].text as string;
+    expect(text).toContain("통화 포인트");
+    expect(text).toContain("상세 진단 메일 예정: 2026-09-04(금) 09:30");
+    expect(text).toContain("/admin/leads?lead=lead-1");
+    expect(text).not.toContain("고객용 이메일 초안");
+  });
+
+  it("HOT 등급이면 알림 메일 제목에 [HOT]이 붙는다", async () => {
+    await submitAxCheck(
+      validInput({
+        answers: validAnswers({ q7: "within_3_months", q8: "self_decide", q3: ["quote", "bidding"] }),
+      })
+    );
+
+    const salesCall = sendResendEmailMock.mock.calls.find(
+      (call) => call[0].to === "contact@coredxi.com"
+    );
+    expect(salesCall![0].subject).toContain("[HOT]");
   });
 
   it("uses SALES_NOTIFY_EMAIL over the contact settings fallback when set", async () => {
@@ -228,7 +264,7 @@ describe("submitAxCheck happy path", () => {
     expect(subscribeNewsletterMock).toHaveBeenCalledWith("user@example.com", "ax-check");
   });
 
-  it("still succeeds when the sales notify email fails to send", async () => {
+  it("T0 발송이 실패해도 제출 자체는 성공한다", async () => {
     sendResendEmailMock.mockResolvedValue({ success: false, error: "boom" });
 
     const result = await submitAxCheck(validInput());

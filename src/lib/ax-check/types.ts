@@ -72,6 +72,10 @@ export type DeleteAxCheckResult =
   | { success: true }
   | { success: false; error: string };
 
+export type UpdateAxCheckFollowupResult =
+  | { success: true }
+  | { success: false; error: string };
+
 /** /ax-check/result/[token] — 등급·이메일·전화번호 등 내부용 필드는 제외한 공개 조회 결과. */
 export type AxCheckResultPageData = {
   company: string;
