@@ -25,7 +25,7 @@ import {
   Q3_MAX_SELECT,
   type AxCheckQuestion,
 } from "@/lib/ax-check/catalog";
-import { summarizeAxCheck } from "@/lib/ax-check/summarize";
+import { normalizeLegacyPriorities, summarizeAxCheck } from "@/lib/ax-check/summarize";
 import { buildCustomerEmailDraft } from "@/lib/ax-check/email-draft";
 import { generateAxCheckResultToken } from "@/lib/ax-check/result-token";
 import type {
@@ -46,29 +46,6 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[0-9+\-\s()]{7,20}$/;
 const OTHER_TEXT_MAX_LENGTH = 200;
 const LEAD_STATUS_SET = new Set<string>(LEAD_STATUS_OPTIONS.map((o) => o.value));
-
-/**
- * 구버전(roadmap 도입 전, ~2026-08-30) 응답 호환 처리 — 당시 summary.priorities는
- * { title, why, firstStep, expectedEffect } 형태였다. 새 필드가 없으면 최소한으로
- * 채워 넣어 화면·이메일 초안이 크래시 없이 렌더링되도록 한다.
- */
-function normalizeLegacyPriorities(raw: unknown): AxCheckLeadRecord["priorities"] {
-  if (!Array.isArray(raw)) return [];
-  return raw.map((item) => {
-    const p = item as Partial<AxCheckLeadRecord["priorities"][number]> & { firstStep?: string };
-    if (Array.isArray(p.roadmap) && p.roadmap.length === 3) {
-      return p as AxCheckLeadRecord["priorities"][number];
-    }
-    return {
-      title: p.title ?? "",
-      why: p.why ?? "",
-      echo: p.echo ?? "",
-      industryExample: p.industryExample ?? null,
-      roadmap: [p.firstStep ?? "—", "—", "—"] as const,
-      expectedEffect: p.expectedEffect ?? "",
-    };
-  });
-}
 
 async function requireAdmin(): Promise<{ ok: true } | { ok: false; error: string }> {
   const session = await auth();

@@ -139,3 +139,26 @@ export function summarizeAxCheck(answers: AxCheckAnswers): AxCheckSummary {
 
   return { priorities, grade, score, catalogVersion: CATALOG_VERSION };
 }
+
+/**
+ * 구버전(roadmap 도입 전, ~2026-08-30) 응답 호환 처리 — 당시 summary.priorities는
+ * { title, why, firstStep, expectedEffect } 형태였다. 새 필드가 없으면 최소한으로
+ * 채워 넣어 화면·이메일 초안·팔로업 발송이 크래시 없이 동작하도록 한다.
+ */
+export function normalizeLegacyPriorities(raw: unknown): AxCheckPriority[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((item) => {
+    const p = item as Partial<AxCheckPriority> & { firstStep?: string };
+    if (Array.isArray(p.roadmap) && p.roadmap.length === 3) {
+      return p as AxCheckPriority;
+    }
+    return {
+      title: p.title ?? "",
+      why: p.why ?? "",
+      echo: p.echo ?? "",
+      industryExample: p.industryExample ?? null,
+      roadmap: [p.firstStep ?? "—", "—", "—"] as const,
+      expectedEffect: p.expectedEffect ?? "",
+    };
+  });
+}
