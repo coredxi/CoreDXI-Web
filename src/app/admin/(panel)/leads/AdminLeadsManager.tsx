@@ -12,6 +12,7 @@ import { LEAD_STATUS_OPTIONS } from "@/lib/ax-check/types";
 import { formatKstDateTime } from "@/lib/format-kst-date";
 import { LeadList } from "./LeadList";
 import { LeadDetailPanel } from "./LeadDetailPanel";
+import { FOLLOWUP_STATUS_LABEL } from "./FollowupStatusBadge";
 
 const STATUS_LABEL: Record<string, string> = Object.fromEntries(
   LEAD_STATUS_OPTIONS.map((o) => [o.value, o.label])
@@ -20,6 +21,7 @@ const STATUS_LABEL: Record<string, string> = Object.fromEntries(
 type Props = {
   initialLeads: AxCheckLeadRecord[];
   loadError?: string;
+  initialSelectedId?: string;
 };
 
 function csvEscape(value: string): string {
@@ -30,7 +32,19 @@ function csvEscape(value: string): string {
 }
 
 function buildLeadsCsv(leads: AxCheckLeadRecord[]): string {
-  const header = ["제출일", "회사", "담당자", "이메일", "연락처", "ref", "등급", "상태", "메모"];
+  const header = [
+    "제출일",
+    "회사",
+    "담당자",
+    "이메일",
+    "연락처",
+    "ref",
+    "등급",
+    "상태",
+    "메모",
+    "팔로업 상태",
+    "팔로업 발송일시",
+  ];
   const rows = leads.map((lead) => [
     formatKstDateTime(lead.createdAt),
     lead.company,
@@ -41,6 +55,8 @@ function buildLeadsCsv(leads: AxCheckLeadRecord[]): string {
     lead.grade,
     STATUS_LABEL[lead.status] ?? lead.status,
     lead.note ?? "",
+    FOLLOWUP_STATUS_LABEL[lead.followupStatus] ?? lead.followupStatus,
+    lead.followupSentAt ? formatKstDateTime(lead.followupSentAt) : "",
   ]);
 
   const lines = [header, ...rows].map((row) => row.map(csvEscape).join(","));
@@ -59,10 +75,25 @@ function downloadCsv(csv: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-export function AdminLeadsManager({ initialLeads, loadError }: Props) {
+export function AdminLeadsManager({ initialLeads, loadError, initialSelectedId }: Props) {
   const [leads, setLeads] = useState(initialLeads);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(initialLeads[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(() => {
+    if (initialSelectedId && initialLeads.some((l) => l.id === initialSelectedId)) {
+      return initialSelectedId;
+    }
+    return initialLeads[0]?.id ?? null;
+  });
+
+  const followupCounts = useMemo(
+    () => ({
+      scheduled: leads.filter((l) => l.followupStatus === "SCHEDULED").length,
+      held: leads.filter((l) => l.followupStatus === "HELD").length,
+      sent: leads.filter((l) => l.followupStatus === "SENT").length,
+      failed: leads.filter((l) => l.followupStatus === "FAILED").length,
+    }),
+    [leads]
+  );
 
   const selectedLead = useMemo(
     () => leads.find((l) => l.id === selectedId) ?? null,
@@ -144,6 +175,25 @@ export function AdminLeadsManager({ initialLeads, loadError }: Props) {
           <Download className="h-3.5 w-3.5" />
           CSV 내보내기
         </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+          <p className="text-xs font-medium text-slate-400">팔로업 예정</p>
+          <p className="mt-1 text-xl font-bold text-indigo-600">{followupCounts.scheduled}</p>
+        </div>
+        <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+          <p className="text-xs font-medium text-slate-400">보류</p>
+          <p className="mt-1 text-xl font-bold text-amber-600">{followupCounts.held}</p>
+        </div>
+        <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+          <p className="text-xs font-medium text-slate-400">발송 완료</p>
+          <p className="mt-1 text-xl font-bold text-emerald-600">{followupCounts.sent}</p>
+        </div>
+        <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm">
+          <p className="text-xs font-medium text-slate-400">발송 실패</p>
+          <p className="mt-1 text-xl font-bold text-red-600">{followupCounts.failed}</p>
+        </div>
       </div>
 
       <LeadList leads={leads} selectedId={selectedId} onSelect={setSelectedId} />
