@@ -376,6 +376,10 @@ export function getEmailLogoUrl(): string {
 /**
  * renderSignatureBlock()의 HTML 버전 — 로고 이미지를 포함한다.
  * [홍보팀] 로고 이미지 자체를 바꾸려면 public/brand/email-logo.png 파일을 교체하면 됩니다.
+ *
+ * 주의: 이 결과는 white-space:pre-wrap 컨테이너 안에 들어간다. <div>는 그 자체로 줄바꿈되는
+ * 블록 요소라, 줄 사이를 "\n"으로도 이으면 줄바꿈이 두 번 겹쳐 간격이 벌어진다 — 그래서
+ * 빈 문자열("")로 이어붙인다(줄바꿈은 각 <div>가 알아서 만든다).
  */
 export function renderSignatureBlockHtml(): string {
   return [
@@ -385,7 +389,7 @@ export function renderSignatureBlockHtml(): string {
     `<div>${escapeHtml(`${SALES_SIGNATURE.phone} | ${SALES_SIGNATURE.email}`)}</div>`,
     `<div style="font-style:italic;color:#555555;margin-top:4px;">"${escapeHtml(SALES_SIGNATURE.tagline)}"</div>`,
     `<div style="color:#777777;font-size:12px;margin-top:4px;">${escapeHtml(SALES_SIGNATURE.addresses.join(" · "))}</div>`,
-  ].join("\n");
+  ].join("");
 }
 
 /**

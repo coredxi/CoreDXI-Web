@@ -271,4 +271,14 @@ describe("html 버전 — 로고 포함 서명", () => {
     expect(draft.html).toContain("A&amp;B&lt;테스트&gt;");
     expect(draft.html).not.toContain("A&B<테스트>");
   });
+
+  it("서명 줄 사이에 줄바꿈 문자가 겹치지 않는다(<div>가 이미 줄바꿈되므로 간격이 두 배로 벌어지면 안 됨)", () => {
+    const draft = buildT0Email(
+      baseSummary(),
+      { company: "테스트회사", name: "홍길동" },
+      { resultUrl: "https://www.coredxi.com/ax-check/result/tok123" }
+    );
+    // <div> 태그 사이에 "\n"이 남아있으면 pre-wrap 컨테이너에서 줄바꿈이 두 번 겹친다.
+    expect(draft.html).not.toMatch(/<\/div>\s*\n\s*<div/);
+  });
 });
