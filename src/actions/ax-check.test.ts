@@ -40,8 +40,10 @@ vi.mock("@/lib/ax-check/business-days", () => ({
 }));
 
 const isFollowupEnabledMock = vi.fn();
+const sendFollowupEmailMock = vi.fn();
 vi.mock("@/lib/ax-check/followup", () => ({
   isFollowupEnabled: () => isFollowupEnabledMock(),
+  sendFollowupEmail: (...args: unknown[]) => sendFollowupEmailMock(...args),
 }));
 
 const prismaMock = {
@@ -50,6 +52,7 @@ const prismaMock = {
     findMany: vi.fn(),
     findUnique: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
     delete: vi.fn(),
   },
 };
@@ -62,6 +65,11 @@ const {
   updateAxCheckStatus,
   updateAxCheckNote,
   deleteAxCheckResponse,
+  holdAxCheckFollowup,
+  resumeAxCheckFollowup,
+  sendAxCheckFollowupNow,
+  updateAxCheckFollowupDraft,
+  resetAxCheckFollowupDraft,
 } = await import("./ax-check");
 
 function validAnswers(overrides: Record<string, unknown> = {}) {
@@ -419,5 +427,140 @@ describe("admin-gated actions", () => {
 
     expect(result).toEqual({ success: true });
     expect(prismaMock.axCheckResponse.delete).toHaveBeenCalledWith({ where: { id: "id-1" } });
+  });
+});
+
+describe("admin followup actions", () => {
+  beforeEach(() => {
+    prismaMock.axCheckResponse.updateMany = vi.fn();
+    prismaMock.axCheckResponse.findUnique = vi.fn();
+  });
+
+  it("holdAxCheckFollowup은 관리자 로그인을 요구한다", async () => {
+    authMock.mockResolvedValue(null);
+
+    const result = await holdAxCheckFollowup("id-1");
+
+    expect(result).toEqual({ success: false, error: "관리자 로그인이 필요합니다." });
+  });
+
+  it("holdAxCheckFollowup은 SCHEDULED/FAILED 상태에서만 HELD로 전이한다", async () => {
+    authMock.mockResolvedValue({ user: { accountType: "admin", role: "EDITOR" } });
+    prismaMock.axCheckResponse.updateMany.mockResolvedValue({ count: 1 });
+
+    const result = await holdAxCheckFollowup("id-1");
+
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.axCheckResponse.updateMany).toHaveBeenCalledWith({
+      where: { id: "id-1", followupStatus: { in: ["SCHEDULED", "FAILED"] } },
+      data: { followupStatus: "HELD" },
+    });
+  });
+
+  it("holdAxCheckFollowup은 대상 상태가 아니면 에러를 반환한다", async () => {
+    authMock.mockResolvedValue({ user: { accountType: "admin", role: "EDITOR" } });
+    prismaMock.axCheckResponse.updateMany.mockResolvedValue({ count: 0 });
+
+    const result = await holdAxCheckFollowup("id-1");
+
+    expect(result).toEqual({ success: false, error: "보류할 수 있는 상태가 아닙니다." });
+  });
+
+  it("resumeAxCheckFollowup은 HELD가 아니면 에러를 반환한다", async () => {
+    authMock.mockResolvedValue({ user: { accountType: "admin", role: "EDITOR" } });
+    prismaMock.axCheckResponse.findUnique.mockResolvedValue({
+      followupStatus: "SCHEDULED",
+      followupScheduledAt: new Date(),
+    });
+
+    const result = await resumeAxCheckFollowup("id-1");
+
+    expect(result).toEqual({ success: false, error: "보류 상태가 아닙니다." });
+  });
+
+  it("resumeAxCheckFollowup은 HELD를 SCHEDULED로 되돌린다", async () => {
+    authMock.mockResolvedValue({ user: { accountType: "admin", role: "EDITOR" } });
+    prismaMock.axCheckResponse.findUnique.mockResolvedValue({
+      followupStatus: "HELD",
+      followupScheduledAt: new Date("2099-01-01T00:00:00Z"),
+    });
+    prismaMock.axCheckResponse.update.mockResolvedValue({});
+
+    const result = await resumeAxCheckFollowup("id-1");
+
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.axCheckResponse.update).toHaveBeenCalledWith({
+      where: { id: "id-1" },
+      data: { followupStatus: "SCHEDULED", followupScheduledAt: new Date("2099-01-01T00:00:00Z") },
+    });
+  });
+
+  it("resumeAxCheckFollowup은 예정 시각이 이미 지났으면 지금으로 당긴다", async () => {
+    authMock.mockResolvedValue({ user: { accountType: "admin", role: "EDITOR" } });
+    prismaMock.axCheckResponse.findUnique.mockResolvedValue({
+      followupStatus: "HELD",
+      followupScheduledAt: new Date("2020-01-01T00:00:00Z"),
+    });
+    prismaMock.axCheckResponse.update.mockResolvedValue({});
+
+    await resumeAxCheckFollowup("id-1");
+
+    const call = prismaMock.axCheckResponse.update.mock.calls[0]![0];
+    expect(call.data.followupScheduledAt.getTime()).toBeGreaterThan(
+      new Date("2020-01-01T00:00:00Z").getTime()
+    );
+  });
+
+  it("sendAxCheckFollowupNow는 관리자 로그인을 요구한다", async () => {
+    authMock.mockResolvedValue(null);
+
+    const result = await sendAxCheckFollowupNow("id-1");
+
+    expect(result).toEqual({ success: false, error: "관리자 로그인이 필요합니다." });
+    expect(sendFollowupEmailMock).not.toHaveBeenCalled();
+  });
+
+  it("sendAxCheckFollowupNow는 force:true로 sendFollowupEmail을 호출한다", async () => {
+    authMock.mockResolvedValue({ user: { accountType: "admin", role: "EDITOR" } });
+    sendFollowupEmailMock.mockResolvedValue({ success: true });
+
+    const result = await sendAxCheckFollowupNow("id-1");
+
+    expect(result).toEqual({ success: true });
+    expect(sendFollowupEmailMock).toHaveBeenCalledWith("id-1", { force: true });
+  });
+
+  it("updateAxCheckFollowupDraft는 빈 제목/본문을 거부한다", async () => {
+    authMock.mockResolvedValue({ user: { accountType: "admin", role: "EDITOR" } });
+
+    const result = await updateAxCheckFollowupDraft("id-1", "  ", "본문");
+
+    expect(result).toEqual({ success: false, error: "제목과 본문을 모두 입력해 주세요." });
+  });
+
+  it("updateAxCheckFollowupDraft는 override를 저장한다", async () => {
+    authMock.mockResolvedValue({ user: { accountType: "admin", role: "EDITOR" } });
+    prismaMock.axCheckResponse.update.mockResolvedValue({});
+
+    const result = await updateAxCheckFollowupDraft("id-1", "새 제목", "새 본문");
+
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.axCheckResponse.update).toHaveBeenCalledWith({
+      where: { id: "id-1" },
+      data: { followupSubject: "새 제목", followupBody: "새 본문" },
+    });
+  });
+
+  it("resetAxCheckFollowupDraft는 override를 null로 되돌린다", async () => {
+    authMock.mockResolvedValue({ user: { accountType: "admin", role: "EDITOR" } });
+    prismaMock.axCheckResponse.update.mockResolvedValue({});
+
+    const result = await resetAxCheckFollowupDraft("id-1");
+
+    expect(result).toEqual({ success: true });
+    expect(prismaMock.axCheckResponse.update).toHaveBeenCalledWith({
+      where: { id: "id-1" },
+      data: { followupSubject: null, followupBody: null },
+    });
   });
 });

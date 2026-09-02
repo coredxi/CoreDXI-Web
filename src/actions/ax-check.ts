@@ -34,7 +34,7 @@ import { normalizeLegacyPriorities, summarizeAxCheck } from "@/lib/ax-check/summ
 import { buildT0Email } from "@/lib/ax-check/email-draft";
 import { generateAxCheckResultToken } from "@/lib/ax-check/result-token";
 import { computeFollowupScheduledAt, formatKstFollowupSchedule } from "@/lib/ax-check/business-days";
-import { isFollowupEnabled } from "@/lib/ax-check/followup";
+import { isFollowupEnabled, sendFollowupEmail } from "@/lib/ax-check/followup";
 import type {
   AxCheckAnswers,
   AxCheckFormInput,
@@ -44,6 +44,7 @@ import type {
   AxCheckSubmitResult,
   DeleteAxCheckResult,
   LeadStatus,
+  UpdateAxCheckFollowupResult,
   UpdateAxCheckNoteResult,
   UpdateAxCheckStatusResult,
 } from "@/lib/ax-check/types";
@@ -388,5 +389,115 @@ export async function deleteAxCheckResponse(id: string): Promise<DeleteAxCheckRe
   } catch (e) {
     console.error("[deleteAxCheckResponse]", e);
     return { success: false, error: "삭제 중 오류가 발생했습니다." };
+  }
+}
+
+export async function holdAxCheckFollowup(id: string): Promise<UpdateAxCheckFollowupResult> {
+  const gate = await requireAdmin();
+  if (!gate.ok) return { success: false, error: gate.error };
+  if (!id.trim()) return { success: false, error: "유효하지 않은 요청입니다." };
+
+  try {
+    const result = await prisma.axCheckResponse.updateMany({
+      where: { id, followupStatus: { in: ["SCHEDULED", "FAILED"] } },
+      data: { followupStatus: "HELD" },
+    });
+    if (result.count !== 1) {
+      return { success: false, error: "보류할 수 있는 상태가 아닙니다." };
+    }
+    revalidatePath("/admin/leads");
+    return { success: true };
+  } catch (e) {
+    console.error("[holdAxCheckFollowup]", e);
+    return { success: false, error: "보류 처리 중 오류가 발생했습니다." };
+  }
+}
+
+export async function resumeAxCheckFollowup(id: string): Promise<UpdateAxCheckFollowupResult> {
+  const gate = await requireAdmin();
+  if (!gate.ok) return { success: false, error: gate.error };
+  if (!id.trim()) return { success: false, error: "유효하지 않은 요청입니다." };
+
+  try {
+    const record = await prisma.axCheckResponse.findUnique({
+      where: { id },
+      select: { followupStatus: true, followupScheduledAt: true },
+    });
+    if (!record || record.followupStatus !== "HELD") {
+      return { success: false, error: "보류 상태가 아닙니다." };
+    }
+    const now = new Date();
+    const scheduledAt =
+      record.followupScheduledAt && record.followupScheduledAt > now
+        ? record.followupScheduledAt
+        : now;
+
+    await prisma.axCheckResponse.update({
+      where: { id },
+      data: { followupStatus: "SCHEDULED", followupScheduledAt: scheduledAt },
+    });
+    revalidatePath("/admin/leads");
+    return { success: true };
+  } catch (e) {
+    console.error("[resumeAxCheckFollowup]", e);
+    return { success: false, error: "보류 해제 중 오류가 발생했습니다." };
+  }
+}
+
+export async function sendAxCheckFollowupNow(id: string): Promise<UpdateAxCheckFollowupResult> {
+  const gate = await requireAdmin();
+  if (!gate.ok) return { success: false, error: gate.error };
+  if (!id.trim()) return { success: false, error: "유효하지 않은 요청입니다." };
+
+  const result = await sendFollowupEmail(id, { force: true });
+  revalidatePath("/admin/leads");
+  if (!result.success) {
+    return { success: false, error: result.error };
+  }
+  return { success: true };
+}
+
+export async function updateAxCheckFollowupDraft(
+  id: string,
+  subject: string,
+  body: string
+): Promise<UpdateAxCheckFollowupResult> {
+  const gate = await requireAdmin();
+  if (!gate.ok) return { success: false, error: gate.error };
+
+  const trimmedSubject = subject.trim();
+  const trimmedBody = body.trim();
+  if (!id.trim() || !trimmedSubject || !trimmedBody) {
+    return { success: false, error: "제목과 본문을 모두 입력해 주세요." };
+  }
+
+  try {
+    await prisma.axCheckResponse.update({
+      where: { id },
+      data: { followupSubject: trimmedSubject, followupBody: trimmedBody },
+    });
+    revalidatePath("/admin/leads");
+    return { success: true };
+  } catch (e) {
+    console.error("[updateAxCheckFollowupDraft]", e);
+    return { success: false, error: "저장 중 오류가 발생했습니다." };
+  }
+}
+
+export async function resetAxCheckFollowupDraft(id: string): Promise<UpdateAxCheckFollowupResult> {
+  const gate = await requireAdmin();
+  if (!gate.ok) return { success: false, error: gate.error };
+  if (!id.trim()) return { success: false, error: "유효하지 않은 요청입니다." };
+
+  try {
+    await prisma.axCheckResponse.update({
+      where: { id },
+      data: { followupSubject: null, followupBody: null },
+    });
+    revalidatePath("/admin/leads");
+    return { success: true };
+  } catch (e) {
+    console.error("[resetAxCheckFollowupDraft]", e);
+    return { success: false, error: "초기화 중 오류가 발생했습니다." };
   }
 }
