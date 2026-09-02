@@ -12,7 +12,7 @@ export const FOLLOWUP_STATUS_LABEL: Record<FollowupStatus, string> = {
 const STATUS_BADGE: Record<FollowupStatus, string> = {
   SCHEDULED: "bg-indigo-50 text-indigo-600",
   HELD: "bg-amber-50 text-amber-600",
-  SENDING: "bg-blue-50 text-blue-600",
+  SENDING: "bg-slate-100 text-slate-500",
   SENT: "bg-emerald-50 text-emerald-600",
   FAILED: "bg-red-50 text-red-600",
   SKIPPED: "bg-slate-100 text-slate-500",
