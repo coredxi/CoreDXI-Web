@@ -113,6 +113,18 @@ describe("sendFollowupEmail", () => {
     expect(call.to).toBe("user@example.com");
   });
 
+  it("text와 함께 로고가 포함된 html도 같이 보낸다(override·생성 초안 둘 다)", async () => {
+    prismaMock.axCheckResponse.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.axCheckResponse.findUnique.mockResolvedValue(baseRecord());
+    prismaMock.axCheckResponse.update.mockResolvedValue({});
+
+    await sendFollowupEmail("lead-1");
+
+    const call = sendResendEmailMock.mock.calls[0]![0];
+    expect(call.html).toContain("/brand/email-logo.png");
+    expect(call.html).toContain(call.text.split("\n")[0]); // 본문 첫 줄 내용이 html에도 있어야 함
+  });
+
   it("성공하면 SENT로 갱신한다", async () => {
     prismaMock.axCheckResponse.updateMany.mockResolvedValue({ count: 1 });
     prismaMock.axCheckResponse.findUnique.mockResolvedValue(baseRecord());

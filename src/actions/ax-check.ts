@@ -196,6 +196,7 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
       to: email,
       subject: t0Draft.subject,
       text: t0Draft.body,
+      html: t0Draft.html,
       // 본문 말미의 수신 거부 안내가 "이 메일에 회신"을 요청하므로 noreply로 떨어지면 안 된다.
       replyTo: process.env.SALES_REPLY_TO ?? SALES_SIGNATURE.email,
     });

@@ -11,7 +11,7 @@ import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/prisma";
 import { sendResendEmail } from "@/lib/resend";
 import { SALES_SIGNATURE } from "./catalog";
-import { buildCustomerEmailDraft } from "./email-draft";
+import { buildCustomerEmailDraft, wrapEmailBodyAsHtml } from "./email-draft";
 import { normalizeLegacyPriorities } from "./summarize";
 import type { AxCheckAnswers } from "./summarize";
 
@@ -83,6 +83,7 @@ export async function sendFollowupEmail(
       to: record.email,
       subject,
       text: body,
+      html: wrapEmailBodyAsHtml(body),
       replyTo: process.env.SALES_REPLY_TO ?? SALES_SIGNATURE.email,
     });
 

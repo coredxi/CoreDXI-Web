@@ -237,3 +237,38 @@ describe("buildT0Email", () => {
     expect(draft.body).toContain(SALES_SIGNATURE.company);
   });
 });
+
+describe("html 버전 — 로고 포함 서명", () => {
+  it("buildT0Email의 html에 로고 이미지와 서명 정보가 들어간다", () => {
+    const draft = buildT0Email(
+      baseSummary(),
+      { company: "테스트회사", name: "홍길동" },
+      { resultUrl: "https://www.coredxi.com/ax-check/result/tok123" }
+    );
+    expect(draft.html).toContain('<img src="https://www.coredxi.com/brand/email-logo.png"');
+    expect(draft.html).toContain(SALES_SIGNATURE.company);
+    expect(draft.html).toContain(SALES_SIGNATURE.phone);
+  });
+
+  it("buildCustomerEmailDraft(mode:auto)의 html에 로고 이미지와 본문 내용이 들어간다", () => {
+    const draft = buildCustomerEmailDraft(
+      baseAnswers(),
+      baseSummary(),
+      { company: "테스트회사", name: "홍길동" },
+      { mode: "auto" }
+    );
+    expect(draft.html).toContain('<img src="https://www.coredxi.com/brand/email-logo.png"');
+    expect(draft.html).toContain("제안서·견적서 자동 초안 생성");
+    expect(draft.html).toContain(SALES_SIGNATURE.company);
+  });
+
+  it("html은 본문에 있는 특수문자를 이스케이프한다", () => {
+    const draft = buildT0Email(
+      baseSummary(),
+      { company: "A&B<테스트>", name: "홍길동" },
+      { resultUrl: "https://www.coredxi.com/ax-check/result/tok123" }
+    );
+    expect(draft.html).toContain("A&amp;B&lt;테스트&gt;");
+    expect(draft.html).not.toContain("A&B<테스트>");
+  });
+});

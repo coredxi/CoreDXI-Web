@@ -36,14 +36,22 @@ export async function sendResendEmail(
 
   try {
     const resend = new Resend(apiKey);
+    // html·text는 배타적이지 않다 — 둘 다 주어지면 멀티파트로 함께 보낸다(HTML을 못 읽는
+    // 클라이언트·접근성 도구를 위한 대체 텍스트). html만 있으면 html만, text만 있으면
+    // text만(기존 OTP 메일 등 단일 필드 호출부와 호환 유지). 한 개의 삼항식으로 구성해야
+    // Resend SDK의 "html/text 중 최소 하나" 판별 유니언 타입에 맞는다(별도 조건부 스프레드
+    // 두 개로 나누면 각 필드가 독립적으로 optional 취급돼 타입이 안 맞는다).
+    const bodyFields = input.html
+      ? input.text
+        ? { html: input.html, text: input.text }
+        : { html: input.html }
+      : { text: input.text ?? "" };
     const payload = {
       from: input.from ?? RESEND_FROM,
       to: input.to,
       subject: input.subject,
       ...(input.replyTo ? { replyTo: input.replyTo } : {}),
-      ...(input.html
-        ? { html: input.html }
-        : { text: input.text ?? "" }),
+      ...bodyFields,
     };
     const { error } = await resend.emails.send(payload);
 

@@ -14,16 +14,41 @@
 
 import {
   FOLLOWUP_COPY,
+  escapeHtml,
   getOptionLabel,
   getQuestionById,
   renderSignatureBlock,
+  renderSignatureBlockHtml,
 } from "./catalog";
 import type { AxCheckAnswers, AxCheckPriority, AxCheckSummary } from "./summarize";
 
 export type AxCheckEmailDraft = {
   subject: string;
   body: string;
+  /** body와 항상 같은 내용의 HTML 버전(로고 포함) — body를 이스케이프한 뒤 서명 블록만 로고
+   *  포함 HTML로 치환해서 만든다. 별도로 문구를 관리하지 않으므로 두 버전이 어긋날 일이 없다. */
+  html: string;
 };
+
+/**
+ * 텍스트 본문(body)을 HTML 이메일로 변환한다. body 안의 서명 블록(renderSignatureBlock() 결과)을
+ * 찾아 로고 포함 HTML 서명(renderSignatureBlockHtml())으로 바꿔치기하고, 나머지는 그대로
+ * white-space: pre-wrap으로 감싸 줄바꿈·들여쓰기를 텍스트 버전과 동일하게 유지한다.
+ */
+export function wrapEmailBodyAsHtml(body: string): string {
+  const escapedBody = escapeHtml(body);
+  const escapedSignature = escapeHtml(renderSignatureBlock());
+  const withSignature = escapedBody.includes(escapedSignature)
+    ? escapedBody.replace(escapedSignature, renderSignatureBlockHtml())
+    : escapedBody;
+
+  return [
+    '<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#111111;',
+    'white-space:pre-wrap;max-width:560px;">',
+    withSignature,
+    "</div>",
+  ].join("");
+}
 
 function formatPriorityBlock(priority: AxCheckPriority, index: number): string[] {
   return [
@@ -68,7 +93,11 @@ export function buildCustomerEmailDraft(
       renderSignatureBlock(),
     ].join("\n");
 
-    return { subject: FOLLOWUP_COPY.t1.subject(company, count), body };
+    return {
+      subject: FOLLOWUP_COPY.t1.subject(company, count),
+      body,
+      html: wrapEmailBodyAsHtml(body),
+    };
   }
 
   const body = [
@@ -89,6 +118,7 @@ export function buildCustomerEmailDraft(
   return {
     subject: `[CoreDXI] ${company} AX 체크 결과 — 귀사의 우선 과제 ${count}가지`,
     body,
+    html: wrapEmailBodyAsHtml(body),
   };
 }
 
@@ -125,8 +155,11 @@ export function buildT0Email(
     renderSignatureBlock()
   );
 
+  const body = bodyLines.join("\n");
+
   return {
     subject: FOLLOWUP_COPY.t0.subject(company, count),
-    body: bodyLines.join("\n"),
+    body,
+    html: wrapEmailBodyAsHtml(body),
   };
 }

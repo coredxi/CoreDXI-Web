@@ -357,6 +357,37 @@ export function renderSignatureBlock(): string {
   ].join("\n");
 }
 
+/** HTML 특수문자 이스케이프(&, <, >, ", '). 이메일 본문을 HTML로 변환할 때 공용으로 쓴다. */
+export function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/** 이메일 로고 이미지의 절대 URL. 이메일 클라이언트는 상대 경로 이미지를 표시하지 못한다. */
+export function getEmailLogoUrl(): string {
+  const siteUrl = process.env.NEXTAUTH_URL ?? "https://www.coredxi.com";
+  return `${siteUrl}/brand/email-logo.png`;
+}
+
+/**
+ * renderSignatureBlock()의 HTML 버전 — 로고 이미지를 포함한다.
+ * [홍보팀] 로고 이미지 자체를 바꾸려면 public/brand/email-logo.png 파일을 교체하면 됩니다.
+ */
+export function renderSignatureBlockHtml(): string {
+  return [
+    `<img src="${getEmailLogoUrl()}" alt="CoreDXI" width="160" style="display:block;margin:0 0 12px;border:0;" />`,
+    `<div>${escapeHtml(`${SALES_SIGNATURE.name} ${SALES_SIGNATURE.title}`)}</div>`,
+    `<div>${escapeHtml(SALES_SIGNATURE.company)}</div>`,
+    `<div>${escapeHtml(`${SALES_SIGNATURE.phone} | ${SALES_SIGNATURE.email}`)}</div>`,
+    `<div style="font-style:italic;color:#555555;margin-top:4px;">"${escapeHtml(SALES_SIGNATURE.tagline)}"</div>`,
+    `<div style="color:#777777;font-size:12px;margin-top:4px;">${escapeHtml(SALES_SIGNATURE.addresses.join(" · "))}</div>`,
+  ].join("\n");
+}
+
 /**
  * FOLLOWUP_COPY — T0(제출 즉시)·T1(D+2 영업일) 자동 발송 메일 문구.
  * [홍보팀] 문구만 바꾸고 싶으면 이 객체 안의 문자열/템플릿만 수정하면 됩니다(코드 구조 변경 불필요).
