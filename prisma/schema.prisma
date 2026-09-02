@@ -245,6 +245,15 @@ enum LeadStatus {
   CLOSED
 }
 
+enum FollowupStatus {
+  SCHEDULED
+  HELD
+  SENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
 model AxCheckResponse {
   id             String     @id @default(cuid())
   refCode        String? // ?ref= (영업이사 식별, 예: sales-kim)
@@ -261,6 +270,14 @@ model AxCheckResponse {
   note           String?    @db.Text // 영업이사 메모
   marketingOptIn Boolean    @default(false) // 선택 동의 → NewsletterSubscriber 연동 여부
   resultToken    String     @unique // /ax-check/result/[token] 재열람용(메일 링크)
+  followupStatus      FollowupStatus @default(SCHEDULED)
+  followupScheduledAt DateTime?
+  followupSentAt      DateTime?
+  followupSubject     String?
+  followupBody        String?        @db.Text
+  followupError       String?
+  followupAttempts    Int            @default(0)
+  t0SentAt            DateTime?
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
@@ -268,4 +285,5 @@ model AxCheckResponse {
   @@index([status])
   @@index([refCode])
   @@index([email])
+  @@index([followupStatus, followupScheduledAt])
 }

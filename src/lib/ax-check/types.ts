@@ -4,6 +4,7 @@ export type { AxCheckAnswers, AxCheckPriority };
 
 export type LeadGrade = "HOT" | "WARM" | "COLD";
 export type LeadStatus = "NEW" | "CONTACTED" | "MEETING" | "CLOSED";
+export type FollowupStatus = "SCHEDULED" | "HELD" | "SENDING" | "SENT" | "FAILED" | "SKIPPED";
 
 export const LEAD_STATUS_OPTIONS = [
   { value: "NEW", label: "신규" },
@@ -43,6 +44,14 @@ export type AxCheckLeadRecord = {
   status: LeadStatus;
   note: string | null;
   marketingOptIn: boolean;
+  followupStatus: FollowupStatus;
+  followupScheduledAt: Date | null;
+  followupSentAt: Date | null;
+  followupSubject: string | null;
+  followupBody: string | null;
+  followupError: string | null;
+  followupAttempts: number;
+  t0SentAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
