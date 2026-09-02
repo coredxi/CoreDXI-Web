@@ -67,8 +67,8 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 홈 | `/` | 히어로 섹션, 성공사례 미리보기(3건), 최신 블로그(5건), Mini About CTA |
 | 회사 소개 | `/about` | 미션·핵심가치·KPI 수치(50+, 98%, 3배)·CTA |
 | 솔루션 | `/solutions` | AI 협업 자동화·AX 컨설팅·엔터프라이즈 AI 플랫폼 3종 카드, 4단계 도입 프로세스. **2026-09 재편 예정(Phase 1.5 2단계)**: "중소기업 AI 도입·AX 전환 컨설팅" 단일 오퍼 — 진단→설계→구축→교육 4단계 + 대상 업종 블록 + AX 체크 CTA |
-| AX 체크(인터뷰 깔때기) | `/ax-check` | **신규(Phase 1.5 1단계, 2026-09-05 목표)** 8문항 전부 선택지·3분 질문지, 상단 컨설팅 소개 인트로, `?ref=` 영업이사 식별, 제출 즉시 화면에 "AX 우선 과제 3가지"(규칙 기반, 업종 예시·3단계 로드맵 포함). **상세 진단서는 영업이사가 초안을 검토·수정 후 수동 발송(자동 메일 발송 없음, 2026-08-30 결정)**, 선택 동의 시 뉴스레터 구독 연동. 설계: `docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md`, `docs/superpowers/specs/2026-08-30-ax-check-experience-upgrade-design.md` |
-| AX 체크 결과 재열람 | `/ax-check/result/[token]` | 메일 링크용 토큰 페이지 |
+| AX 체크(인터뷰 깔때기) | `/ax-check` | **신규(Phase 1.5 1단계, 2026-09-05 목표)** 8문항 전부 선택지·3분 질문지, 상단 컨설팅 소개 인트로, `?ref=` 영업이사 식별, 제출 즉시 화면에 "AX 우선 과제 3가지"(규칙 기반, 업종 예시·3단계 로드맵 포함). **팔로업 메일 자동 발송(2026-09-02 결정, 8/30 수동 발송 대체)**: 제출 즉시 결과 요약 메일(T0) + 영업일 기준 D+2 09:30 KST 상세 진단 메일(T1, Vercel Cron) — 관리자가 발송 전 보류·수정·즉시 발송 가능, 영업이사는 HOT 리드 통화만. 선택 동의 시 뉴스레터 구독 연동. 설계: `docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md`, `docs/superpowers/specs/2026-08-30-ax-check-experience-upgrade-design.md`(인트로·피드백), `docs/superpowers/specs/2026-09-02-ax-check-auto-followup-design.md`(자동 팔로업) |
+| AX 체크 결과 재열람 | `/ax-check/result/[token]` | 메일 링크용 토큰 페이지 — T0 결과 요약 메일에 링크 포함(2026-09-02) |
 | 성공사례 목록 | `/cases` | Prisma `Portfolio` DB → 카드 그리드 |
 | 성공사례 상세 | `/cases/[id]` | 썸네일·동영상 embed·본문, 동적 SEO 메타데이터 |
 | 블로그 목록 | `/blog` | 발행 글 목록 + URL 검색 필터(`?q=`). **2026-08-14 기준 게시물 전량 삭제 상태(재발행 준비 중)** — 경위·재건 전략은 `docs/superpowers/specs/2026-08-14-content-brand-strategy-design.md` 참고 |
@@ -105,7 +105,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 블로그 관리 | `/admin/blog` | ✅ 완료 | 글 목록·신규 작성(Tiptap 에디터)·수정·발행 |
 | 블로그 주제 관리 | `/admin/blog/topics` | ✅ 완료 | 카테고리 CRUD |
 | 문의 관리 | `/admin/contact` | ✅ 완료 | 문의 목록·상태 변경·알림 이메일 설정 |
-| 리드 관리 | `/admin/leads` | 🚧 Phase 1.5 | AX 체크 응답 목록(등급 HOT/WARM/COLD·상태·ref), 상세·메모·상태 변경·CSV·삭제 — 영업이사용 |
+| 리드 관리 | `/admin/leads` | 🚧 Phase 1.5 | AX 체크 응답 목록(등급 HOT/WARM/COLD·상태·ref), 상세·메모·상태 변경·CSV·삭제 — 영업이사용. **2026-09-02 추가 예정**: 팔로업 메일 패널(예정/보류/발송/실패 상태, 보류·해제·지금 보내기·본문 수정·이력) + 상단 발송 카운트 |
 | 관리자 계정 | `/admin/users` | ✅ 완료 | 관리자 목록·Role 변경(SUPER_ADMIN/EDITOR/VIEWER) |
 | 관리자 등록 | `/admin/register` | ✅ 완료 | 새 관리자 생성 |
 | 고객 관리 | `/admin/customers` | ✅ 완료 | 일반 회원 목록·상세·수정·삭제 |
@@ -162,6 +162,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 
 - **GA4 전환 이벤트 태깅 완료 (2026-08-08)** — `cta_click`/`contact_submit`/`newsletter_subscribe`/`scroll_depth` 4종 커스텀 이벤트. 설계: `docs/superpowers/specs/2026-08-08-ga4-event-tracking-design.md`
 - **영업 지원 트랙(Phase 1.5) 착수 (2026-08-22)** — 영업이사 합류에 맞춰 `/ax-check` 인터뷰 깔때기·`/admin/leads`·솔루션 단일 오퍼 재편·팔로업 뉴스레터 발송·미팅 예약을 3단계(09/05·09/26·10/31)로 진행. **2026-08-08 "뉴스레터 발송 범위 제외" 결정은 철회**하되 목적을 "리드 팔로업 월 1회"로 좁힘. GA4는 `ax_check_submit` 이벤트 신설(`source` 디멘션 재사용). 설계: `docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md`, 실행: `docs/superpowers/plans/2026-08-22-sales-enablement-action-plan.md`
+- **영업채널 자동 팔로업 전환 (2026-09-02)** — 영업이사 1인·외근 위주 체제에서 8/30 "초안 + 수동 발송"이 지켜지지 않는다고 판단해 철회. 시스템이 제출 즉시 결과 요약 메일(T0)과 영업일 기준 D+2 상세 진단 메일(T1, Vercel Cron 09:30 KST)을 자동 발송하고, 관리자는 발송 전 보류·수정·즉시 발송, 영업이사는 HOT 리드 통화만 담당. 결과 화면 문구도 자동 발송에 맞게 정직하게 수정. 킬 스위치 `AX_CHECK_FOLLOWUP_ENABLED`. 설계: `docs/superpowers/specs/2026-09-02-ax-check-auto-followup-design.md`, 실행: `docs/superpowers/plans/2026-09-02-sales-channel-auto-followup-action-plan.md`
 - **AX 체크 경험 개선 (2026-08-30)** — 인트로 화면·결과 피드백 구체화(Q1/Q2/Q4 추가 반영)·
   이메일 워크플로우 전환(고객 자동 발송 제거 → 초안 생성 + 영업이사 수동 발송)을
   첫 링크 발송(1-11) 전에 반영. 설계: `docs/superpowers/specs/2026-08-30-ax-check-experience-upgrade-design.md`
@@ -181,7 +182,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | `BlogCategory` | 블로그 카테고리 |
 | `RateLimitHit` | 관리자 로그인·문의 폼·뉴스레터 구독 등 요청 빈도 제한 기록 |
 | `NewsletterSubscriber` | 뉴스레터 구독자(2026-08-08 구현·검증·DB 반영 완료, `docs/superpowers/specs/2026-08-08-newsletter-design.md` 참고). AX 체크 선택 동의 시 `source="ax-check"`로 합류 |
-| `AxCheckResponse` | **코드·마이그레이션 SQL 작성 완료(2026-08-25), DB 반영은 `prisma migrate deploy` 실행 대기** AX 체크 응답·등급(HOT/WARM/COLD)·상태(NEW/CONTACTED/MEETING/CLOSED)·요약·영업 메모 |
+| `AxCheckResponse` | AX 체크 응답·등급(HOT/WARM/COLD)·상태(NEW/CONTACTED/MEETING/CLOSED)·요약·영업 메모 (DB 반영 2026-08-26~27). **2026-09-02 확장 예정**: `followupStatus`(SCHEDULED/HELD/SENDING/SENT/FAILED/SKIPPED)·`followupScheduledAt`·`followupSentAt`·`followupSubject`·`followupBody`·`followupError`·`followupAttempts`·`t0SentAt` — 수동 `migration.sql` |
 
 **Supabase 테이블** (Prisma 외):
 

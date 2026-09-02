@@ -47,6 +47,8 @@
 
 ## 5. 이메일 초안 워크플로우
 
+> **2026-09-02 대체됨**: 이 절의 "초안 생성 + 영업이사 수동 발송"은 `docs/superpowers/specs/2026-09-02-ax-check-auto-followup-design.md`(T0 즉시 요약 메일 + T1 D+2 영업일 자동 발송 + 관리자 보류 창)로 대체된다. `buildCustomerEmailDraft`는 `mode:"auto"` 옵션이 추가되어 자동 발송 본문 생성기로 계속 쓰인다. 6절(인트로)·7절(피드백 구체화)은 그대로 유효.
+
 - `buildCustomerEmailDraft(answers, summary, contact) → { subject, body }` 순수 함수.
 - 영업이사 알림 메일(자동 발송 유지)의 본문 하단에 초안 전문을 동봉.
 - `/admin/leads` 리드 상세에 "이메일 초안" 패널: 미리보기 + 복사 버튼(주 경로) +
