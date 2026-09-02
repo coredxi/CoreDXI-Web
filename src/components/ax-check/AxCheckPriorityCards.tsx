@@ -25,7 +25,7 @@ export function AxCheckPriorityCards({ company, priorities }: Props) {
           {company ? `${company}의 ` : ""}AX 우선 과제 3가지
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          상세 진단서는 담당 이사가 직접 검토해 1영업일 내 메일로 보내드립니다.
+          상세 진단서는 담당 이사가 직접 검토해 영업일 기준 2~3일 내로 연락드립니다.
         </p>
       </div>
 
