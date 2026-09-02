@@ -2,9 +2,12 @@
 
 > 작성일: 2026-09-02
 > 설계: `docs/superpowers/specs/2026-09-02-ax-check-auto-followup-design.md` 8절
+> **2026-09-02 확정: T0·T1 모두 안 1** (영업이사 검토 완료). 서명: 김문건 이사(Sales) · 010-7192-0532 · obaamg1017@coredxi.com · 태그라인·서울/울산 주소 포함(프롬프트 확정 값 참조).
 > 용도: 사용자·영업이사가 **안 1 / 안 2 중 하나를 고르면** 그 문구를 `catalog.ts`의 `FOLLOWUP_COPY` 상수와 `email-draft.ts`(mode:"auto")에 그대로 반영한다. 섞어 써도 된다(예: 제목은 안 1, 본문 톤은 안 2).
 > `{company}` `{name}` `{industry}` `{priority1..3}` `{resultUrl}` `{brochureUrl}` `{signature}`는 시스템이 채우는 자리. `{brochureUrl}` 줄은 `AX_CHECK_BROCHURE_URL` 미설정 시 통째로 빠진다.
 > 서명 `{signature}` = `SALES_SIGNATURE`(이름 / 직함 | CoreDXI / 전화 | 메일) — **실제 값 입력이 자동 발송 전 게이트**
+
+> **선택 결과(2026-09-02, 영업이사 검토 완료): T0·T1 모두 안 1.** 서명 확정: 김문건 이사(Sales) · (주)코어디엑스아이 · 010-7192-0532 · obaamg1017@coredxi.com · 태그라인 "기업의 AI Digital workplace 여정을 함께하는 신뢰의 기술 파트너, CoreDXI" · 서울시 서초동 사임당로 27 평화빌딩 4층 / 울산광역시 남구 달삼로 76 3층 307호. 구현 프롬프트: `2026-09-02-ax-check-auto-followup-claude-code-prompt.md`
 
 ---
 
@@ -134,6 +137,6 @@ CoreDXI는 진단(2주) → 설계 → 구축 → 교육 순서로 프로젝트�
 - [ ] 60자 내 줄바꿈(텍스트 메일), 카톡 인앱 브라우저에서 열어 확인
 - [ ] 안내 문구(수신 거부 경로) 유지 — A-6 원칙
 
-## 추천
+## 추천 (참고용 — 최종 선택은 위 확정 참조)
 
 첫 발송 대상(IT·통신·AV 구축 업체 대표, 일부는 "AI 쓸 일 없다"는 선입견)을 감안하면 **T0는 안 2, T1은 안 1**의 조합을 추천한다. 첫 접촉은 가볍게, 상세 진단은 구조 있게.

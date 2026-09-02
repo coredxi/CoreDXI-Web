@@ -155,7 +155,7 @@ export function isFollowupEnabled(): boolean; // AX_CHECK_FOLLOWUP_ENABLED !== "
 ### T0 — 결과 요약 (`buildT0Email(summary, contact, links)`)
 - 제목: `[CoreDXI] {company} AX 체크 결과 — 우선 과제 {n}가지 정리본`
 - 본문: 인사 → 우선 과제 제목 3줄 → "지금 바로 다시 보기: {resultUrl}" → 소개서 링크(`AX_CHECK_BROCHURE_URL`이 설정된 경우에만 줄 추가; 0-4 S4 게시 후 설정) → "영업일 기준 2~3일 내에 답변 내용을 바탕으로 정리한 상세 진단 메일을 보내드립니다. 우선 과제가 뚜렷한 경우 담당 이사가 직접 연락드립니다." → 안내 문구(아래) → 서명.
-- 초안 후보 2벌: `docs/superpowers/plans/2026-09-02-ax-check-followup-email-drafts.md` (A-2에서 선택).
+- 초안 후보 2벌: `docs/superpowers/plans/2026-09-02-ax-check-followup-email-drafts.md` — **2026-09-02 영업이사 검토 결과 T0·T1 모두 안 1 확정**. 서명(`SALES_SIGNATURE`)은 김문건 이사(Sales) / 010-7192-0532 / obaamg1017@coredxi.com + 태그라인·주소 2곳(프롬프트 문서 확정 값 참조).
 
 ### T1 — 상세 진단 (`buildCustomerEmailDraft(..., { mode: "auto" })`)
 - 기존 구조(인사 → 과제별 인용·업종 예시·이유·로드맵·기대 효과 → 진행 방식 → 통화 제안 → 서명) 유지.
