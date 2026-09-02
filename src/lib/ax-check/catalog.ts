@@ -330,15 +330,64 @@ export const TIMING_CONSIDERING = new Set(["within_3_months", "this_year", "next
 /** Q8 값 중 HOT 판정에 필요한 "의사결정 권한이 있는" 집합. */
 export const AUTHORITY_DECISIVE = new Set(["self_decide", "ceo_report"]);
 
-/**
- * 이메일 초안 서명 블록 — v1-draft 값. 영업이사 실제 이름·연락처로 교체 필요
- * (교체는 이 상수만 수정하면 됨, 코드 변경 불필요).
- */
 export const SALES_SIGNATURE = {
-  name: "김영업",
-  title: "영업이사",
-  phone: "010-0000-0000",
-  email: "sales@coredxi.com",
+  name: "김문건",
+  title: "이사(Sales)",
+  company: "(주)코어디엑스아이 | CoreDXI",
+  phone: "010-7192-0532",
+  email: "obaamg1017@coredxi.com",
+  tagline: "기업의 AI Digital workplace 여정을 함께하는 신뢰의 기술 파트너, CoreDXI",
+  addresses: [
+    "서울시 서초동 사임당로 27 평화빌딩 4층",
+    "울산광역시 남구 달삼로 76 3층 307호",
+  ],
+} as const;
+
+/**
+ * 이메일 본문에 넣는 5줄 서명 블록. buildCustomerEmailDraft·buildT0Email이 공용으로 쓴다.
+ * [홍보팀] 서명 내용을 바꾸려면 위 SALES_SIGNATURE만 수정하면 이 함수 출력도 같이 바뀝니다.
+ */
+export function renderSignatureBlock(): string {
+  return [
+    `${SALES_SIGNATURE.name} ${SALES_SIGNATURE.title}`,
+    SALES_SIGNATURE.company,
+    `${SALES_SIGNATURE.phone} | ${SALES_SIGNATURE.email}`,
+    `"${SALES_SIGNATURE.tagline}"`,
+    SALES_SIGNATURE.addresses.join(" · "),
+  ].join("\n");
+}
+
+/**
+ * FOLLOWUP_COPY — T0(제출 즉시)·T1(D+2 영업일) 자동 발송 메일 문구.
+ * [홍보팀] 문구만 바꾸고 싶으면 이 객체 안의 문자열/템플릿만 수정하면 됩니다(코드 구조 변경 불필요).
+ * 안 1(정돈된 컨설턴트 톤) 확정본 — docs/superpowers/plans/2026-09-02-ax-check-followup-email-drafts.md
+ */
+export const FOLLOWUP_COPY = {
+  optOutNotice:
+    "이 메일은 AX 체크 진단 신청에 따른 결과 안내입니다. 추가 안내를 원치 않으시면 이 메일에 회신으로\n알려주세요.",
+  t0: {
+    subject: (company: string, count: number) =>
+      `[CoreDXI] ${company} AX 체크 결과 — 우선 과제 ${count}가지 정리본`,
+    greeting: (company: string, name: string) => `${company} ${name}님, 안녕하세요. CoreDXI입니다.`,
+    introLine1: (company: string, count: number) =>
+      `AX 체크에 참여해 주셔서 감사합니다. 방금 화면에서 확인하신 ${company}의 AX 우선 과제 ${count}가지를`,
+    introLine2: "다시 볼 수 있도록 정리해 보내드립니다.",
+    followupNotice:
+      "답변해 주신 내용을 바탕으로 과제별 배경과 첫 1주·1개월·3개월 로드맵을 정리한 상세 진단 메일을\n영업일 기준 2~3일 내에 보내드리겠습니다. 우선 과제가 뚜렷한 경우에는 담당 이사가 직접 연락드립니다.",
+  },
+  t1: {
+    subject: (company: string, count: number) =>
+      `[CoreDXI] ${company} AX 체크 상세 진단 — 우선 과제 ${count}가지와 3개월 로드맵`,
+    greeting: (company: string, name: string) => `${company} ${name}님, 안녕하세요. CoreDXI입니다.`,
+    introLine: (industry: string, count: number) =>
+      `지난 AX 체크에서 답변해 주신 내용을 바탕으로 ${industry} 기준의 우선 과제 ${count}가지를 정리했습니다.`,
+    introLine2:
+      "각 과제마다 왜 지금 이 과제인지, 첫 1주·1개월·3개월에 무엇을 하면 되는지, 기대 효과를 함께 적었습니다.",
+    processParagraph:
+      "CoreDXI는 진단(2주) → 설계 → 구축 → 교육 순서로 프로젝트를 진행합니다. 도구를 소개하는 데서 끝나지 않고,\n반복 업무가 실제로 줄어드는 것까지 함께 챙깁니다.",
+    callToAction: (company: string) =>
+      `이 메일에 회신해 주시면 편하신 시간에 30분 통화로 ${company}의 상황에 맞춰 자세히 설명드리겠습니다.`,
+  },
 } as const;
 
 /**
