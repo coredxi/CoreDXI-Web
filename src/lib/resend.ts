@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-export const RESEND_FROM = "noreply@coredxi.com";
+export const RESEND_FROM = "CoreDXI <noreply@coredxi.com>";
 
 export type SendResendEmailInput = {
   to: string | string[];
