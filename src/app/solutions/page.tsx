@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { getPageContent } from "@/lib/page-content";
 import { SOLUTIONS_CONTENT_DEFAULTS } from "@/lib/page-content/solutions";
 import { TrackedCtaLink } from "@/components/analytics/TrackedCtaLink";
+import { BrochureDownloadButton } from "@/components/solutions/BrochureDownloadButton";
 
 export const revalidate = 60;
 
@@ -117,6 +118,16 @@ export default async function SolutionsPage() {
                       도입 문의
                       <ArrowRight className="h-4 w-4" aria-hidden="true" />
                     </TrackedCtaLink>
+                    {/* [홍보팀] AX 컨설팅 카드 전용 — 소개서 다운로드 버튼. URL을 비우면
+                        관리자 화면에서 임시로 숨길 수 있다. */}
+                    {solution.badge === "AX 컨설팅" && content.brochureUrl && (
+                      <BrochureDownloadButton
+                        href={content.brochureUrl}
+                        label={content.brochureLabel}
+                        location="solutions_brochure_download"
+                        className="mt-3"
+                      />
+                    )}
                   </div>
                 );
               })}

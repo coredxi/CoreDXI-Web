@@ -66,7 +66,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 |--------|------|-----------|
 | 홈 | `/` | 히어로 섹션, 성공사례 미리보기(3건), 최신 블로그(5건), Mini About CTA |
 | 회사 소개 | `/about` | 미션·핵심가치·KPI 수치(50+, 98%, 3배)·CTA |
-| 솔루션 | `/solutions` | AI 협업 자동화·AX 컨설팅·엔터프라이즈 AI 플랫폼 3종 카드, 4단계 도입 프로세스. **2026-09 재편 예정(Phase 1.5 2단계)**: "중소기업 AI 도입·AX 전환 컨설팅" 단일 오퍼 — 진단→설계→구축→교육 4단계 + 대상 업종 블록 + AX 체크 CTA |
+| 솔루션 | `/solutions` | AI 협업 자동화·AX 컨설팅·엔터프라이즈 AI 플랫폼 3종 카드, 4단계 도입 프로세스, AX 컨설팅 카드에 소개서 PDF 다운로드 버튼(CMS 편집 가능, 2026-09-03). **2026-09 재편 예정(Phase 1.5 2단계)**: "중소기업 AI 도입·AX 전환 컨설팅" 단일 오퍼 — 진단→설계→구축→교육 4단계 + 대상 업종 블록 + AX 체크 CTA |
 | AX 체크(인터뷰 깔때기) | `/ax-check` | **신규(Phase 1.5 1단계, 2026-09-05 목표)** 8문항 전부 선택지·3분 질문지, 상단 컨설팅 소개 인트로, `?ref=` 영업이사 식별, 제출 즉시 화면에 "AX 우선 과제 3가지"(규칙 기반, 업종 예시·3단계 로드맵 포함). **팔로업 메일 자동 발송(2026-09-02 결정, 8/30 수동 발송 대체)**: 제출 즉시 결과 요약 메일(T0) + 영업일 기준 D+2 09:30 KST 상세 진단 메일(T1, Vercel Cron) — 관리자가 발송 전 보류·수정·즉시 발송 가능, 영업이사는 HOT 리드 통화만. 선택 동의 시 뉴스레터 구독 연동. 설계: `docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md`, `docs/superpowers/specs/2026-08-30-ax-check-experience-upgrade-design.md`(인트로·피드백), `docs/superpowers/specs/2026-09-02-ax-check-auto-followup-design.md`(자동 팔로업) |
 | AX 체크 결과 재열람 | `/ax-check/result/[token]` | 메일 링크용 토큰 페이지 — T0 결과 요약 메일에 링크 포함(2026-09-02) |
 | 성공사례 목록 | `/cases` | Prisma `Portfolio` DB → 카드 그리드 |
@@ -164,8 +164,10 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 - **영업 지원 트랙(Phase 1.5) 착수 (2026-08-22)** — 영업이사 합류에 맞춰 `/ax-check` 인터뷰 깔때기·`/admin/leads`·솔루션 단일 오퍼 재편·팔로업 뉴스레터 발송·미팅 예약을 3단계(09/05·09/26·10/31)로 진행. **2026-08-08 "뉴스레터 발송 범위 제외" 결정은 철회**하되 목적을 "리드 팔로업 월 1회"로 좁힘. GA4는 `ax_check_submit` 이벤트 신설(`source` 디멘션 재사용). 설계: `docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md`, 실행: `docs/superpowers/plans/2026-08-22-sales-enablement-action-plan.md`
 - **영업채널 자동 팔로업 전환 (2026-09-02)** — 영업이사 1인·외근 위주 체제에서 8/30 "초안 + 수동 발송"이 지켜지지 않는다고 판단해 철회. 시스템이 제출 즉시 결과 요약 메일(T0)과 영업일 기준 D+2 상세 진단 메일(T1, Vercel Cron 09:30 KST)을 자동 발송하고, 관리자는 발송 전 보류·수정·즉시 발송, 영업이사는 HOT 리드 통화만 담당. 결과 화면 문구도 자동 발송에 맞게 정직하게 수정. 킬 스위치 `AX_CHECK_FOLLOWUP_ENABLED`. 설계: `docs/superpowers/specs/2026-09-02-ax-check-auto-followup-design.md`, 실행: `docs/superpowers/plans/2026-09-02-sales-channel-auto-followup-action-plan.md`
 - **AX 체크 경험 개선 (2026-08-30)** — 인트로 화면·결과 피드백 구체화(Q1/Q2/Q4 추가 반영)·
-  이메일 워크플로우 전환(고객 자동 발송 제거 → 초안 생성 + 영업이사 수동 발송)을
+  이메일 워크플로우 전환(고객 자동 발송 제거 → 초안 생성 + 영업이사 수동 발송, **2026-09-02 자동 발송 방식으로 대체 결정 — 위 "영업채널 자동 팔로업 전환" 참고**)을
   첫 링크 발송(1-11) 전에 반영. 설계: `docs/superpowers/specs/2026-08-30-ax-check-experience-upgrade-design.md`
+- **Phase 1.5 2단계 잔여 항목 (09/08~09/26 예정)** — AX 체크 완료율 점검(20% 미만 시 문항 8→6), `/solutions` 단일 오퍼 재편, `/about` 레퍼런스 중심 축약, 블로그 1편. 상세: `docs/TODO.md` 1-B, `docs/superpowers/plans/2026-08-22-sales-enablement-action-plan.md`
+- **Phase 2 착수 시점** — CMS 구조 편집·블로그 댓글/반응·관리자 다크모드는 Phase 1.5 종료 후(11월 이후) 착수 검토
 - **전환 퍼널 분석 대시보드 2단계(시각화 UI) 구현 완료 (2026-08-14)** — `/admin/dashboard`의 `Ga4FunnelPanel`이 최근 30일 이벤트 카운트 기반 근사 퍼널(방문→스크롤 참여→CTA 클릭→문의 제출)과 뉴스레터 구독 건수를 가로 바 형태로 표시. GA4 정식 Funnel Exploration이 아닌 eventCount/sessions 근사치이며, 스크롤 깊이(`percent`) 구간 세분화는 커스텀 디멘션 등록 확인 전까지 보류(이벤트 총합만 사용). 설계: `docs/superpowers/specs/2026-08-14-funnel-dashboard-stage2-design.md`. **실측(실 GA4 데이터 렌더링·배포 후 실시간 이벤트 확인) 2026-08-30 완료** — 프로덕션에서 전환 퍼널 실 데이터 확인 및 블로그 하단 CTA `cta_click`(`cta_location=blog_post_bottom`) 실시간 수신 확인(`docs/superpowers/plans/2026-08-14-phase1-item4-5-action-plan.md` 2번 표 순서 5~7). **Phase 1 공식 종료**
 
 ### 6-2. 데이터베이스 스키마 (Prisma)

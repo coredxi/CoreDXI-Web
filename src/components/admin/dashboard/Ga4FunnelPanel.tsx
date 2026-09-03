@@ -35,6 +35,8 @@ export async function Ga4FunnelPanel() {
             {/* [홍보팀] 방문부터 문의까지 각 단계에서 이벤트가 얼마나 발생했는지 보여주는 지표입니다. */}
             eventCount 기반 · scroll_depth / cta_click / contact_submit
           </p>
+          {/* [홍보팀] "CTA 클릭" 단계의 cta_click에는 /solutions 소개서 다운로드 클릭
+              (cta_location: "solutions_brochure_download")도 포함됩니다(2026-09-03 결정). */}
         </div>
         <div className="flex flex-wrap gap-2">
           <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">

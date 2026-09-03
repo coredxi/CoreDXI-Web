@@ -254,6 +254,35 @@ export function SolutionsContentForm({ initial }: Props) {
       </div>
 
       <div className="space-y-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-gray-700">소개서 다운로드</h2>
+        <p className="text-xs text-gray-500">
+          AX 컨설팅 카드 하단에 노출되는 소개서 PDF 다운로드 버튼입니다. PDF 파일을 교체할
+          때는 같은 파일명으로 덮어쓰면 URL이 유지됩니다. URL을 비워두면 버튼이 사라집니다.
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="sol-brochure-label">버튼 문구</Label>
+            <Input
+              id="sol-brochure-label"
+              value={values.brochureLabel}
+              onChange={(e) => updateField("brochureLabel", e.target.value)}
+              disabled={pending}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="sol-brochure-url">파일 URL</Label>
+            <Input
+              id="sol-brochure-url"
+              value={values.brochureUrl}
+              onChange={(e) => updateField("brochureUrl", e.target.value)}
+              disabled={pending}
+              placeholder="/docs/coredxi-ax-consulting-brochure.pdf"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-sm font-semibold text-gray-700">하단 CTA 섹션</h2>
         <div className="space-y-1.5">
           <Label htmlFor="sol-cta-title">CTA 타이틀</Label>

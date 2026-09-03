@@ -17,6 +17,10 @@ export type SolutionsContent = {
   processSteps: { title: string; desc: string }[];
   ctaTitle: string;
   ctaDesc: string;
+  /** [홍보팀] AX 컨설팅 카드 소개서 다운로드 버튼 문구. 비워두면 버튼이 숨겨진다. */
+  brochureLabel: string;
+  /** [홍보팀] 소개서 PDF 경로("/"로 시작하는 상대 경로) 또는 절대 URL. 비워두면 버튼이 숨겨진다. */
+  brochureUrl: string;
 };
 
 export const SOLUTIONS_CONTENT_DEFAULTS: SolutionsContent = {
@@ -75,4 +79,6 @@ export const SOLUTIONS_CONTENT_DEFAULTS: SolutionsContent = {
   ctaTitle: "지금 바로 무료 상담을 신청하세요",
   ctaDesc:
     "영업일 기준 1~2일 내 전문 컨설턴트가 연락드립니다. AI 전환의 첫 걸음, CoreDXI와 함께 시작하세요.",
+  brochureLabel: "소개서 PDF 다운로드",
+  brochureUrl: "/docs/coredxi-ax-consulting-brochure.pdf",
 };
