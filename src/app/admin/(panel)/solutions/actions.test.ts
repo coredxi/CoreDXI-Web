@@ -49,4 +49,52 @@ describe("saveSolutionsContent", () => {
       expect.objectContaining({ heroTitleLine1: "변경된 타이틀" })
     );
   });
+
+  it("accepts a relative brochure URL and trims it on save", async () => {
+    const result = await saveSolutionsContent({
+      ...SOLUTIONS_CONTENT_DEFAULTS,
+      brochureUrl: "  /docs/coredxi-ax-consulting-brochure.pdf  ",
+    });
+    expect(result.success).toBe(true);
+    expect(savePageContentMock).toHaveBeenCalledWith(
+      "solutions",
+      expect.objectContaining({
+        brochureUrl: "/docs/coredxi-ax-consulting-brochure.pdf",
+      })
+    );
+  });
+
+  it("accepts an empty brochure URL to hide the button", async () => {
+    const result = await saveSolutionsContent({
+      ...SOLUTIONS_CONTENT_DEFAULTS,
+      brochureUrl: "",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts an https absolute brochure URL", async () => {
+    const result = await saveSolutionsContent({
+      ...SOLUTIONS_CONTENT_DEFAULTS,
+      brochureUrl: "https://www.coredxi.com/docs/coredxi-ax-consulting-brochure.pdf",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a javascript: brochure URL", async () => {
+    const result = await saveSolutionsContent({
+      ...SOLUTIONS_CONTENT_DEFAULTS,
+      brochureUrl: "javascript:alert(1)",
+    });
+    expect(result.success).toBe(false);
+    expect(savePageContentMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a protocol-relative brochure URL", async () => {
+    const result = await saveSolutionsContent({
+      ...SOLUTIONS_CONTENT_DEFAULTS,
+      brochureUrl: "//evil.example.com/x.pdf",
+    });
+    expect(result.success).toBe(false);
+    expect(savePageContentMock).not.toHaveBeenCalled();
+  });
 });
