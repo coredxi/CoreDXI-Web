@@ -4,6 +4,8 @@
 > 상위 계획: `docs/superpowers/plans/2026-08-22-sales-enablement-action-plan.md` (Phase 1.5) — 이 문서는 그 2단계(09/08~09/26)를 재편한다
 > 관련 설계: `docs/superpowers/specs/2026-08-30-ax-check-experience-upgrade-design.md` (수동 발송 워크플로우 — 이 문서로 대체됨), 신규 설계 문서는 B단계에서 작성
 > 진행 현황: Notion AI 비서 집무실 액션 DB "[CoreDXI-Web] 영업채널 자동 팔로업 전환" + 하위 액션 A~E. 이 문서와 Notion이 어긋나면 **Notion이 최신**
+>
+> **2026-09-03 갱신 — 체크박스가 실제 진행 상황과 어긋나 있던 것을 바로잡음.** C단계 구현은 계획된 일정(09/08~09/12, 별도 브랜치)보다 훨씬 앞당겨져 **09/02~09/03 사이 main에 직접 커밋 18건**으로 구현·배포 완료됨(`feat/ax-check-auto-followup` 브랜치는 만들지 않음 — 계획 5-C 지침에서 벗어남, 기록만 남기고 재작업하지 않음). 근거: `prisma migrate status`로 프로덕션 스키마 최신 확인, CI 전 커밋 green, Gmail에서 `ref=test-c8` 테스트 리드 알림 수신 확인(09/02 22:42). 아래 체크박스는 이 사실관계를 반영해 갱신.
 
 ---
 
@@ -98,37 +100,37 @@ T0을 두는 이유: 현재는 고객 손에 남는 것이 화면뿐이다(고�
 ### 5-0. 과도기 규칙 (09/04 첫 발송 ~ C단계 배포 전)
 | 순서 | 항목 | 담당 | 상태 |
 |---|---|---|---|
-| P-1 | 첫 3~5곳 리드는 `/admin/leads` 초안을 **사용자(사무실)**가 복사·발송한다. 영업이사는 HOT만 전화 | 사용자 | ⬜ |
-| P-2 | 이 기간 리드의 제출→발송 소요 시간을 Notion 작업 로그에 기록(자동화 후 비교 기준) | 사용자 | ⬜ |
+| P-1 | 첫 3~5곳 리드는 `/admin/leads` 초안을 **사용자(사무실)**가 복사·발송한다. 영업이사는 HOT만 전화 | 사용자 | ⬜ **해당 없음(09-03 판단)** — C단계가 09/03에 이미 배포돼 "첫 링크 발송(09/04)"보다 앞섰음. 과도기 자체가 사실상 발생하지 않음 |
+| P-2 | 이 기간 리드의 제출→발송 소요 시간을 Notion 작업 로그에 기록(자동화 후 비교 기준) | 사용자 | ⬜ 위와 같은 이유로 해당 없음 |
 
 ### 5-A. 결정 (09/02 ~ 09/04)
 | 순서 | 항목 | 담당 | 상태 |
 |---|---|---|---|
-| A-1 | 시퀀스 확정 — T0 즉시 메일 포함 여부, T1 시점(D+2 vs D+3), T2 도입 시기 | 사용자·영업이사 | ⬜ |
-| A-2 | 첫 메일 콘텐츠 안 A/B 결정 → 초안 2벌 작성(AI 비서) → 사용자·영업이사 선택 | 사용자·영업이사·AI 비서 | ⬜ |
-| A-3 | HOT 개입 규칙 — 전화 기한(T1 당일), 부재 시 처리, WARM 이상 확대 여부 | 영업이사 | ⬜ |
-| A-4 | 결과 화면·T0 메일·`/privacy` 문구 확정(원칙 3·4) | 사용자·홍보팀 | ⬜ |
-| A-5 | 0-7 뉴스레터 발송 담당 = "Resend Broadcasts + 사용자 승인"으로 확정, 영업이사 제외 | 사용자 | ⬜ |
-| A-6 | 광고성 정보 기준 확인 — T1은 서비스 이행, T2·뉴스레터는 옵트인 한정 | 사용자(필요 시 자문) | ⬜ |
+| A-1 | 시퀀스 확정 — T0 즉시 메일 포함 여부, T1 시점(D+2 vs D+3), T2 도입 시기 | 사용자·영업이사 | ✅ T0 포함·T1 D+2 09:30 KST로 확정, 설계 문서·코드에 반영·배포 완료(09/02~03). T2는 미착수(E-1로 이연) |
+| A-2 | 첫 메일 콘텐츠 안 A/B 결정 → 초안 2벌 작성(AI 비서) → 사용자·영업이사 선택 | 사용자·영업이사·AI 비서 | ✅ 안 A 채택, 안 1(정돈된 컨설턴트 톤) 확정 — `docs/superpowers/plans/2026-09-02-ax-check-followup-email-drafts.md`, `FOLLOWUP_COPY` 코드 반영 완료 |
+| A-3 | HOT 개입 규칙 — 전화 기한(T1 당일), 부재 시 처리, WARM 이상 확대 여부 | 영업이사 | ⬜ **미확정으로 보임** — 이 세션에서 커밋·문서상 명시적 합의 근거를 찾지 못함. 사용자·영업이사 확인 필요 |
+| A-4 | 결과 화면·T0 메일·`/privacy` 문구 확정(원칙 3·4) | 사용자·홍보팀 | ✅ 커밋 `783b55b`(1차)·`97fd0ad`(자동 발송 반영) 완료 |
+| A-5 | 0-7 뉴스레터 발송 담당 = "Resend Broadcasts + 사용자 승인"으로 확정, 영업이사 제외 | 사용자 | ✅ 이 액션플랜 0절에 결정 기록됨(실제 구현은 E-4, 미착수) |
+| A-6 | 광고성 정보 기준 확인 — T1은 서비스 이행, T2·뉴스레터는 옵트인 한정 | 사용자(필요 시 자문) | ⬜ **미확인** — 공통 안내 문구(8절)만 코드에 반영됐고, 법률·정책 확인 자체는 근거를 찾지 못함. 사용자 확인 필요 |
 
 ### 5-B. 설계 문서 (09/03 ~ 09/05)
 | 순서 | 항목 | 담당 | 상태 |
 |---|---|---|---|
-| B-1 | `docs/superpowers/specs/2026-09-0x-ax-check-auto-followup-design.md` — 4번 요점 확정, 상태 전이도, 크론 실패 시나리오, 롤백(크론 비활성화만으로 수동 모드 복귀) | AI 비서 세션 → 사용자 검토 | ⬜ |
-| B-2 | `docs/PRD.md`·`docs/TODO.md`·`CLAUDE.md` 2절 반영, 8/30 설계 문서에 "대체됨" 표기 | AI 비서 세션 | ⬜ |
-| B-3 | Claude Code 구현 프롬프트 작성(`…-claude-code-prompt.md`) | AI 비서 세션 | ⬜ |
+| B-1 | `docs/superpowers/specs/2026-09-0x-ax-check-auto-followup-design.md` — 4번 요점 확정, 상태 전이도, 크론 실패 시나리오, 롤백(크론 비활성화만으로 수동 모드 복귀) | AI 비서 세션 → 사용자 검토 | ✅ `2026-09-02-ax-check-auto-followup-design.md` 작성 완료 |
+| B-2 | `docs/PRD.md`·`docs/TODO.md`·`CLAUDE.md` 2절 반영, 8/30 설계 문서에 "대체됨" 표기 | AI 비서 세션 | ✅ TODO.md는 09/02 반영, PRD.md는 09/03 갱신(리드 관리·`AxCheckResponse` 행을 "예정"→"완료"로 수정). 프로젝트 `CLAUDE.md` 2절도 09/02 재편 반영됨. 8/30 설계 문서 "대체됨" 표기는 이 설계 문서(B-1) 6절에 명시됨 |
+| B-3 | Claude Code 구현 프롬프트 작성(`…-claude-code-prompt.md`) | AI 비서 세션 | ✅ `2026-09-02-ax-check-auto-followup-claude-code-prompt.md` 작성 완료 |
 
-### 5-C. 구현 1차 (09/08 ~ 09/12, 브랜치 `feat/ax-check-auto-followup`)
+### 5-C. 구현 1차 (계획 09/08~09/12 → **실제 09/02~09/03, main 직접 커밋**)
 | 순서 | 항목 | 담당 | 검증 | 상태 |
 |---|---|---|---|---|
-| C-1 | `migration.sql` + `schema.prisma` followup 필드, `prisma migrate deploy` | Claude Code → 사용자 | 로컬·프로덕션 적용 | ⬜ |
-| C-2 | `business-days.ts`(KST 영업일 계산) + Vitest | Claude Code | 단위 테스트 | ⬜ |
-| C-3 | `ax-check.ts` — 제출 시 T0 발송 + `followupScheduledAt` 계산·SCHEDULED 저장, 알림 메일 개편 | Claude Code | Vitest 갱신 | ⬜ |
-| C-4 | `/api/cron/ax-check-followup` + `vercel.json` crons + `CRON_SECRET` | Claude Code → 사용자(env) | 수동 호출·Vercel 크론 로그 | ⬜ |
-| C-5 | `EmailDraftPanel` 확장(보류·지금 보내기·수정·이력) + 서버 액션 | Claude Code | EDITOR 계정 실접근 | ⬜ |
-| C-6 | 결과 화면·`/privacy`·`CONTENT_GUIDE.md`(17번 갱신: 자동 발송 보류 방법) | Claude Code/홍보팀 | 문서 리뷰 | ⬜ |
-| C-7 | lint / tsc / vitest / Playwright, PR, 배포 | Claude Code → 사용자 | CI 녹색 | ⬜ |
-| C-8 | 프로덕션 검증 — 테스트 ref로 제출 → T0 수신 → 크론 실행 → T1 수신 → 보류 케이스 1건 | 사용자 | 체크리스트 | ⬜ |
+| C-1 | `migration.sql` + `schema.prisma` followup 필드, `prisma migrate deploy` | Claude Code → 사용자 | 로컬·프로덕션 적용 | ✅ 커밋 `618b150`. 2026-09-03 `prisma migrate status`로 프로덕션 스키마 최신 확인 |
+| C-2 | `business-days.ts`(KST 영업일 계산) + Vitest | Claude Code | 단위 테스트 | ✅ 커밋 `70cfe60`, `business-days.test.ts` 포함 vitest 통과 |
+| C-3 | `ax-check.ts` — 제출 시 T0 발송 + `followupScheduledAt` 계산·SCHEDULED 저장, 알림 메일 개편 | Claude Code | Vitest 갱신 | ✅ 커밋 `60c59e2` |
+| C-4 | `/api/cron/ax-check-followup` + `vercel.json` crons + `CRON_SECRET` | Claude Code → 사용자(env) | 수동 호출·Vercel 크론 로그 | 🚧 라우트·`vercel.json`은 커밋 `343d6c3`로 완료. **`CRON_SECRET` 등 Vercel 프로덕션 env 실제 설정 여부는 미확인** — 이 세션에 연결된 Vercel 계정이 실 배포 계정과 달라 대시보드 조회 불가, 사용자 확인 필요 |
+| C-5 | `EmailDraftPanel` 확장(보류·지금 보내기·수정·이력) + 서버 액션 | Claude Code | EDITOR 계정 실접근 | ✅ 커밋 `98de57a`, `a368d41` |
+| C-6 | 결과 화면·`/privacy`·`CONTENT_GUIDE.md`(17번 갱신: 자동 발송 보류 방법) | Claude Code/홍보팀 | 문서 리뷰 | ✅ 커밋 `97fd0ad`, `eb712c7` |
+| C-7 | lint / tsc / vitest / Playwright, PR, 배포 | Claude Code → 사용자 | CI 녹색 | 🚧 lint/tsc/vitest는 전 커밋 CI green 확인(GitHub Actions). **PR은 생성하지 않고 main에 직접 커밋**(계획 이탈). Playwright E2E `ax-check.spec.ts`는 이번 세션에서 재실행 확인 안 함. Vercel 배포는 GitHub 연동 자동배포로 추정되나 이번 세션에서 직접 확인 못함(사용자 확인 필요) |
+| C-8 | 프로덕션 검증 — 테스트 ref로 제출 → T0 수신 → 크론 실행 → T1 수신 → 보류 케이스 1건 | 사용자 | 체크리스트 | 🚧 진행 중. ✅ `ref=test-c8` 제출→영업이사 알림 수신 확인(09/02 22:42) ✅ 등급×업종 9건 육안 검수 완료, 어색한 조사 병기 발견·수정(커밋 `acb9561`, 09/03) ⬜ T1 실제 수신(D+2=09/04 09:30 KST, 아직 미도래) ⬜ 보류 케이스 1건 스킵 확인 ⬜ Vercel 프로덕션 env 확인(C-4 참고) |
 
 ### 5-D. 운영 전환 (09/12 ~ 09/16)
 | 순서 | 항목 | 담당 | 상태 |
@@ -208,7 +210,7 @@ T0을 두는 이유: 현재는 고객 손에 남는 것이 화면뿐이다(고�
 ## 11. 완료 기준 (이 액션플랜 자체)
 
 - [x] 이 액션플랜 작성 (2026-09-02)
-- [ ] A단계 결정 6건 확정 (09/04)
-- [ ] B단계 설계 문서·PRD·TODO 반영 (09/05)
-- [ ] C단계 배포 + C-8 프로덕션 검증 (09/12)
+- [ ] A단계 결정 6건 확정 (09/04) — **4/6 확정**(A-1·A-2·A-4·A-5). A-3(HOT 개입 규칙)·A-6(광고성 정보 기준)은 미확정, 사용자·영업이사 확인 필요
+- [x] B단계 설계 문서·PRD·TODO 반영 (09/05) — 2026-09-03 완료(계획보다 이름)
+- [x] C단계 배포 (계획 09/12 → 실제 09/03 완료, main 직접 커밋) — C-8 프로덕션 검증은 진행 중(T1 수신 확인이 09/04 09:30 KST 이후 가능)
 - [ ] D-4 2주 회고 — "영업이사가 메일에 쓰는 시간 0" 달성 여부 (09/26)

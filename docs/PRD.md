@@ -105,7 +105,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 블로그 관리 | `/admin/blog` | ✅ 완료 | 글 목록·신규 작성(Tiptap 에디터)·수정·발행 |
 | 블로그 주제 관리 | `/admin/blog/topics` | ✅ 완료 | 카테고리 CRUD |
 | 문의 관리 | `/admin/contact` | ✅ 완료 | 문의 목록·상태 변경·알림 이메일 설정 |
-| 리드 관리 | `/admin/leads` | 🚧 Phase 1.5 | AX 체크 응답 목록(등급 HOT/WARM/COLD·상태·ref), 상세·메모·상태 변경·CSV·삭제 — 영업이사용. **2026-09-02 추가 예정**: 팔로업 메일 패널(예정/보류/발송/실패 상태, 보류·해제·지금 보내기·본문 수정·이력) + 상단 발송 카운트 |
+| 리드 관리 | `/admin/leads` | ✅ 완료 | AX 체크 응답 목록(등급 HOT/WARM/COLD·상태·ref), 상세·메모·상태 변경·CSV·삭제 — 영업이사용. **팔로업 메일 패널 구현 완료(2026-09-02~03)**: 예정/보류/발송/실패 상태, 보류·해제·지금 보내기·본문 수정·이력 + 상단 발송 카운트. 프로덕션 검증(C-8) 일부 진행 중 |
 | 관리자 계정 | `/admin/users` | ✅ 완료 | 관리자 목록·Role 변경(SUPER_ADMIN/EDITOR/VIEWER) |
 | 관리자 등록 | `/admin/register` | ✅ 완료 | 새 관리자 생성 |
 | 고객 관리 | `/admin/customers` | ✅ 완료 | 일반 회원 목록·상세·수정·삭제 |
@@ -182,7 +182,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | `BlogCategory` | 블로그 카테고리 |
 | `RateLimitHit` | 관리자 로그인·문의 폼·뉴스레터 구독 등 요청 빈도 제한 기록 |
 | `NewsletterSubscriber` | 뉴스레터 구독자(2026-08-08 구현·검증·DB 반영 완료, `docs/superpowers/specs/2026-08-08-newsletter-design.md` 참고). AX 체크 선택 동의 시 `source="ax-check"`로 합류 |
-| `AxCheckResponse` | AX 체크 응답·등급(HOT/WARM/COLD)·상태(NEW/CONTACTED/MEETING/CLOSED)·요약·영업 메모 (DB 반영 2026-08-26~27). **2026-09-02 확장 예정**: `followupStatus`(SCHEDULED/HELD/SENDING/SENT/FAILED/SKIPPED)·`followupScheduledAt`·`followupSentAt`·`followupSubject`·`followupBody`·`followupError`·`followupAttempts`·`t0SentAt` — 수동 `migration.sql` |
+| `AxCheckResponse` | AX 체크 응답·등급(HOT/WARM/COLD)·상태(NEW/CONTACTED/MEETING/CLOSED)·요약·영업 메모 (DB 반영 2026-08-26~27). **2026-09-02~03 확장 완료**: `followupStatus`(SCHEDULED/HELD/SENDING/SENT/FAILED/SKIPPED)·`followupScheduledAt`·`followupSentAt`·`followupSubject`·`followupBody`·`followupError`·`followupAttempts`·`t0SentAt` — 수동 `migration.sql` 작성 후 프로덕션 `prisma migrate deploy` 반영 확인(2026-09-03) |
 
 **Supabase 테이블** (Prisma 외):
 

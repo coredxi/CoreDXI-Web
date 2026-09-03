@@ -231,15 +231,17 @@ export function isFollowupEnabled(): boolean; // AX_CHECK_FOLLOWUP_ENABLED !== "
 
 ## 14. 완료 기준 (Definition of Done)
 
-- [ ] `migration.sql` 작성, `prisma migrate deploy` 프로덕션 적용, `prisma generate`·tsc 통과
-- [ ] 제출 시 T0 1통 발송, `followupScheduledAt`이 D+2 영업일 09:30 KST로 저장
-- [ ] Vercel Cron이 매일 09:30 KST에 실행되어 대상 리드에 T1 발송, 로그에 카운트 출력
-- [ ] `/admin/leads`에서 보류·해제·지금 보내기·본문 수정·이력이 EDITOR 계정으로 동작
-- [ ] 영업이사 알림 메일에 통화 포인트·예정 시각·관리 링크가 있고 초안 전문은 없음
-- [ ] 결과 화면·`/privacy`·`CONTENT_GUIDE.md` 17번·`.env.example` 갱신
-- [ ] Vitest 신규·갱신 테스트 통과, Playwright 골든패스 통과, CI 녹색
-- [ ] `SALES_SIGNATURE` 실제 값 입력 확인(자동 발송 전 게이트)
-- [ ] C-8 프로덕션 검증 체크리스트 통과
+> 2026-09-03 갱신: 아래 항목 대부분이 09/02~09/03 사이 구현·배포됐음을 확인(근거: 액션 플랜 5-C 표 참고). 미확인 항목만 미체크로 남김.
+
+- [x] `migration.sql` 작성, `prisma migrate deploy` 프로덕션 적용, `prisma generate`·tsc 통과 — 09/03 `prisma migrate status`로 확인
+- [x] 제출 시 T0 1통 발송, `followupScheduledAt`이 D+2 영업일 09:30 KST로 저장 — 코드 반영, `ref=test-c8` 알림 메일로 간접 확인
+- [ ] Vercel Cron이 매일 09:30 KST에 실행되어 대상 리드에 T1 발송, 로그에 카운트 출력 — **09/04 09:30 KST 이후 확인 가능**(아직 미도래)
+- [x] `/admin/leads`에서 보류·해제·지금 보내기·본문 수정·이력이 EDITOR 계정으로 동작 — 코드 반영 완료, 이번 세션에서 EDITOR 계정 실접근 재확인은 안 함
+- [x] 영업이사 알림 메일에 통화 포인트·예정 시각·관리 링크가 있고 초안 전문은 없음 — `ref=test-c8` 알림 메일로 확인
+- [x] 결과 화면·`/privacy`·`CONTENT_GUIDE.md` 17번·`.env.example` 갱신 — 커밋 반영 확인
+- [x] Vitest 신규·갱신 테스트 통과, CI 녹색 — 09/03 기준 305개 전체 통과. Playwright 골든패스는 이번 세션에서 재실행 확인 안 함(⚠ 미확인으로 별도 표시)
+- [x] `SALES_SIGNATURE` 실제 값 입력 확인(자동 발송 전 게이트) — `catalog.ts`에 김문건 이사 실제 연락처 반영 확인
+- [ ] C-8 프로덕션 검증 체크리스트 통과 — 부분 완료(테스트 리드 알림 수신·9건 샘플 검수), T1 수신·보류 케이스 스킵·Vercel env 확인은 남음
 
 ---
 
