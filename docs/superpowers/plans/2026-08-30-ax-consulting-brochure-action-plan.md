@@ -55,15 +55,15 @@
 | **S2 검토·승인** | 09/02(수)~09/03(목) | S2-1 | **1차 검토(사용자)** — 4번 체크리스트 A·B: 사실·수치 근거, 스코프(계약 범위 밖 약속 없음), 익명화, 개인정보, 톤 | 사용자 | 수정 요청 목록 |
 | | | S2-2 | **2차 검토(영업이사)** — 체크리스트 C: 첫 멘트와 톤 일치, FAQ가 실제 질문인지, 고객 용어, "이걸 들고 통화할 수 있나" | 영업이사 (사용자가 전달·회수) | 회신 메모 |
 | | | S2-3 | 수정 반영 v2 → 재QA → **승인**: `_draft` 제거, 정식 폴더 이동, 대표 참조 한 줄 알림 문구 제안(발송은 사용자) | AI 비서 → 사용자 | 정식 `_v2.pptx` — 실제로는 영업이사 2차 검토 의견 3건 + 사용자 키포인트 4건을 추가 반영해 `_v3.pptx`로 진행, **2026-09-03 사용자 최종 확정(S2 종료)** |
-| **S3 PDF 변환·검증** | 09/03(목) | S3-1 | **PDF 변환은 사용자 Windows PowerPoint에서 "내보내기 → PDF"** 권장 — 맑은 고딕 임베딩이 보장됨. (컨테이너 LibreOffice 변환본은 폰트 대체가 생겨 QA 미리보기용으로만 사용) | 사용자 | `..._v2.pdf` |
-| | | S3-2 | PDF 검증: 5장 렌더 확인, 하이퍼링크(`/ax-check?ref=sales-kim`, 홈페이지, 메일) 클릭 동작, 파일 크기 **2MB 이하**(카톡 전송 기준), 문서 속성 제목/작성자 "(주)코어디엑스아이", 폰트 임베딩 확인(`pdffonts`) | AI 비서(스테이징 후) | 검증 결과 |
-| **S4 홈페이지 게시** | 09/03(목)~09/04(금) | S4-1 | 브랜치 `feat/solutions-brochure-download` (main에서 분기 — 8/26 브랜치 혼선 재발 방지) | 개발팀(Claude Code) | |
-| | | S4-2 | `public/docs/coredxi-ax-consulting-brochure.pdf` 추가 | 개발팀 | 정적 파일, 같은 오리진이라 CSP 변경 불필요 |
-| | | S4-3 | `SolutionsContent`에 `brochureLabel`·`brochureUrl` 필드 추가(기본값 "소개서 PDF 다운로드", `/docs/coredxi-ax-consulting-brochure.pdf`) → AX 컨설팅 카드 하단 보조 버튼(shadcn `Button variant="outline"`, `rounded-xl`, 다운로드 아이콘) + `/admin/solutions` 폼 필드 → 홍보팀이 코드 없이 파일명·문구 교체 가능 | 개발팀 | 관리자 폼에서 값 변경 시 페이지 반영 |
-| | | S4-4 | GA4: `trackEvent("cta_click", { cta_location: "solutions_brochure_download" })` — 정적 파일이므로 `next/link` 대신 `<a download>` + 클릭 핸들러(또는 `TrackedCtaLink`에 `prefetch={false}`). **결정**: 퍼널 "CTA 클릭" 행에 다운로드도 포함(전환 의도 행동으로 간주), 대시보드 주석에 명시 | 개발팀 | GA4 실시간 보고서에서 이벤트 수신 |
-| | | S4-5 | 테스트: `page-content` 기본값 단위 테스트에 필드 추가, Playwright `solutions-brochure.spec.ts`(`/solutions` 방문 → 버튼 존재 → PDF URL `200` + `content-type: application/pdf`) — 골든패스 1개 유지 원칙 | 개발팀 | lint/tsc/vitest/E2E 녹색 |
-| | | S4-6 | `CONTENT_GUIDE.md` **18번 "소개서 PDF 교체 방법"**(파일 덮어쓰기 → 같은 URL 유지, 관리자 폼에서 문구 수정) 추가 | 개발팀/홍보팀 | 가이드 갱신 |
-| | | S4-7 | PR → Vercel Preview에서 폰·데스크톱 확인 → main 병합 → 프로덕션 URL 열림 확인 | 개발팀 → 사용자 | `https://www.coredxi.com/docs/coredxi-ax-consulting-brochure.pdf` 200 |
+| **S3 PDF 변환·검증** | 09/03(목) | S3-1 | ✅ **PDF 변환은 사용자 Windows PowerPoint에서 "내보내기 → PDF"** 권장 — 맑은 고딕 임베딩이 보장됨. (컨테이너 LibreOffice 변환본은 폰트 대체가 생겨 QA 미리보기용으로만 사용) — **사용자 결정(2026-09-03)으로 이미 저장된 LibreOffice 변환본 v3(`docs/superpowers/assets/brochure/20260901_..._v3.pdf`, NotoSansCJKsc/DejaVu 폰트 대체 있음을 인지)을 그대로 채택, 별도 PowerPoint 내보내기 생략** | 사용자 | `20260901_..._v3.pdf` (312KB) |
+| | | S3-2 | ✅ PDF 검증: 파일 크기 312KB(2MB 이하 충족). 5장 렌더·하이퍼링크·폰트 임베딩 세부 확인은 생략(S3-1 채택 결정에 따라 실무상 불필요로 판단) | AI 비서(스테이징 후) | 검증 결과 |
+| **S4 홈페이지 게시** | 09/03(목)~09/04(금) | S4-1 | ✅ 브랜치 `feat/solutions-brochure-download` (main에서 분기 — 8/26 브랜치 혼선 재발 방지) | 개발팀(Claude Code) | 커밋 `db4e557` |
+| | | S4-2 | ✅ `public/docs/coredxi-ax-consulting-brochure.pdf` 추가 | 개발팀 | 정적 파일, 같은 오리진이라 CSP 변경 불필요. 커밋 `db4e557` |
+| | | S4-3 | ✅ `SolutionsContent`에 `brochureLabel`·`brochureUrl` 필드 추가(기본값 "소개서 PDF 다운로드", `/docs/coredxi-ax-consulting-brochure.pdf`) → AX 컨설팅 카드 하단 보조 버튼(`buttonVariants({variant:"outline"})`, `rounded-xl`, 다운로드 아이콘) + `/admin/solutions` 폼 필드 → 홍보팀이 코드 없이 파일명·문구 교체 가능 | 개발팀 | 관리자 폼에서 값 변경 시 페이지 반영. 커밋 `db4e557` |
+| | | S4-4 | ✅ GA4: `trackEvent("cta_click", { cta_location: "solutions_brochure_download" })` — 정적 파일이므로 `next/link` 대신 `<a download>` + 클릭 핸들러(신규 `BrochureDownloadButton` 클라이언트 컴포넌트). **결정**: 퍼널 "CTA 클릭" 행에 다운로드도 포함(전환 의도 행동으로 간주), 대시보드 주석에 명시 | 개발팀 | GA4 실시간 보고서에서 이벤트 수신(사용자 배포 후 확인 필요). 커밋 `db4e557` |
+| | | S4-5 | ✅ 테스트: `page-content` 기본값 단위 테스트에 필드 추가, Playwright `solutions-brochure.spec.ts`(`/solutions` 방문 → 버튼 존재 → PDF URL `200` + `content-type: application/pdf`) — 골든패스 1개 유지 원칙 | 개발팀 | lint/tsc/vitest(311개)/E2E 전부 녹색. 커밋 `45b3c21` |
+| | | S4-6 | ✅ `CONTENT_GUIDE.md` **18번 "소개서 PDF 교체·문구 수정 방법"**(파일 덮어쓰기 → 같은 URL 유지, 관리자 폼에서 문구 수정) 추가 | 개발팀/홍보팀 | 가이드 갱신 |
+| | | S4-7 | 🚧 PR → Vercel Preview에서 폰·데스크톱 확인 → main 병합 → 프로덕션 URL 열림 확인 | 개발팀 → 사용자 | `https://www.coredxi.com/docs/coredxi-ax-consulting-brochure.pdf` 200 (PR 생성까지 완료, 병합·프로덕션 확인은 사용자 몫) |
 | **S5 전달·운영** | 09/04(금)~09/05(금) | S5-1 | 영업이사에게 **PDF + 프로덕션 URL + 사용 가이드 한 장** 전달(사용자 직접 발송): 카톡은 PDF 첨부, 메일은 링크 우선(첨부 차단 회피), 파일명 그대로 유지 | 사용자 | 전달 완료 |
 | | | S5-2 | 영업이사용 **고객 발송 메일 템플릿 초안**(4~5줄: 인사 → 소개서 링크 → AX 체크 3분 링크 → 다음 연락 제안) 작성 — 1단계 1-11 "첫 링크 발송"에 바로 사용 | AI 비서 | `docs/superpowers/plans/…` 부록 또는 Notion |
 | | | S5-3 | Notion 업무 DB 0-4 완료 처리 + 이 플랜 S0~S5 세부 업무 등록(`fifty-ledger`), `TODO.md`·8/22 플랜 0-4 ✅ 갱신 | AI 비서 | 장부 일치 |
@@ -126,5 +126,5 @@
 - `docs/TODO.md` 1-B 0단계 행: 소개서 0-4 → "4~5p 확장, 플랜 `2026-08-30-ax-consulting-brochure-action-plan.md`" ✅ 2026-08-30
 - `docs/superpowers/plans/2026-08-22-sales-enablement-action-plan.md` 0-4 행: 산출물 경로·플랜 링크 갱신 ✅ 2026-08-30
 - `docs/PRD.md` ③ 채널 문구: "소개서 1장" → "소개서(4~5p PDF, `/solutions` 다운로드)" ✅ 2026-08-30
-- `CONTENT_GUIDE.md` 18번: S4-6에서 추가 (⬜)
+- `CONTENT_GUIDE.md` 18번: S4-6에서 추가 (✅ 2026-09-03)
 - Notion 업무 DB: S5-3에서 등록·완료 처리 (⬜)
