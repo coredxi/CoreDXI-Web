@@ -1,0 +1,9 @@
+# 텍스트 파일은 항상 LF로 저장 — 환경(Windows/Mac/Linux, 원격 세션 등)에 관계없이
+# 동일하게 취급되도록 저장소 규칙으로 고정한다. 개인 core.autocrlf 설정에 의존하지 않는다.
+* text=auto eol=lf
+
+# 바이너리 파일은 줄바꿈 변환 대상에서 완전히 제외 — 변환이 적용되면 파일이 깨진다.
+*.pdf binary
+*.pptx binary
+*.png binary
+*.ico binary
