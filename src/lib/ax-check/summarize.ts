@@ -20,6 +20,7 @@ import {
   INDUSTRY_TASK_EXAMPLES,
   NO_AI_EXPERIENCE,
   NO_AI_EXPERIENCE_STEP_LABEL,
+  objectParticle,
   Q3_MAX_SELECT,
   Q5_NEEDS_DATA_PREP,
   SMALL_TEAM_SIZE,
@@ -47,7 +48,7 @@ export type AxCheckAnswers = {
 export type AxCheckPriority = {
   title: string;
   why: string;
-  /** 답변 인용 근거 문장 — "'제안서·견적서 작성'을(를) 가장 시간이 많이 드는 업무로 꼽아주셨습니다." */
+  /** 답변 인용 근거 문장 — "'제안서·견적서 작성'을 가장 시간이 많이 드는 업무로 꼽아주셨습니다." */
   echo: string;
   /** Q1(업종) 기준 구체 예시 1문장. 매핑이 없는 업종("위 복합"/"기타" 등)이면 null. */
   industryExample: string | null;
@@ -86,7 +87,7 @@ function buildEcho(taskValue: string, answers: AxCheckAnswers): string {
     taskValue === "other" && answers.q3Other?.trim()
       ? answers.q3Other.trim()
       : getOptionLabel(getQuestionById("q3"), taskValue);
-  return `'${label}'을(를) 가장 시간이 많이 드는 업무로 꼽아주셨습니다.`;
+  return `'${label}'${objectParticle(label)} 가장 시간이 많이 드는 업무로 꼽아주셨습니다.`;
 }
 
 function withPrefixes(base: string, prefixes: string[]): string {

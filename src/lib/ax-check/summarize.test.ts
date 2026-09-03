@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { gradeAxCheck, summarizeAxCheck, type AxCheckAnswers } from "./summarize";
-import { CATALOG_VERSION } from "./catalog";
+import { CATALOG_VERSION, objectParticle } from "./catalog";
 
 function baseAnswers(overrides: Partial<AxCheckAnswers> = {}): AxCheckAnswers {
   return {
@@ -76,7 +76,7 @@ describe("summarizeAxCheck — 답변 인용(echo)", () => {
   it("선택한 업무 라벨을 그대로 인용한다", () => {
     const summary = summarizeAxCheck(baseAnswers({ q3: ["quote"] }));
     expect(summary.priorities[0]?.echo).toBe(
-      "'견적·내역서·투찰 서류 작성'을(를) 가장 시간이 많이 드는 업무로 꼽아주셨습니다."
+      "'견적·내역서·투찰 서류 작성'을 가장 시간이 많이 드는 업무로 꼽아주셨습니다."
     );
   });
 
@@ -203,5 +203,21 @@ describe("summarizeAxCheck — score", () => {
 
     expect(hot.score).toBeGreaterThan(warm.score);
     expect(warm.score).toBeGreaterThan(cold.score);
+  });
+});
+
+describe("objectParticle — 목적격 조사(을/를) 받침 판정", () => {
+  it("받침이 있는 명사는 '을'을 붙인다", () => {
+    expect(objectParticle("견적·내역서·투찰 서류 작성")).toBe("을"); // '성' 받침 ㅇ
+    expect(objectParticle("관리")).not.toBe("을"); // 대조군: 받침 없음
+  });
+
+  it("받침이 없는 명사는 '를'을 붙인다", () => {
+    expect(objectParticle("나라장터 입찰 공고 탐색·적격심사 서류 준비")).toBe("를"); // '비' 받침 없음
+    expect(objectParticle("A/S·하자보수·월정기 점검 이력 관리")).toBe("를"); // '리' 받침 없음
+  });
+
+  it("한글이 아닌 문자로 끝나면 '를'로 안전하게 기본값 처리한다", () => {
+    expect(objectParticle("기타 업무 ABC")).toBe("를");
   });
 });

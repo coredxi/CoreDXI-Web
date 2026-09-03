@@ -357,6 +357,21 @@ export function renderSignatureBlock(): string {
   ].join("\n");
 }
 
+/**
+ * 한글 명사 뒤에 붙일 목적격 조사(을/를)를 받침 유무로 판정한다.
+ * 마지막 글자가 완성형 한글(가~힣)이 아니면(영문·숫자·기타) 어느 쪽으로 읽어도 어색하지 않은
+ * "를"을 기본값으로 쓴다. summarize.ts의 buildEcho()가 사용 — 기존에는 "을(를)" 병기였으나
+ * C-8 등급×업종 9건 육안 검수에서 이 병기가 자동 발송 티가 두드러진다는 점이 발견돼 교체했다.
+ */
+export function objectParticle(label: string): "을" | "를" {
+  const lastChar = label.trim().slice(-1);
+  const code = lastChar.charCodeAt(0);
+  const isCompleteHangul = code >= 0xac00 && code <= 0xd7a3;
+  if (!isCompleteHangul) return "를";
+  const hasBatchim = (code - 0xac00) % 28 !== 0;
+  return hasBatchim ? "을" : "를";
+}
+
 /** HTML 특수문자 이스케이프(&, <, >, ", '). 이메일 본문을 HTML로 변환할 때 공용으로 쓴다. */
 export function escapeHtml(text: string): string {
   return text
