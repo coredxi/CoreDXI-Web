@@ -231,17 +231,19 @@ export function isFollowupEnabled(): boolean; // AX_CHECK_FOLLOWUP_ENABLED !== "
 
 ## 14. 완료 기준 (Definition of Done)
 
-> 2026-09-03 갱신: 아래 항목 대부분이 09/02~09/03 사이 구현·배포됐음을 확인(근거: 액션 플랜 5-C 표 참고). 미확인 항목만 미체크로 남김.
+> 2026-09-03 갱신(2차): 1차 조사(로컬 저장소 커밋만 근거)에서는 T1 수신·Vercel env를 미확인으로 남겼으나,
+> Notion 액션 DB(fifty-ledger, 다른 세션에서 이미 사용자 확인 후 완료 처리)를 조회해 실제로는 09/02~09/03
+> 사이 아래 항목 전부(Playwright 재실행 제외)가 완료됐음을 확인. Notion을 최종 근거로 다시 갱신.
 
-- [x] `migration.sql` 작성, `prisma migrate deploy` 프로덕션 적용, `prisma generate`·tsc 통과 — 09/03 `prisma migrate status`로 확인
-- [x] 제출 시 T0 1통 발송, `followupScheduledAt`이 D+2 영업일 09:30 KST로 저장 — 코드 반영, `ref=test-c8` 알림 메일로 간접 확인
-- [ ] Vercel Cron이 매일 09:30 KST에 실행되어 대상 리드에 T1 발송, 로그에 카운트 출력 — **09/04 09:30 KST 이후 확인 가능**(아직 미도래)
-- [x] `/admin/leads`에서 보류·해제·지금 보내기·본문 수정·이력이 EDITOR 계정으로 동작 — 코드 반영 완료, 이번 세션에서 EDITOR 계정 실접근 재확인은 안 함
+- [x] `migration.sql` 작성, `prisma migrate deploy` 프로덕션 적용, `prisma generate`·tsc 통과 — 09/03 `prisma migrate status`로 직접 확인 + Notion 기록
+- [x] 제출 시 T0 1통 발송, `followupScheduledAt`이 D+2 영업일 09:30 KST로 저장 — 코드 반영, `ref=test-c8` 알림 메일로 확인
+- [x] Vercel Cron이 매일 09:30 KST에 실행되어 대상 리드에 T1 발송, 로그에 카운트 출력 — Notion 액션 DB "C 구현 1차" 항목에 T1 수신·크론 인증 통과로 기록(2026-09-03, 사용자 확인). 어떤 리드로 어떻게 검증했는지(자연 스케줄 대기 vs "지금 보내기" 강제 발송)는 로컬에서 재확인 못함
+- [x] `/admin/leads`에서 보류·해제·지금 보내기·본문 수정·이력이 EDITOR 계정으로 동작 — 코드 반영 + Notion에 보류/해제/지금 보내기 통과로 기록
 - [x] 영업이사 알림 메일에 통화 포인트·예정 시각·관리 링크가 있고 초안 전문은 없음 — `ref=test-c8` 알림 메일로 확인
 - [x] 결과 화면·`/privacy`·`CONTENT_GUIDE.md` 17번·`.env.example` 갱신 — 커밋 반영 확인
-- [x] Vitest 신규·갱신 테스트 통과, CI 녹색 — 09/03 기준 305개 전체 통과. Playwright 골든패스는 이번 세션에서 재실행 확인 안 함(⚠ 미확인으로 별도 표시)
+- [x] Vitest 신규·갱신 테스트 통과, CI 녹색 — 09/03 기준 305개 전체 통과. **Playwright 골든패스만 유일하게 미확인**(프로덕션 DB 직결이라 이번 세션에서 임의 실행 보류)
 - [x] `SALES_SIGNATURE` 실제 값 입력 확인(자동 발송 전 게이트) — `catalog.ts`에 김문건 이사 실제 연락처 반영 확인
-- [ ] C-8 프로덕션 검증 체크리스트 통과 — 부분 완료(테스트 리드 알림 수신·9건 샘플 검수), T1 수신·보류 케이스 스킵·Vercel env 확인은 남음
+- [x] C-8 프로덕션 검증 체크리스트 통과 — Notion 기록상 완료(사용자 확인). 등급×업종 9건 육안 검수는 그 시점엔 "선택 QA, 후속 세션"으로 유보돼 있었는데 이번 세션(09-03)에서 완료 — 어색한 조사 병기 발견·수정(커밋 `acb9561`)
 
 ---
 
