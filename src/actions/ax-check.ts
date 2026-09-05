@@ -217,8 +217,12 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
   }
 
   // 영업이사 알림 메일 — 통화 포인트 3줄 + 예정 발송 시각 + 관리 링크. 초안 전문은 동봉하지 않는다.
+  // 수신(to)=영업이사(SALES_NOTIFY_EMAIL), 참조(cc)=기술이사(SALES_NOTIFY_CC_EMAIL, 선택) —
+  // 2026-09-05 결정: 실제 접촉은 영업이사가 하되 기술이사도 내용을 참고할 수 있게 참조로 넣는다.
+  // [홍보팀] 수신·참조 주소는 코드가 아니라 Vercel 환경변수에서 바꿉니다(CONTENT_GUIDE.md 17번).
   const salesNotifyEmail =
     process.env.SALES_NOTIFY_EMAIL?.trim() || (await getContactNotificationEmail());
+  const salesNotifyCcEmail = process.env.SALES_NOTIFY_CC_EMAIL?.trim() || undefined;
   if (salesNotifyEmail) {
     const q3Labels = input.answers.q3
       .slice(0, 2)
@@ -231,6 +235,9 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
     const salesMailResult = await sendResendEmail({
       to: salesNotifyEmail,
       subject: `${subjectPrefix} 새 AX 체크 리드 - ${grade} - ${company}`,
+      ...(salesNotifyCcEmail && salesNotifyCcEmail !== salesNotifyEmail
+        ? { cc: salesNotifyCcEmail }
+        : {}),
       text: [
         "새 AX 체크 응답이 접수되었습니다.",
         "",

@@ -113,6 +113,7 @@ beforeEach(() => {
   prismaMock.axCheckResponse.update.mockResolvedValue({});
   isFollowupEnabledMock.mockReturnValue(true);
   delete process.env.SALES_NOTIFY_EMAIL;
+  delete process.env.SALES_NOTIFY_CC_EMAIL;
   delete process.env.SALES_REPLY_TO;
 });
 
@@ -223,6 +224,29 @@ describe("submitAxCheck happy path", () => {
     expect(sendResendEmailMock).toHaveBeenCalledWith(
       expect.objectContaining({ to: "contact@coredxi.com" })
     );
+  });
+
+  it("영업 알림 메일은 SALES_NOTIFY_EMAIL을 수신, SALES_NOTIFY_CC_EMAIL을 참조로 보낸다", async () => {
+    process.env.SALES_NOTIFY_EMAIL = "sales@coredxi.com";
+    process.env.SALES_NOTIFY_CC_EMAIL = "tech@coredxi.com";
+
+    await submitAxCheck(validInput());
+
+    expect(sendResendEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "sales@coredxi.com", cc: "tech@coredxi.com" })
+    );
+  });
+
+  it("SALES_NOTIFY_CC_EMAIL 미설정 시 영업 알림 메일에 cc 필드를 넣지 않는다", async () => {
+    process.env.SALES_NOTIFY_EMAIL = "sales@coredxi.com";
+
+    await submitAxCheck(validInput());
+
+    const salesCall = sendResendEmailMock.mock.calls.find(
+      (call) => (call[0] as { to: string }).to === "sales@coredxi.com"
+    );
+    expect(salesCall).toBeDefined();
+    expect((salesCall![0] as { cc?: string }).cc).toBeUndefined();
   });
 
   it("고객에게 T0 요약 메일을 즉시 발송한다", async () => {

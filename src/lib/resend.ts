@@ -8,6 +8,8 @@ export type SendResendEmailInput = {
   text?: string;
   html?: string;
   replyTo?: string | string[];
+  /** 참조(CC). 영업 알림 메일에서 기술이사 참조용으로 사용한다(2026-09-05). */
+  cc?: string | string[];
   from?: string;
 };
 
@@ -51,6 +53,7 @@ export async function sendResendEmail(
       to: input.to,
       subject: input.subject,
       ...(input.replyTo ? { replyTo: input.replyTo } : {}),
+      ...(input.cc ? { cc: input.cc } : {}),
       ...bodyFields,
     };
     const { error } = await resend.emails.send(payload);
