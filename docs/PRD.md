@@ -169,6 +169,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 - **Phase 1.5 2단계 잔여 항목 (09/08~09/26 예정)** — AX 체크 완료율 점검(20% 미만 시 문항 8→6), `/solutions` 단일 오퍼 재편, `/about` 레퍼런스 중심 축약, 블로그 1편. 상세: `docs/TODO.md` 1-B, `docs/superpowers/plans/2026-08-22-sales-enablement-action-plan.md`
 - **Phase 2 착수 시점** — Phase 1.5 종료 후(11월 이후). **2026-09-06 재정의**: CMS 구조 편집·블로그 댓글/반응·관리자 다크모드는 아이디어 주차장으로 이동하고, Phase 2는 "영업 도구 고도화"(카톡 실시간 알림, `/admin/leads` 필드 확장, 응답 데이터 기반 문항·LLM·업종 확장, 콘텐츠 파생 파이프라인, Notion-CRM 연계 재검토)로 재정의. 상세: 기획서 3-B·4번 Phase 2·7-C
 - **전체 방향 재검토 (2026-09-06)** — Phase 1.5 기술은 계획을 앞섰으나 실응답 0건. 사용자 결정: ① 영업이사 첫 링크 발송 마감 09/11(09/10까지 없으면 사용자 직접 2~3곳) ② 뉴스레터·콘텐츠 발송 담당 = 사용자 + AI 비서(시스템 자동 + 승인) ③ Phase 2 재정의. **신규 기능 착수 게이트: AX 체크 실응답 5건 + HOT 1건** — 충족 전 E 2차(T2 너처·Calendly·LLM·Broadcasts)와 3단계 항목 코드 착수 금지. 사이트의 역할 정의를 "리드 육성 플랫폼"에서 "영업이사의 도구 + 리드 구조화 장치"로 변경
+- **AX 뉴스레터 발송 시스템 기본설계 확정 (2026-09-28)** — 포스코 뉴스배포관리시스템(기준등록→자료수집→AI 선별→검토 후 발송)을 벤치마크해 "외부 구독자용 AX 뉴스 큐레이션 뉴스레터"로 설계. 네이버 뉴스 검색 API + 언론사 RSS 수집, 1차 규칙 점수 → 2차 Claude API 점수·요약, 발송 유형 즉시/스케줄링/검토후발송(기본 검토후발송 = 시스템 자동 + 사용자 승인), 매주 화 08:00 KST, 제목 `(광고)` 표기, 1호는 "중소기업 AI 도입·AX 전환" 단일 캠페인, 매체는 IT·경제지 10~15곳 재구성. 신규 Prisma 테이블 6종·Cron 2종·`/admin/newsletter` 탭 확장. **코드 착수는 신규 기능 게이트(실응답 5건 + HOT 1건) 충족 후**, 0단계 준비(네이버 검색 API 키·RSS 조사·시드 CSV)만 선행 가능. 설계: `docs/superpowers/specs/2026-09-28-newsletter-distribution-design.md`
 - **전환 퍼널 분석 대시보드 2단계(시각화 UI) 구현 완료 (2026-08-14)** — `/admin/dashboard`의 `Ga4FunnelPanel`이 최근 30일 이벤트 카운트 기반 근사 퍼널(방문→스크롤 참여→CTA 클릭→문의 제출)과 뉴스레터 구독 건수를 가로 바 형태로 표시. GA4 정식 Funnel Exploration이 아닌 eventCount/sessions 근사치이며, 스크롤 깊이(`percent`) 구간 세분화는 커스텀 디멘션 등록 확인 전까지 보류(이벤트 총합만 사용). 설계: `docs/superpowers/specs/2026-08-14-funnel-dashboard-stage2-design.md`. **실측(실 GA4 데이터 렌더링·배포 후 실시간 이벤트 확인) 2026-08-30 완료** — 프로덕션에서 전환 퍼널 실 데이터 확인 및 블로그 하단 CTA `cta_click`(`cta_location=blog_post_bottom`) 실시간 수신 확인(`docs/superpowers/plans/2026-08-14-phase1-item4-5-action-plan.md` 2번 표 순서 5~7). **Phase 1 공식 종료**
 
 ### 6-2. 데이터베이스 스키마 (Prisma)
@@ -185,6 +186,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | `BlogCategory` | 블로그 카테고리 |
 | `RateLimitHit` | 관리자 로그인·문의 폼·뉴스레터 구독 등 요청 빈도 제한 기록 |
 | `NewsletterSubscriber` | 뉴스레터 구독자(2026-08-08 구현·검증·DB 반영 완료, `docs/superpowers/specs/2026-08-08-newsletter-design.md` 참고). AX 체크 선택 동의 시 `source="ax-check"`로 합류 |
+| `NewsletterCampaign` · `NewsletterKeyword` · `NewsletterSelectionRule` · `NewsSource` · `NewsletterCampaignSource` · `NewsArticle` · `NewsletterIssue` · `NewsletterIssueArticle` · `NewsletterDelivery` | **(설계 확정, 미구현)** AX 뉴스레터 발송 시스템 — 캠페인 기준·검색 키워드(AND/OR/NOT)·선별지표·매체·수집 기사·호(발송 단위)·선별 결과·발송 이력. 게이트 충족 후 수동 `migration.sql`로 반영. `docs/superpowers/specs/2026-09-28-newsletter-distribution-design.md` |
 | `AxCheckResponse` | AX 체크 응답·등급(HOT/WARM/COLD)·상태(NEW/CONTACTED/MEETING/CLOSED)·요약·영업 메모 (DB 반영 2026-08-26~27). **2026-09-02~03 확장 완료**: `followupStatus`(SCHEDULED/HELD/SENDING/SENT/FAILED/SKIPPED)·`followupScheduledAt`·`followupSentAt`·`followupSubject`·`followupBody`·`followupError`·`followupAttempts`·`t0SentAt` — 수동 `migration.sql` 작성 후 프로덕션 `prisma migrate deploy` 반영 확인(2026-09-03) |
 
 **Supabase 테이블** (Prisma 외):
@@ -301,6 +303,8 @@ src/
 | **Naver OAuth** | 소셜 로그인 | `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET` |
 | **Resend** | 이메일 발송 (OTP, 문의 알림, 뉴스레터 구독 확인) | `RESEND_API_KEY` |
 | **Resend Audiences** | 뉴스레터 구독자 동기화(선택, 미설정 시 로컬 DB만 사용) | `RESEND_AUDIENCE_ID` |
+| **네이버 뉴스 검색 API** | (설계 확정, 미구현) AX 뉴스레터 기사 수집 — OAuth용 `NAVER_CLIENT_ID`와 별도 앱 | `NAVER_SEARCH_CLIENT_ID`, `NAVER_SEARCH_CLIENT_SECRET` |
+| **Anthropic Claude API** | (설계 확정, 2차 단계) 뉴스레터 기사 관련성 점수·요약, 미설정 시 규칙 점수만 사용 | `ANTHROPIC_API_KEY` |
 | **Google Analytics 4** | 방문자 분석 + 관리자 대시보드 | `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `GA4_PROPERTY_ID`, `GA4_SERVICE_ACCOUNT_JSON` |
 | **Sentry** | 에러 모니터링 | (next.config.ts에서 org/project 설정) |
 | **Notion** | (환경변수 존재, 실제 연동 미확인) | `NOTION_TOKEN`, `NOTION_*_DB_ID` (7개) |
