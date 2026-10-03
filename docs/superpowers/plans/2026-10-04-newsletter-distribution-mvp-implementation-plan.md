@@ -50,6 +50,7 @@
 3. **승인 후 구독 해지한 사람에게 발송** — `QUEUED` 행 생성 후 실제 발송 전에 해지할 수 있다 → 발송 직전 현재 구독자 목록에 없으면 `SKIPPED`(Task 9 테스트).
 4. **`(광고)` 누락 제목** — 관리자가 호 제목을 수정하며 `(광고)`를 지울 수 있다 → 발송·테스트 발송 시 `ensureAdPrefix`로 강제(Task 5·9 테스트).
 5. **네이버 응답의 HTML 엔티티·`<b>` 태그** — `&quot;AI&quot; <b>도입</b>` 같은 원문이 그대로 메일에 노출되거나 이중 이스케이프된다 → `cleanText`로 태그 제거 후 엔티티 디코딩, 메일 렌더 시 1회만 `escapeHtml`(Task 3·6·8 테스트).
+6. **시간대 없는 RSS 날짜** — 아이티조선·블로터 피드는 `2026-10-03 18:30:00`처럼 시간대 없이 준다(Task 0 실측). UTC 서버에서 9시간 미래로 해석되면 "미래 기사 컷(1시간)"에 걸려 최신 기사가 전부 버려진다 → KST로 고정 해석(Task 6 `parseFeedDate` 테스트).
 
 ---
 
@@ -98,8 +99,9 @@
 - Create: `docs/superpowers/assets/newsletter/news-sources.csv`
 
 - [ ] **Step 1 (사용자):** 네이버 개발자센터 → 애플리케이션 등록 → 사용 API "검색" → Client ID/Secret을 `.env`에 `NAVER_SEARCH_CLIENT_ID`, `NAVER_SEARCH_CLIENT_SECRET`로 저장(기존 `NAVER_CLIENT_ID`는 건드리지 않음).
-- [ ] **Step 2 (Claude):** IT·경제지 10~15곳 RSS URL 조사(설계 결정 #10 후보: 전자신문·매일경제·서울경제·머니투데이·이데일리·파이낸셜뉴스·아시아경제·이투데이·한국경제·지디넷코리아·아이티조선·디지털데일리·블로터·바이라인네트워크). **https로 응답하는 피드만** `rssUrl`에 기입(http 전용이면 빈칸 → 도메인 매칭 전용).
-- [ ] **Step 3 (Claude):** 아래 형식으로 CSV 작성. 쉼표가 들어간 값은 쓰지 않는다(파서가 인용부호 미지원). `domain`은 `www.`/`m.` 없는 소문자.
+- [x] **Step 2·3 완료(2026-10-04):** 14곳 조사 → 12곳 https RSS 확인. 이데일리는 http 전용(https는 오류 페이지로 302), 디지털데일리는 RSS 경로가 홈으로 302 → 두 곳은 `rssUrl` 비움(도메인 매칭 전용). 전자신문은 속보(Section902, 30건), 매경·한경·서경은 IT 섹션 피드 채택. 아이티조선·블로터는 `pubDate`에 시간대가 없어 Task 6 `parseFeedDate`로 대응.
+- [x] **Step 2 (Claude):** IT·경제지 10~15곳 RSS URL 조사(설계 결정 #10 후보: 전자신문·매일경제·서울경제·머니투데이·이데일리·파이낸셜뉴스·아시아경제·이투데이·한국경제·지디넷코리아·아이티조선·디지털데일리·블로터·바이라인네트워크). **https로 응답하는 피드만** `rssUrl`에 기입(http 전용이면 빈칸 → 도메인 매칭 전용).
+- [x] **Step 3 (Claude):** 아래 형식으로 CSV 작성. 쉼표가 들어간 값은 쓰지 않는다(파서가 인용부호 미지원). `domain`은 `www.`/`m.` 없는 소문자.
 
 ```csv
 name,category,homepage,rssUrl,domain,trustWeight,isActive
@@ -1383,6 +1385,7 @@ git commit -m "feat(newsletter): KST 발송 슬롯 계산·제목 템플릿·(�
   - `NAVER_NEWS_ENDPOINT`, `class NaverNewsError extends Error`
   - `getNaverSearchCredentials(): { clientId: string; clientSecret: string } | null`
   - `searchNaverNews(query: string, opts?: { display?: number; fetchImpl?: FetchLike }): Promise<CandidateArticle[]>`
+  - `parseFeedDate(raw: string | undefined): Date | null` (시간대 없는 날짜는 KST)
   - `parseRssXml(xml: string): Promise<CandidateArticle[]>`
   - `fetchRssArticles(rssUrl: string, opts?: { fetchImpl?: FetchLike }): Promise<CandidateArticle[]>`
 
@@ -1555,7 +1558,25 @@ describe("searchNaverNews", () => {
 
 ```ts
 import { describe, expect, it } from "vitest";
-import { parseRssXml } from "./rss";
+import { parseFeedDate, parseRssXml } from "./rss";
+
+describe("parseFeedDate", () => {
+  it("시간대 표기가 있으면 그대로 해석(RFC 822·콜론 오프셋·공백 누락 변형 포함)", () => {
+    expect(parseFeedDate("Sat, 03 Oct 2026 11:41:45 +09:00")?.toISOString()).toBe("2026-10-03T02:41:45.000Z");
+    expect(parseFeedDate("Sat,3 Oct 2026 13:24:20 +0900")?.toISOString()).toBe("2026-10-03T04:24:20.000Z");
+    expect(parseFeedDate("Fri, 02 Oct 2026 09:00:06 +0000")?.toISOString()).toBe("2026-10-02T09:00:06.000Z");
+    expect(parseFeedDate("2026-10-03T09:30:00Z")?.toISOString()).toBe("2026-10-03T09:30:00.000Z");
+  });
+
+  it("시간대 없는 날짜(아이티조선·블로터 등 ndsoft 계열)는 KST로 해석한다 — 서버 시간대(UTC)와 무관", () => {
+    expect(parseFeedDate("2026-10-03 18:30:00")?.toISOString()).toBe("2026-10-03T09:30:00.000Z");
+  });
+
+  it("해석 불가면 null", () => {
+    expect(parseFeedDate("garbage")).toBeNull();
+    expect(parseFeedDate(undefined)).toBeNull();
+  });
+});
 
 const XML = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"><channel><title>테스트</title>
@@ -1740,13 +1761,33 @@ import { safeFetchText, type FetchLike } from "./safe-fetch";
 
 const parser = new Parser();
 
+const HAS_TIMEZONE = /(Z|[+-]\d{2}:?\d{2}|GMT|UTC|KST)\s*$/i;
+const NAIVE_DATETIME = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/;
+
+/**
+ * 피드 날짜 해석. ndsoft 계열 국내 매체(아이티조선·블로터 등)는 "2026-10-03 18:30:00"처럼 시간대 없이 주는데,
+ * new Date()는 이를 서버 로컬 시간(Vercel=UTC)으로 읽어 9시간 미래가 된다 → 시간대 없는 값은 KST로 고정 해석.
+ * (2026-10-04 Task 0 RSS 실측에서 발견)
+ */
+export function parseFeedDate(raw: string | undefined): Date | null {
+  if (!raw) return null;
+  const s = raw.trim();
+  const naive = HAS_TIMEZONE.test(s) ? null : NAIVE_DATETIME.exec(s);
+  if (naive) {
+    const [, y, mo, d, h, mi, sec] = naive;
+    return new Date(Date.UTC(+y, +mo - 1, +d, +h - 9, +mi, sec ? +sec : 0));
+  }
+  const date = new Date(s);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 export async function parseRssXml(xml: string): Promise<CandidateArticle[]> {
   const feed = await parser.parseString(xml);
   return feed.items.flatMap((item): CandidateArticle[] => {
     const title = cleanText(item.title);
-    const dateRaw = item.isoDate ?? item.pubDate;
-    const publishedAt = dateRaw ? new Date(dateRaw) : null;
-    if (!item.link || !title || !publishedAt || Number.isNaN(publishedAt.getTime())) return [];
+    // isoDate는 rss-parser가 new Date(pubDate)로 이미 변환한 값이라 시간대 없는 날짜가 틀어져 있다 → 원문 pubDate 우선
+    const publishedAt = parseFeedDate(item.pubDate ?? item.isoDate);
+    if (!item.link || !title || !publishedAt) return [];
     const snippet = cleanText(item.contentSnippet ?? item.summary ?? item.content ?? "").slice(
       0,
       SNIPPET_MAX_LENGTH

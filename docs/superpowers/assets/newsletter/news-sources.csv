@@ -1,0 +1,15 @@
+name,category,homepage,rssUrl,domain,trustWeight,isActive
+전자신문,IT전문,https://www.etnews.com,https://rss.etnews.com/Section902.xml,etnews.com,5,true
+지디넷코리아,IT전문,https://zdnet.co.kr,https://feeds.feedburner.com/zdkorea,zdnet.co.kr,4,true
+아이티조선,IT전문,https://it.chosun.com,https://it.chosun.com/rss/allArticle.xml,it.chosun.com,4,true
+블로터,IT전문,https://www.bloter.net,https://www.bloter.net/rss/allArticle.xml,bloter.net,4,true
+바이라인네트워크,IT전문,https://byline.network,https://byline.network/feed/,byline.network,4,true
+디지털데일리,IT전문,https://www.ddaily.co.kr,,ddaily.co.kr,4,true
+매일경제,경제일간,https://www.mk.co.kr,https://www.mk.co.kr/rss/50300009/,mk.co.kr,4,true
+한국경제,경제일간,https://www.hankyung.com,https://www.hankyung.com/feed/it,hankyung.com,4,true
+서울경제,경제일간,https://www.sedaily.com,https://www.sedaily.com/RSS/IT,sedaily.com,4,true
+머니투데이,경제일간,https://www.mt.co.kr,https://rss.mt.co.kr/mt_news.xml,mt.co.kr,3,true
+파이낸셜뉴스,경제일간,https://www.fnnews.com,https://www.fnnews.com/rss/r20/fn_realnews_all.xml,fnnews.com,3,true
+아시아경제,경제일간,https://www.asiae.co.kr,https://www.asiae.co.kr/rss/all.htm,asiae.co.kr,3,true
+이투데이,경제일간,https://www.etoday.co.kr,https://rss.etoday.co.kr/eto/etoday_news_all.xml,etoday.co.kr,3,true
+이데일리,경제일간,https://www.edaily.co.kr,,edaily.co.kr,3,true
