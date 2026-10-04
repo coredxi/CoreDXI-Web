@@ -29,3 +29,6 @@ export type CandidateArticle = {
 export type NewsletterActionResult<T extends object = object> =
   | ({ success: true } & T)
   | { success: false; error: string };
+
+/** 임시저장 캠페인에서 호 생성·편집·발송을 막을 때 쓰는 공용 안내 문구 */
+export const DRAFT_CAMPAIGN_ERROR = "임시저장 캠페인은 먼저 저장을 완료해 주세요";

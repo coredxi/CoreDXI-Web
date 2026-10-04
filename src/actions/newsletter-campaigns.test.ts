@@ -48,6 +48,12 @@ beforeEach(() => {
 });
 
 describe("saveCampaign", () => {
+  it("저장 완료된 캠페인은 draft:true로 다시 저장해도 임시저장으로 되돌리지 않는다", async () => {
+    prismaMock.newsletterCampaign.findUnique.mockResolvedValue({ isDraft: false });
+    await saveCampaign({ ...input, id: "c1" }, { draft: true });
+    expect(prismaMock.newsletterCampaign.update.mock.calls[0][0].data.isDraft).toBe(false);
+  });
+
   it("권한이 없으면 저장하지 않는다", async () => {
     guardMock.requireNewsletterAdmin.mockResolvedValue({ ok: false, error: "권한 없음" });
     expect(await saveCampaign(input, { draft: false })).toEqual({ success: false, error: "권한 없음" });

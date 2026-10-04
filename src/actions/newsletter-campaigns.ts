@@ -15,10 +15,10 @@ import { ensureCurrentIssue, type CampaignForIssue } from "@/lib/newsletter/issu
 import { keywordHitRate, matchKeywords, pickQueryTerms } from "@/lib/newsletter/keyword-filter";
 import { SNIPPET_MAX_LENGTH, cleanText, computeTitleHash, hostOf, normalizeUrl } from "@/lib/newsletter/normalize";
 import { kstYmdToUtc } from "@/lib/newsletter/schedule";
-import type { KeywordInput, NewsletterActionResult } from "@/lib/newsletter/types";
+import { DRAFT_CAMPAIGN_ERROR, type KeywordInput, type NewsletterActionResult } from "@/lib/newsletter/types";
 
 const BASE_PATH = "/admin/newsletter/campaigns";
-const DRAFT_ERROR = "임시저장 캠페인은 먼저 저장을 완료해 주세요";
+const DRAFT_ERROR = DRAFT_CAMPAIGN_ERROR;
 
 export async function listCampaigns() {
   const gate = await requireNewsletterAdmin();
@@ -98,6 +98,9 @@ export async function saveCampaign(
     }
 
     const id = input.id;
+    // 저장 완료된 캠페인은 임시저장으로 되돌리지 않는다(호가 있는 상태에서 승인·발송 가드 우회 방지)
+    const existing = await prisma.newsletterCampaign.findUnique({ where: { id }, select: { isDraft: true } });
+    fields.isDraft = (existing?.isDraft ?? false) && opts.draft;
     await prisma.$transaction(async (tx) => {
       await tx.newsletterKeyword.deleteMany({ where: { campaignId: id } });
       await tx.newsletterSelectionRule.deleteMany({ where: { campaignId: id } });

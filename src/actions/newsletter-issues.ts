@@ -11,7 +11,7 @@ import { requireCampaignManager, requireNewsletterAdmin } from "@/lib/newsletter
 import { EDITABLE_ISSUE_STATUSES } from "@/lib/newsletter/issues";
 import { computeNextSendAt } from "@/lib/newsletter/schedule";
 import { renderIssueEmail, sendIssue, sendTestIssue, type SendIssueResult } from "@/lib/newsletter/send";
-import type { NewsletterActionResult } from "@/lib/newsletter/types";
+import { DRAFT_CAMPAIGN_ERROR, type NewsletterActionResult } from "@/lib/newsletter/types";
 
 export type IssueArticleEdit = {
   id: string;
@@ -21,21 +21,23 @@ export type IssueArticleEdit = {
   summary: string | null;
 };
 
+const MUTATION_RACE = "이미 승인되었거나 발송 중인 호는 수정할 수 없습니다";
 const NOT_EDITABLE = "이미 승인·발송된 호는 수정할 수 없습니다. 먼저 '승인 취소'를 눌러 주세요.";
 
-async function loadIssueWithGate(issueId: string) {
+async function loadIssueWithGate(issueId: string, opts: { mutating?: boolean } = {}) {
   const issue = await prisma.newsletterIssue.findUnique({
     where: { id: issueId },
     select: {
       id: true,
       campaignId: true,
       status: true,
-      campaign: { select: { cadence: true, sendDayOfWeek: true, sendHourKst: true, activeFrom: true, activeUntil: true } },
+      campaign: { select: { isDraft: true, cadence: true, sendDayOfWeek: true, sendHourKst: true, activeFrom: true, activeUntil: true } },
     },
   });
   if (!issue) return { ok: false as const, error: "호를 찾을 수 없습니다." };
   const gate = await requireCampaignManager(issue.campaignId);
   if (!gate.ok) return { ok: false as const, error: gate.error };
+  if (opts.mutating && issue.campaign.isDraft) return { ok: false as const, error: DRAFT_CAMPAIGN_ERROR };
   return { ok: true as const, issue, admin: gate.admin };
 }
 
@@ -74,15 +76,20 @@ export async function updateIssue(
   issueId: string,
   input: { subject: string; intro: string | null; articles: IssueArticleEdit[] }
 ): Promise<NewsletterActionResult> {
-  const loaded = await loadIssueWithGate(issueId);
+  const loaded = await loadIssueWithGate(issueId, { mutating: true });
   if (!loaded.ok) return { success: false, error: loaded.error };
   if (!isEditable(loaded.issue.status)) return { success: false, error: NOT_EDITABLE };
   const subject = input.subject.trim();
   if (!subject) return { success: false, error: "메일 제목을 입력해 주세요." };
 
-  await prisma.$transaction([
-    ...input.articles.map((a) =>
-      prisma.newsletterIssueArticle.update({
+  const ok = await prisma.$transaction(async (tx) => {
+    const r = await tx.newsletterIssue.updateMany({
+      where: { id: issueId, status: { in: [...EDITABLE_ISSUE_STATUSES] } },
+      data: { subject, intro: input.intro?.trim() || null, editedAt: new Date() },
+    });
+    if (r.count !== 1) return false;
+    for (const a of input.articles) {
+      await tx.newsletterIssueArticle.update({
         where: { id: a.id, issueId },
         data: {
           isSelected: a.isSelected,
@@ -90,34 +97,40 @@ export async function updateIssue(
           editorNote: a.editorNote?.trim() || null,
           summary: a.summary?.trim() || null,
         },
-      })
-    ),
-    prisma.newsletterIssue.update({
-      where: { id: issueId },
-      data: { subject, intro: input.intro?.trim() || null, editedAt: new Date() },
-    }),
-  ]);
+      });
+    }
+    return true;
+  });
+  if (!ok) return { success: false, error: MUTATION_RACE };
   revalidateIssue(loaded.issue.campaignId, issueId);
   return { success: true };
 }
 
 export async function attachArticleToIssue(issueId: string, articleId: string): Promise<NewsletterActionResult> {
-  const loaded = await loadIssueWithGate(issueId);
+  const loaded = await loadIssueWithGate(issueId, { mutating: true });
   if (!loaded.ok) return { success: false, error: loaded.error };
   if (!isEditable(loaded.issue.status)) return { success: false, error: NOT_EDITABLE };
-  const sortOrder = await prisma.newsletterIssueArticle.count({ where: { issueId } });
-  await prisma.newsletterIssueArticle.upsert({
-    where: { issueId_articleId: { issueId, articleId } },
-    create: { issueId, articleId, ruleScore: 0, isSelected: true, sortOrder },
-    update: { isSelected: true },
+  const ok = await prisma.$transaction(async (tx) => {
+    const r = await tx.newsletterIssue.updateMany({
+      where: { id: issueId, status: { in: [...EDITABLE_ISSUE_STATUSES] } },
+      data: { editedAt: new Date(), status: "DRAFT" },
+    });
+    if (r.count !== 1) return false;
+    const sortOrder = await tx.newsletterIssueArticle.count({ where: { issueId } });
+    await tx.newsletterIssueArticle.upsert({
+      where: { issueId_articleId: { issueId, articleId } },
+      create: { issueId, articleId, ruleScore: 0, isSelected: true, sortOrder },
+      update: { isSelected: true },
+    });
+    return true;
   });
-  await prisma.newsletterIssue.update({ where: { id: issueId }, data: { editedAt: new Date(), status: "DRAFT" } });
+  if (!ok) return { success: false, error: MUTATION_RACE };
   revalidateIssue(loaded.issue.campaignId, issueId);
   return { success: true };
 }
 
 export async function requestIssueReview(issueId: string): Promise<NewsletterActionResult<{ recipients: string[] }>> {
-  const loaded = await loadIssueWithGate(issueId);
+  const loaded = await loadIssueWithGate(issueId, { mutating: true });
   if (!loaded.ok) return { success: false, error: loaded.error };
 
   const extra = (process.env.NEWSLETTER_TEST_RECIPIENTS ?? "")
@@ -141,7 +154,7 @@ export async function approveIssue(
   issueId: string,
   scheduledAtIso: string | null
 ): Promise<NewsletterActionResult<{ scheduledAt: string }>> {
-  const loaded = await loadIssueWithGate(issueId);
+  const loaded = await loadIssueWithGate(issueId, { mutating: true });
   if (!loaded.ok) return { success: false, error: loaded.error };
 
   const selected = await prisma.newsletterIssueArticle.count({ where: { issueId, isSelected: true } });
@@ -193,7 +206,7 @@ export async function cancelIssue(issueId: string): Promise<NewsletterActionResu
 }
 
 export async function sendIssueNow(issueId: string): Promise<SendIssueResult> {
-  const loaded = await loadIssueWithGate(issueId);
+  const loaded = await loadIssueWithGate(issueId, { mutating: true });
   if (!loaded.ok) return { success: false, error: loaded.error };
   const result = await sendIssue(issueId, { allowFrom: ["DRAFT", "REVIEW_REQUESTED", "APPROVED", "FAILED"] });
   revalidateIssue(loaded.issue.campaignId, issueId);
@@ -201,7 +214,7 @@ export async function sendIssueNow(issueId: string): Promise<SendIssueResult> {
 }
 
 export async function retryIssue(issueId: string): Promise<SendIssueResult> {
-  const loaded = await loadIssueWithGate(issueId);
+  const loaded = await loadIssueWithGate(issueId, { mutating: true });
   if (!loaded.ok) return { success: false, error: loaded.error };
   const result = await sendIssue(issueId, { allowFrom: ["FAILED"] });
   revalidateIssue(loaded.issue.campaignId, issueId);

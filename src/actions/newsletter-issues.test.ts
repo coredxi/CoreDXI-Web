@@ -9,18 +9,20 @@ vi.mock("@/lib/newsletter/send", () => sendMock);
 const prismaMock = {
   newsletterIssue: { findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn(), findMany: vi.fn() },
   newsletterIssueArticle: { count: vi.fn(), update: vi.fn(), upsert: vi.fn() },
-  $transaction: vi.fn(async (ops: Promise<unknown>[]) => Promise.all(ops)),
+  $transaction: vi.fn(async (arg: unknown) =>
+    typeof arg === "function" ? (arg as (tx: unknown) => Promise<unknown>)(prismaMock) : Promise.all(arg as Promise<unknown>[])
+  ),
 };
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
-const { approveIssue, requestIssueReview, sendIssueNow, updateIssue } = await import("./newsletter-issues");
+const { approveIssue, attachArticleToIssue, requestIssueReview, sendIssueNow, updateIssue } = await import("./newsletter-issues");
 
 const admin = { adminId: "adm1", role: "EDITOR", email: "me@coredxi.com" };
 const issue = {
   id: "i1",
   campaignId: "c1",
   status: "DRAFT",
-  campaign: { cadence: "WEEKLY", sendDayOfWeek: 2, sendHourKst: 8, activeFrom: new Date("2026-10-01T00:00:00Z"), activeUntil: null },
+  campaign: { isDraft: false, cadence: "WEEKLY", sendDayOfWeek: 2, sendHourKst: 8, activeFrom: new Date("2026-10-01T00:00:00Z"), activeUntil: null },
 };
 
 beforeEach(() => {
@@ -48,10 +50,41 @@ describe("updateIssue", () => {
       where: { id: "ia1", issueId: "i1" },
       data: { isSelected: true, sortOrder: 0, editorNote: "메모", summary: null },
     });
-    expect(prismaMock.newsletterIssue.update).toHaveBeenCalledWith({
-      where: { id: "i1" },
+    expect(prismaMock.newsletterIssue.updateMany).toHaveBeenCalledWith({
+      where: { id: "i1", status: { in: ["COLLECTING", "DRAFT", "REVIEW_REQUESTED"] } },
       data: expect.objectContaining({ subject: "제목", intro: null, editedAt: expect.any(Date) }),
     });
+  });
+
+  it("쓰기 시점에 상태가 바뀌었으면(count 0) 기사 행을 건드리지 않고 거부", async () => {
+    prismaMock.newsletterIssue.updateMany.mockResolvedValue({ count: 0 });
+    const r = await updateIssue("i1", { subject: "s", intro: null, articles: [{ id: "ia1", isSelected: true, sortOrder: 0, editorNote: null, summary: null }] });
+    expect(r.success).toBe(false);
+    expect(prismaMock.newsletterIssueArticle.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("attachArticleToIssue", () => {
+  it("쓰기 시점에 상태가 바뀌었으면(count 0) upsert 하지 않고 거부", async () => {
+    prismaMock.newsletterIssue.updateMany.mockResolvedValue({ count: 0 });
+    expect((await attachArticleToIssue("i1", "a1")).success).toBe(false);
+    expect(prismaMock.newsletterIssueArticle.upsert).not.toHaveBeenCalled();
+  });
+
+  it("조건부 상태 쓰기 후 기사를 추가한다", async () => {
+    expect((await attachArticleToIssue("i1", "a1")).success).toBe(true);
+    expect(prismaMock.newsletterIssueArticle.upsert).toHaveBeenCalled();
+  });
+});
+
+describe("임시저장 캠페인", () => {
+  it("승인·즉시발송을 거부하고 sendIssue를 호출하지 않는다", async () => {
+    prismaMock.newsletterIssue.findUnique.mockResolvedValue({ ...issue, campaign: { ...issue.campaign, isDraft: true } });
+    const msg = "임시저장 캠페인은 먼저 저장을 완료해 주세요";
+    expect(await approveIssue("i1", null)).toEqual({ success: false, error: msg });
+    expect(await sendIssueNow("i1")).toEqual({ success: false, error: msg });
+    expect(sendMock.sendIssue).not.toHaveBeenCalled();
+    expect(prismaMock.newsletterIssue.updateMany).not.toHaveBeenCalled();
   });
 });
 
