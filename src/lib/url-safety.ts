@@ -44,3 +44,26 @@ export function getSupabaseStorageHost(): string | null {
     return null;
   }
 }
+
+/**
+ * [홍보팀] 뉴스레터 RSS 피드처럼 관리자가 등록한 외부 URL을 서버가 가져가도 안전한지 검사한다.
+ * https만 허용하고, 사설·루프백·링크로컬(클라우드 메타데이터)·CGNAT 대역, 정수형/IPv6 리터럴,
+ * 계정정보가 포함된 URL은 모두 막는다(SSRF 방지). 등록 시점과 fetch 시점(리다이렉트 포함) 모두 호출한다.
+ */
+export function isSafeFeedUrl(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "https:") return false;
+  if (parsed.username || parsed.password) return false;
+
+  const host = parsed.hostname.toLowerCase();
+  if (host.startsWith("[") || host.includes(":")) return false; // IPv6 리터럴 전면 차단
+  if (/^\d+$/.test(host)) return false; // 정수형 IP 표기
+  if (isBlockedHost(host)) return false;
+  if (/^(0\.|169\.254\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.)/.test(host)) return false;
+  return true;
+}
