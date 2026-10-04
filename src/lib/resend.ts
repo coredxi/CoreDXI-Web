@@ -11,10 +11,12 @@ export type SendResendEmailInput = {
   /** 참조(CC). 영업 알림 메일에서 기술이사 참조용으로 사용한다(2026-09-05). */
   cc?: string | string[];
   from?: string;
+  /** 추가 메일 헤더. 뉴스레터의 List-Unsubscribe 헤더용(2026-10-05). */
+  headers?: Record<string, string>;
 };
 
 export type SendResendEmailResult =
-  | { success: true }
+  | { success: true; id?: string }
   | { success: false; error: string };
 
 export function getResendApiKey(): string | null {
@@ -54,9 +56,10 @@ export async function sendResendEmail(
       subject: input.subject,
       ...(input.replyTo ? { replyTo: input.replyTo } : {}),
       ...(input.cc ? { cc: input.cc } : {}),
+      ...(input.headers ? { headers: input.headers } : {}),
       ...bodyFields,
     };
-    const { error } = await resend.emails.send(payload);
+    const { data, error } = await resend.emails.send(payload);
 
     if (error) {
       console.error("[sendResendEmail]", error);
@@ -66,7 +69,7 @@ export async function sendResendEmail(
       };
     }
 
-    return { success: true };
+    return data?.id ? { success: true, id: data.id } : { success: true };
   } catch (e) {
     console.error("[sendResendEmail]", e);
     return {
