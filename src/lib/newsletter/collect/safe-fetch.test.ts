@@ -57,6 +57,20 @@ describe("safeFetchText", () => {
     await expect(safeFetchText("https://example.com/rss", { fetchImpl })).rejects.toThrow("리다이렉트");
   });
 
+  it("content-length가 2MB를 넘으면 본문을 읽지 않고 실패", async () => {
+    const fetchImpl = vi.fn<FetchLike>().mockResolvedValue(
+      new Response("x", { status: 200, headers: { "content-length": "3000000" } })
+    );
+    await expect(safeFetchText("https://example.com/rss", { fetchImpl })).rejects.toThrow("너무 큽니다");
+  });
+
+  it("content-length 없이 스트리밍된 본문이 2MB를 넘으면 실패", async () => {
+    const fetchImpl = vi.fn<FetchLike>().mockResolvedValue(
+      new Response(new Uint8Array(2 * 1024 * 1024 + 1), { status: 200 })
+    );
+    await expect(safeFetchText("https://example.com/rss", { fetchImpl })).rejects.toThrow("너무 큽니다");
+  });
+
   it("HTTP 오류는 상태코드를 담아 실패", async () => {
     const fetchImpl = vi.fn<FetchLike>().mockResolvedValue(new Response("x", { status: 503 }));
     await expect(safeFetchText("https://example.com/rss", { fetchImpl })).rejects.toThrow("503");

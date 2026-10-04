@@ -51,14 +51,49 @@ export async function safeFetchText(url: string, opts: { fetchImpl?: FetchLike }
     if (res.status >= 300 && res.status < 400) {
       const location = res.headers.get("location");
       if (!location) throw new Error(`리다이렉트 응답에 location이 없습니다 (${res.status})`);
+      await res.body?.cancel();
       current = new URL(location, current).toString();
       continue;
     }
-    if (!res.ok) throw new Error(`피드 요청 실패: HTTP ${res.status}`);
+    if (!res.ok) {
+      await res.body?.cancel();
+      throw new Error(`피드 요청 실패: HTTP ${res.status}`);
+    }
 
-    const buffer = await res.arrayBuffer();
-    if (buffer.byteLength > MAX_BYTES) throw new Error("피드 응답이 너무 큽니다(2MB 초과)");
-    return decodeFeedBody(new Uint8Array(buffer), res.headers.get("content-type"));
+    const declared = Number(res.headers.get("content-length"));
+    if (declared > MAX_BYTES) {
+      await res.body?.cancel();
+      throw new Error(TOO_LARGE);
+    }
+    const bytes = await readLimited(res);
+    return decodeFeedBody(bytes, res.headers.get("content-type"));
   }
   throw new Error("리다이렉트가 너무 많습니다");
+}
+
+const TOO_LARGE = "피드 응답이 너무 큽니다(2MB 초과)";
+
+/** 본문을 스트리밍으로 읽으며 MAX_BYTES 초과 즉시 중단한다(전체를 메모리에 올리지 않음). */
+async function readLimited(res: Response): Promise<Uint8Array> {
+  if (!res.body) return new Uint8Array(0);
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > MAX_BYTES) {
+      await reader.cancel();
+      throw new Error(TOO_LARGE);
+    }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const c of chunks) {
+    out.set(c, offset);
+    offset += c.byteLength;
+  }
+  return out;
 }
