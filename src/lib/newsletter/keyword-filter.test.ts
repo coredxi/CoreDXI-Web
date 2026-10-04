@@ -67,6 +67,19 @@ describe("matchKeywords", () => {
     ];
     expect(matchKeywords(kw, "중소기업 retail 동향", "").passes).toBe(true);
   });
+
+  it("여러 후보 중 나중의 경계-유효한 적중을 찾는다(TAX 정책 AX 전환)", () => {
+    const kw: KeywordInput[] = [{ group: 1, operator: "OR", term: "AX", weight: 4 }];
+    expect(matchKeywords(kw, "TAX 정책 AX 전환", "").passes).toBe(true);
+  });
+
+  it("여러 후보 중 나중의 경계-유효한 제외어도 적용한다(retail 동향 ai 도입)", () => {
+    const kw: KeywordInput[] = [
+      { group: 1, operator: "OR", term: "도입", weight: 3 },
+      { group: 0, operator: "NOT", term: "ai", weight: 1 },
+    ];
+    expect(matchKeywords(kw, "retail 동향 ai 도입", "").passes).toBe(false);
+  });
 });
 
 describe("keywordHitRate", () => {

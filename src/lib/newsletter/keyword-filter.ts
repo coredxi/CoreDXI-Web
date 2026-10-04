@@ -23,11 +23,8 @@ function containsTerm(haystack: string, term: string): boolean {
   if (!isAsciiOnly(term)) {
     return haystack.includes(term);
   }
-  const idx = haystack.indexOf(term);
-  if (idx === -1) return false;
-  const before = idx === 0 || !/[a-z0-9]/.test(haystack[idx - 1]);
-  const after = idx + term.length === haystack.length || !/[a-z0-9]/.test(haystack[idx + term.length]);
-  return before && after;
+  const pattern = new RegExp(`(?<![a-z0-9])${term}(?![a-z0-9])`);
+  return pattern.test(haystack);
 }
 
 function clampWeight(w: number): number {
