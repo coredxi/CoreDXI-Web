@@ -65,6 +65,12 @@ describe("ensureCurrentIssue", () => {
     );
   });
 
+  it("IMMEDIATE 캠페인도 사용기간이 끝났으면 null", async () => {
+    const ended = { ...campaign, sendType: "IMMEDIATE" as const, activeUntil: new Date("2026-10-01T00:00:00Z") };
+    expect(await ensureCurrentIssue(ended, NOW)).toBeNull();
+    expect(prismaMock.newsletterIssue.findFirst).not.toHaveBeenCalled();
+  });
+
   it("회차 경쟁(P2002)이 나면 다시 조회해 기존 호를 돌려준다", async () => {
     prismaMock.newsletterIssue.findFirst
       .mockResolvedValueOnce(null)

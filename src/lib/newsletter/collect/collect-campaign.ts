@@ -4,6 +4,7 @@
  * 설계: docs/superpowers/specs/2026-09-28-newsletter-distribution-design.md 6-1·6-2
  */
 import { prisma } from "@/lib/prisma";
+import type { IssueStatus } from "@/generated/prisma/client";
 import { ensureCurrentIssue, type CampaignForIssue } from "../issues";
 import { keywordHitRate, matchKeywords, pickQueryTerms } from "../keyword-filter";
 import { SNIPPET_MAX_LENGTH, computeTitleHash, hostOf, matchSourceByDomain, normalizeUrl } from "../normalize";
@@ -179,7 +180,8 @@ export async function collectCampaign(
   const issue = await ensureCurrentIssue(campaign as CampaignForIssue, now);
   if (!issue) return result;
   result.issueId = issue.id;
-  if (issue.editedAt) return result;
+  // 편집 중(editedAt)이거나 검토요청 이후 상태의 호는 건드리지 않음
+  if (issue.editedAt || (issue.status !== "COLLECTING" && issue.status !== "DRAFT")) return result;
 
   const alreadySent = await prisma.newsletterIssueArticle.findMany({
     where: {
@@ -191,33 +193,38 @@ export async function collectCampaign(
   });
   const sentIds = new Set(alreadySent.map((r) => r.articleId));
 
-  const current = await prisma.newsletterIssueArticle.findMany({
-    where: { issueId: issue.id },
-    select: { articleId: true, ruleScore: true },
-  });
-  const merged = new Map(current.map((c) => [c.articleId, c.ruleScore]));
-  for (const s of scored) if (!sentIds.has(s.articleId)) merged.set(s.articleId, s.ruleScore);
+  // 부착은 한 트랜잭션에서 호 상태를 다시 확인한 뒤에만 쓴다(동시 승인·편집 덮어쓰기 방지)
+  const guard = { id: issue.id, status: { in: ["COLLECTING", "DRAFT"] as IssueStatus[] }, editedAt: null };
+  result.attached = await prisma.$transaction(async (tx) => {
+    const live = await tx.newsletterIssue.findFirst({ where: guard, select: { id: true } });
+    if (!live) return 0;
 
-  const top = [...merged.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, campaign.maxArticles * 2);
-  const topIds = top.map(([id]) => id);
+    const current = await tx.newsletterIssueArticle.findMany({
+      where: { issueId: issue.id },
+      select: { articleId: true, ruleScore: true },
+    });
+    const merged = new Map(current.map((c) => [c.articleId, c.ruleScore]));
+    for (const s of scored) if (!sentIds.has(s.articleId)) merged.set(s.articleId, s.ruleScore);
 
-  await prisma.$transaction([
-    prisma.newsletterIssueArticle.deleteMany({ where: { issueId: issue.id, articleId: { notIn: topIds } } }),
-    ...top.map(([articleId, ruleScore], index) => {
+    const top = [...merged.entries()]
+      .sort((x, y) => y[1] - x[1])
+      .slice(0, campaign.maxArticles * 2);
+    const topIds = top.map(([id]) => id);
+
+    await tx.newsletterIssueArticle.deleteMany({ where: { issueId: issue.id, articleId: { notIn: topIds } } });
+    for (const [index, [articleId, ruleScore]] of top.entries()) {
       const fields = { ruleScore, isSelected: index < campaign.maxArticles, sortOrder: index };
-      return prisma.newsletterIssueArticle.upsert({
+      await tx.newsletterIssueArticle.upsert({
         where: { issueId_articleId: { issueId: issue.id, articleId } },
         create: { issueId: issue.id, articleId, ...fields },
         update: fields,
       });
-    }),
-  ]);
-  await prisma.newsletterIssue.update({
-    where: { id: issue.id },
-    data: { status: top.length > 0 ? "DRAFT" : "COLLECTING" },
+    }
+    await tx.newsletterIssue.updateMany({
+      where: guard,
+      data: { status: top.length > 0 ? "DRAFT" : "COLLECTING" },
+    });
+    return top.length;
   });
-  result.attached = top.length;
   return result;
 }

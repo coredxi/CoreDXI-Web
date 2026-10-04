@@ -33,6 +33,7 @@ export async function ensureCurrentIssue(
   now: Date
 ): Promise<CurrentIssue | null> {
   const immediate = campaign.sendType === "IMMEDIATE";
+  if (immediate && campaign.activeUntil && campaign.activeUntil < now) return null;
   const slot = immediate ? now : computeNextSendAt(campaign, now);
   if (!slot) return null;
   const issueDate = kstDateKey(slot);

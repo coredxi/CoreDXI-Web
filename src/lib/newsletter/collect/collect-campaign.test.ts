@@ -5,8 +5,8 @@ const prismaMock = {
   newsSource: { findMany: vi.fn() },
   newsArticle: { findMany: vi.fn(), upsert: vi.fn() },
   newsletterIssueArticle: { findMany: vi.fn(), deleteMany: vi.fn(), upsert: vi.fn() },
-  newsletterIssue: { update: vi.fn() },
-  $transaction: vi.fn(async (ops: Promise<unknown>[]) => Promise.all(ops)),
+  newsletterIssue: { findFirst: vi.fn(), updateMany: vi.fn() },
+  $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prismaMock)),
 };
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
@@ -50,6 +50,7 @@ beforeEach(() => {
     source: create.sourceId ? { trustWeight: 5 } : null,
   }));
   prismaMock.newsletterIssueArticle.findMany.mockResolvedValue([]);
+  prismaMock.newsletterIssue.findFirst.mockResolvedValue({ id: "i1" });
   ensureCurrentIssueMock.mockResolvedValue({ id: "i1", status: "COLLECTING", editedAt: null });
 });
 
@@ -110,7 +111,34 @@ describe("collectCampaign", () => {
     expect(result.attached).toBe(4);
     const upserts = prismaMock.newsletterIssueArticle.upsert.mock.calls.map((c) => c[0].create);
     expect(upserts.filter((u: { isSelected: boolean }) => u.isSelected)).toHaveLength(2);
-    expect(prismaMock.newsletterIssue.update).toHaveBeenCalledWith({ where: { id: "i1" }, data: { status: "DRAFT" } });
+    expect(prismaMock.newsletterIssue.updateMany).toHaveBeenCalledWith({
+      where: { id: "i1", status: { in: ["COLLECTING", "DRAFT"] }, editedAt: null },
+      data: { status: "DRAFT" },
+    });
+  });
+
+  it("검토요청(REVIEW_REQUESTED) 호는 후보·상태를 건드리지 않는다", async () => {
+    ensureCurrentIssueMock.mockResolvedValue({ id: "i1", status: "REVIEW_REQUESTED", editedAt: null });
+    const result = await collectCampaign("c1", { now: NOW, deps: deps([art("중소기업 AI 도입 1", "https://www.etnews.com/1")]) });
+    expect(result.issueId).toBe("i1");
+    expect(result.attached).toBe(0);
+    expect(prismaMock.newsletterIssueArticle.upsert).not.toHaveBeenCalled();
+    expect(prismaMock.newsletterIssue.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("트랜잭션 안 재확인에서 호가 더 이상 편집 가능하지 않으면(동시 승인) 아무것도 쓰지 않는다", async () => {
+    prismaMock.newsletterIssue.findFirst.mockResolvedValue(null);
+    const result = await collectCampaign("c1", { now: NOW, deps: deps([art("중소기업 AI 도입 1", "https://www.etnews.com/1")]) });
+    expect(result.attached).toBe(0);
+    expect(prismaMock.newsletterIssueArticle.deleteMany).not.toHaveBeenCalled();
+    expect(prismaMock.newsletterIssueArticle.upsert).not.toHaveBeenCalled();
+    expect(prismaMock.newsletterIssue.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("미래 날짜(now+2h) 기사는 저장하지 않는다", async () => {
+    const future = { ...art("중소기업 AI 도입 미래", "https://www.etnews.com/f"), publishedAt: new Date(NOW.getTime() + 2 * 3_600_000) };
+    await collectCampaign("c1", { now: NOW, deps: deps([future]) });
+    expect(prismaMock.newsArticle.upsert).not.toHaveBeenCalled();
   });
 
   it("지난 SENT 호에 실렸던 기사는 후보에서 제외한다", async () => {
@@ -120,6 +148,11 @@ describe("collectCampaign", () => {
     const d = deps([art("중소기업 AI 도입 1", "https://www.etnews.com/1")]);
     const result = await collectCampaign("c1", { now: NOW, deps: d });
     expect(result.attached).toBe(0);
+    expect(prismaMock.newsletterIssueArticle.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ isSelected: true, issue: { campaignId: "c1", status: "SENT" } }),
+      })
+    );
   });
 
   it("관리자가 편집한 호(editedAt)는 기사만 저장하고 후보를 건드리지 않는다", async () => {
