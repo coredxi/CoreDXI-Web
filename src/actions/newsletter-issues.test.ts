@@ -148,6 +148,13 @@ describe("requestIssueReview", () => {
 });
 
 describe("sendIssueNow", () => {
+  it("수집 중(기사 미선택) 호는 발송 엔진을 부르지 않고 기사 선택 안내를 돌려준다", async () => {
+    prismaMock.newsletterIssue.findUnique.mockResolvedValue({ ...issue, status: "COLLECTING" });
+    const r = await sendIssueNow("i1");
+    expect(r).toEqual({ success: false, error: expect.stringContaining("기사를 선택") });
+    expect(sendMock.sendIssue).not.toHaveBeenCalled();
+  });
+
   it("DRAFT·REVIEW_REQUESTED·APPROVED·FAILED에서 즉시 발송을 허용한다", async () => {
     sendMock.sendIssue.mockResolvedValue({ success: true, sent: 2, failed: 0, skipped: 0 });
     const r = await sendIssueNow("i1");

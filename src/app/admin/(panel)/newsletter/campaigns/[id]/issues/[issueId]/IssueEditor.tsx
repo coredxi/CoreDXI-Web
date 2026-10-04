@@ -49,6 +49,7 @@ export function IssueEditor(props: Props) {
   const [pending, startTransition] = useTransition();
   const editable = EDITABLE.includes(props.status);
   const selectedCount = articles.filter((a) => a.isSelected).length;
+  const noSelection = selectedCount === 0;
 
   // [홍보팀] 서버 호출이 예외로 끝나도 화면이 조용히 멈추지 않도록 항상 안내 문구를 띄웁니다.
   const guarded = async (fn: () => Promise<void>) => {
@@ -147,7 +148,7 @@ export function IssueEditor(props: Props) {
           {editable && <Button type="button" disabled={pending} onClick={save}>저장</Button>}
           <Button type="button" variant="outline" disabled={pending || dirty} onClick={loadPreview}>미리보기</Button>
           {editable && (
-            <Button type="button" variant="outline" disabled={pending || dirty}
+            <Button type="button" variant="outline" disabled={pending || dirty || noSelection}
               onClick={() => run(() => requestIssueReview(props.issueId), "검토요청 메일을 보냈습니다.")}>
               검토요청(내게 보내기)
             </Button>
@@ -155,6 +156,10 @@ export function IssueEditor(props: Props) {
         </div>
         {(editable || props.status === "APPROVED" || props.status === "FAILED") && dirty && (
           <p className="text-sm text-amber-700">저장 후 진행할 수 있습니다.</p>
+        )}
+        {/* [홍보팀] 선택된 기사가 없으면 검토요청·승인·즉시 발송을 막습니다(빈 뉴스레터 방지). */}
+        {editable && !dirty && noSelection && (
+          <p className="text-sm text-amber-700">먼저 기사를 1건 이상 선택하고 저장하세요.</p>
         )}
         {editable && (
           <div className="flex flex-wrap items-end gap-2 rounded-xl border border-gray-200 p-3">
@@ -165,7 +170,7 @@ export function IssueEditor(props: Props) {
               {/* [홍보팀] 발송은 매일 오전 8시에 한 번만 돕니다. 다른 시각을 골라도 그 이후 첫 8시에 나갑니다. */}
               <p id="is-schedule-hint" className="text-xs text-gray-600">예약 발송은 08시(KST) 슬롯에 나갑니다</p>
             </div>
-            <Button type="button" disabled={pending || dirty}
+            <Button type="button" disabled={pending || dirty || noSelection}
               onClick={() => run(() => approveIssue(props.issueId, scheduleAt ? new Date(`${scheduleAt}:00+09:00`).toISOString() : null), "승인했습니다. 예약 시각에 발송됩니다.")}>
               승인(예약)
             </Button>
@@ -180,7 +185,7 @@ export function IssueEditor(props: Props) {
         )}
         {(editable || props.status === "APPROVED" || props.status === "FAILED") && (
           <div className="flex gap-2">
-            <Button type="button" variant="destructive" disabled={pending || dirty}
+            <Button type="button" variant="destructive" disabled={pending || dirty || noSelection}
               onClick={() => {
                 if (!window.confirm("지금 구독자 전원에게 발송합니다. 계속할까요?")) return;
                 startTransition(() => guarded(async () => {

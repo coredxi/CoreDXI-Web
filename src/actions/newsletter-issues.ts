@@ -23,6 +23,7 @@ export type IssueArticleEdit = {
 };
 
 const MUTATION_RACE = ISSUE_MUTATION_RACE_ERROR;
+const NO_SELECTION_ERROR = "아직 선택된 기사가 없습니다. 기사를 선택하고 저장한 뒤 발송해 주세요.";
 const NOT_EDITABLE = "이미 승인·발송된 호는 수정할 수 없습니다. 먼저 '승인 취소'를 눌러 주세요.";
 
 async function loadIssueWithGate(issueId: string, opts: { mutating?: boolean } = {}) {
@@ -202,6 +203,7 @@ export async function cancelIssue(issueId: string): Promise<NewsletterActionResu
 export async function sendIssueNow(issueId: string): Promise<SendIssueResult> {
   const loaded = await loadIssueWithGate(issueId, { mutating: true });
   if (!loaded.ok) return { success: false, error: loaded.error };
+  if (loaded.issue.status === "COLLECTING") return { success: false, error: NO_SELECTION_ERROR };
   const result = await sendIssue(issueId, { allowFrom: ["DRAFT", "REVIEW_REQUESTED", "APPROVED", "FAILED"] });
   revalidateIssue(loaded.issue.campaignId, issueId);
   return result;
