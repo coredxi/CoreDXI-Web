@@ -59,6 +59,7 @@ export function CampaignForm({ sources, initial, isDraft = true }: { sources: So
   const [form, setForm] = useState<CampaignFormInput>(initial ?? defaultInput());
   const [preview, setPreview] = useState<KeywordPreviewItem[] | null>(null);
   const [pending, startTransition] = useTransition();
+  const [internalText, setInternalText] = useState((initial?.internalRecipients ?? []).join(", "));
 
   const set = <K extends keyof CampaignFormInput>(key: K, value: CampaignFormInput[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -68,9 +69,11 @@ export function CampaignForm({ sources, initial, isDraft = true }: { sources: So
     set("rules", form.rules.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   const maxGroup = Math.max(1, ...form.keywords.filter((k) => k.operator !== "NOT").map((k) => k.group));
 
+  const parseRecipients = (text: string) => text.split(",").map((v) => v.trim()).filter(Boolean);
+
   const submit = (draft: boolean) =>
     startTransition(async () => {
-      const r = await saveCampaign(form, { draft });
+      const r = await saveCampaign({ ...form, internalRecipients: parseRecipients(internalText) }, { draft });
       if (!r.success) {
         toast.error(r.error);
         return;
@@ -114,7 +117,14 @@ export function CampaignForm({ sources, initial, isDraft = true }: { sources: So
             <div className="space-y-1">
               <Label htmlFor="nl-cadence">주기</Label>
               <select id="nl-cadence" className={SELECT_CLASS} value={form.cadence}
-                onChange={(e) => set("cadence", e.target.value as CampaignFormInput["cadence"])}>
+                onChange={(e) => {
+                  const cadence = e.target.value as CampaignFormInput["cadence"];
+                  setForm((f) => ({
+                    ...f,
+                    cadence,
+                    sendDayOfWeek: cadence !== "DAILY" && f.sendDayOfWeek === null ? DEFAULT_SEND_DAY_OF_WEEK : f.sendDayOfWeek,
+                  }));
+                }}>
                 <option value="DAILY">매일</option>
                 <option value="WEEKLY">매주</option>
                 <option value="BIWEEKLY">격주</option>
@@ -176,8 +186,13 @@ export function CampaignForm({ sources, initial, isDraft = true }: { sources: So
         {form.audience === "internal" && (
           <div className="space-y-1">
             <Label htmlFor="nl-internal">내부 수신자 이메일(쉼표 구분, 최대 20명)</Label>
-            <Input id="nl-internal" value={form.internalRecipients.join(", ")}
-              onChange={(e) => set("internalRecipients", e.target.value.split(","))} />
+            <Input id="nl-internal" value={internalText}
+              onChange={(e) => setInternalText(e.target.value)}
+              onBlur={() => {
+                const list = parseRecipients(internalText);
+                set("internalRecipients", list);
+                setInternalText(list.join(", "));
+              }} />
           </div>
         )}
       </section>
