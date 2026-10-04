@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { NaverNewsError, searchNaverNews, type FetchLike } from "./naver-news";
+import { NaverNewsError, searchNaverNews, searchNaverNewsIfConfigured, type FetchLike } from "./naver-news";
 
 beforeEach(() => {
   process.env.NAVER_SEARCH_CLIENT_ID = "id";
@@ -82,5 +82,20 @@ describe("searchNaverNews", () => {
   it("HTTP 오류는 상태코드를 담은 NaverNewsError", async () => {
     const fetchImpl = vi.fn<FetchLike>().mockResolvedValue(jsonResponse({ errorMessage: "x" }, 429));
     await expect(searchNaverNews("AI", { fetchImpl })).rejects.toThrow("429");
+  });
+});
+
+describe("searchNaverNewsIfConfigured", () => {
+  it("검색 키가 없으면 호출 없이 빈 배열을 돌려준다(RSS만으로 운영)", async () => {
+    delete process.env.NAVER_SEARCH_CLIENT_ID;
+    const fetchImpl = vi.fn<FetchLike>();
+    await expect(searchNaverNewsIfConfigured("AI 도입", { fetchImpl })).resolves.toEqual([]);
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("검색 키가 있으면 searchNaverNews와 같이 요청한다", async () => {
+    const fetchImpl = vi.fn<FetchLike>().mockResolvedValue(jsonResponse({ items: [] }));
+    await searchNaverNewsIfConfigured("AI 도입", { fetchImpl });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 });

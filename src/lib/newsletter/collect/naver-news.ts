@@ -63,3 +63,15 @@ export async function searchNaverNews(
     return [{ title, snippet: snippet || null, originalUrl, publishedAt, origin: "NAVER_API" }];
   });
 }
+
+/**
+ * 검색 키가 설정된 경우에만 네이버 뉴스를 검색한다. 키가 없으면 빈 배열(RSS만으로 수집).
+ * [홍보팀] 2026-07-31 네이버 개발자센터 검색 API 신규 발급 종료 — NAVER API HUB 키 발급 전까지는 RSS 매체로만 기사를 모읍니다.
+ */
+export async function searchNaverNewsIfConfigured(
+  query: string,
+  opts: { display?: number; fetchImpl?: FetchLike } = {}
+): Promise<CandidateArticle[]> {
+  if (!getNaverSearchCredentials()) return [];
+  return searchNaverNews(query, opts);
+}

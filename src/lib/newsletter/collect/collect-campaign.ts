@@ -10,7 +10,7 @@ import { keywordHitRate, matchKeywords, pickQueryTerms } from "../keyword-filter
 import { SNIPPET_MAX_LENGTH, computeTitleHash, hostOf, matchSourceByDomain, normalizeUrl } from "../normalize";
 import { computeRuleScore } from "../score-rules";
 import type { CandidateArticle, KeywordInput } from "../types";
-import { searchNaverNews } from "./naver-news";
+import { searchNaverNewsIfConfigured } from "./naver-news";
 import { fetchRssArticles } from "./rss";
 
 export type CollectDeps = {
@@ -32,7 +32,7 @@ const DAY_MS = 86_400_000;
 const FUTURE_TOLERANCE_MS = 3_600_000;
 
 const DEFAULT_DEPS: CollectDeps = {
-  searchNaver: (q) => searchNaverNews(q),
+  searchNaver: (q) => searchNaverNewsIfConfigured(q),
   fetchRss: (url) => fetchRssArticles(url),
 };
 
