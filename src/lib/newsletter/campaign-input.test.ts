@@ -57,6 +57,12 @@ describe("validateCampaignInput", () => {
     if (!r.ok) expect(r.error).toContain(keyword);
   });
 
+  it("임시저장이라도 SCHEDULED는 거부(2단계)", () => {
+    const r = validateCampaignInput({ ...valid, sendType: "SCHEDULED" }, { draft: true });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toContain("2단계");
+  });
+
   it("DAILY는 요일이 없어도 된다", () => {
     expect(validateCampaignInput({ ...valid, cadence: "DAILY", sendDayOfWeek: null }, { draft: false }).ok).toBe(true);
   });

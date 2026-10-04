@@ -18,6 +18,7 @@ import { kstYmdToUtc } from "@/lib/newsletter/schedule";
 import type { KeywordInput, NewsletterActionResult } from "@/lib/newsletter/types";
 
 const BASE_PATH = "/admin/newsletter/campaigns";
+const DRAFT_ERROR = "임시저장 캠페인은 먼저 저장을 완료해 주세요";
 
 export async function listCampaigns() {
   const gate = await requireNewsletterAdmin();
@@ -161,6 +162,8 @@ export async function collectCampaignNow(
 ): Promise<NewsletterActionResult<{ fetched: number; stored: number; matched: number; attached: number; issueId: string | null; errors: string[] }>> {
   const gate = await requireCampaignManager(id);
   if (!gate.ok) return { success: false, error: gate.error };
+  const draftCheck = await prisma.newsletterCampaign.findUnique({ where: { id }, select: { isDraft: true } });
+  if (draftCheck?.isDraft) return { success: false, error: DRAFT_ERROR };
   const r = await collectCampaign(id);
   revalidatePath(`${BASE_PATH}/${id}`);
   revalidatePath(`${BASE_PATH}/${id}/articles`);
@@ -185,6 +188,7 @@ export async function addManualArticle(
 
   const campaign = await prisma.newsletterCampaign.findUnique({ where: { id: campaignId } });
   if (!campaign) return { success: false, error: "캠페인을 찾을 수 없습니다." };
+  if (campaign.isDraft) return { success: false, error: DRAFT_ERROR };
   const issue = await ensureCurrentIssue(campaign as CampaignForIssue, new Date());
   if (!issue) return { success: false, error: "편집 가능한 이번 호가 없습니다(사용기간 종료 또는 이미 승인됨)." };
 

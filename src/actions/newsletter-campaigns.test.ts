@@ -83,7 +83,14 @@ describe("deleteDraftCampaign", () => {
 });
 
 describe("collectCampaignNow", () => {
+  it("임시저장 캠페인은 수집하지 않는다", async () => {
+    prismaMock.newsletterCampaign.findUnique.mockResolvedValue({ isDraft: true });
+    expect(await collectCampaignNow("c1")).toEqual({ success: false, error: "임시저장 캠페인은 먼저 저장을 완료해 주세요" });
+    expect(collectCampaignMock).not.toHaveBeenCalled();
+  });
+
   it("담당자 게이트 후 수집 결과 요약을 돌려준다", async () => {
+    prismaMock.newsletterCampaign.findUnique.mockResolvedValue({ isDraft: false });
     collectCampaignMock.mockResolvedValue({ fetched: 10, stored: 4, matched: 3, attached: 3, issueId: "i1", errors: [] });
     expect(await collectCampaignNow("c1")).toMatchObject({ success: true, attached: 3, issueId: "i1" });
   });
@@ -93,6 +100,13 @@ describe("addManualArticle", () => {
   it("http(s)가 아닌 URL·빈 제목 거부", async () => {
     expect((await addManualArticle("c1", { url: "javascript:x", title: "t", sourceName: "", publishedAt: "2026-10-05", snippet: "" })).success).toBe(false);
     expect((await addManualArticle("c1", { url: "https://a.com/1", title: " ", sourceName: "", publishedAt: "2026-10-05", snippet: "" })).success).toBe(false);
+  });
+
+  it("임시저장 캠페인에는 기사를 추가하지 않는다", async () => {
+    prismaMock.newsletterCampaign.findUnique.mockResolvedValue({ id: "c1", isDraft: true });
+    const r = await addManualArticle("c1", { url: "https://a.com/1", title: "t", sourceName: "", publishedAt: "2026-10-05", snippet: "" });
+    expect(r).toEqual({ success: false, error: "임시저장 캠페인은 먼저 저장을 완료해 주세요" });
+    expect(ensureCurrentIssueMock).not.toHaveBeenCalled();
   });
 
   it("기사를 저장하고 현재 호에 선택된 후보로 붙인다", async () => {

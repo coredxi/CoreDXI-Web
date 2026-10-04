@@ -51,12 +51,13 @@ export function validateCampaignInput(input: CampaignFormInput, opts: { draft: b
   const activeUntil = input.activeUntil ? kstYmdToUtc(input.activeUntil, true) : null;
   const subjectTemplate = input.subjectTemplate.trim();
 
+  if (input.sendType === "SCHEDULED") {
+    return fail("승인 없는 스케줄 자동발송은 2단계에서 활성화됩니다. '검토 후 발송'을 선택해 주세요.");
+  }
+
   if (!opts.draft) {
     if (!subjectTemplate) return fail("메일 제목 템플릿을 입력해 주세요.");
     if (!keywords.some((k) => k.operator !== "NOT")) return fail("포함 키워드를 1개 이상 입력해 주세요.");
-    if (input.sendType === "SCHEDULED") {
-      return fail("승인 없는 스케줄 자동발송은 2단계에서 활성화됩니다. '검토 후 발송'을 선택해 주세요.");
-    }
     if (!isInt(input.sendHourKst, 0, 23)) return fail("발송 시각은 0~23시 사이여야 합니다.");
     if (!isInt(input.collectDays, 1, 31)) return fail("수집기간은 1~31일 사이여야 합니다.");
     if (!isInt(input.maxArticles, 1, 20)) return fail("선별 기사 수는 1~20건 사이여야 합니다.");
