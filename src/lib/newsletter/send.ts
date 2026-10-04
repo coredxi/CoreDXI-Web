@@ -9,15 +9,17 @@ import { prisma } from "@/lib/prisma";
 import { sendResendEmail } from "@/lib/resend";
 import { SALES_SIGNATURE } from "@/lib/ax-check/catalog";
 import type { IssueStatus } from "@/generated/prisma/client";
-import { UNSUBSCRIBE_PLACEHOLDER, renderAxWeekly } from "./templates/ax-weekly";
+import { NEWSLETTER_SITE_ORIGIN, UNSUBSCRIBE_PLACEHOLDER, renderAxWeekly } from "./templates/ax-weekly";
 import { ensureAdPrefix } from "./subject";
 
 export const ISSUE_SEND_LOCK_ERROR = "이미 발송 중이거나 발송할 수 없는 상태입니다.";
 const NO_ARTICLES_ERROR = "선별된 기사가 없습니다.";
+const NO_RECIPIENTS_ERROR = "발송 대상 수신자가 없습니다(구독자 0명 또는 내부 수신자 미지정). 수신자를 확인한 뒤 재시도하세요.";
 const STALE_SENDING_MS = 15 * 60 * 1000;
 const STALE_SENDING_ERROR = "발송 처리 중 프로세스가 중단되어 자동 복구되었습니다. 발송 이력에서 재시도하세요.";
+const DAILY_WINDOW_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_THROTTLE_MS = 600; // Resend API 초당 요청 한도 여유
-const SITE_URL = process.env.NEXTAUTH_URL ?? "https://www.coredxi.com";
+const SITE_URL = NEWSLETTER_SITE_ORIGIN;
 
 export function getMaxRecipients(): number {
   const n = Number(process.env.NEWSLETTER_MAX_RECIPIENTS ?? 80);
@@ -120,9 +122,22 @@ export async function sendIssue(
     }
 
     const recipients = await resolveRecipients(issue);
+    if (recipients.length === 0) {
+      await prisma.newsletterIssue.update({ where: { id: issueId }, data: { status: "FAILED", lastError: NO_RECIPIENTS_ERROR } });
+      return { success: false, error: NO_RECIPIENTS_ERROR };
+    }
     const max = getMaxRecipients();
     if (recipients.length > max) {
       const error = `수신자 ${recipients.length}명이 1회 상한(${max}명)을 넘습니다. Resend 일 한도 때문에 Batch 전환(2단계)이 필요합니다.`;
+      await prisma.newsletterIssue.update({ where: { id: issueId }, data: { status: "FAILED", lastError: error } });
+      return { success: false, error };
+    }
+    // 일 한도: 최근 24시간 동안 다른 호로 이미 보낸 수 + 이번 호 수신자 수가 상한을 넘으면 거부(Resend 무료 일 100통).
+    const sentLast24h = await prisma.newsletterDelivery.count({
+      where: { status: "SENT", sentAt: { gte: new Date(Date.now() - DAILY_WINDOW_MS) }, issueId: { not: issueId } },
+    });
+    if (sentLast24h + recipients.length > max) {
+      const error = `최근 24시간 발송 ${sentLast24h}통 + 이번 수신자 ${recipients.length}명이 일 상한(${max}통)을 넘습니다. 24시간 뒤 발송 이력에서 재시도하세요.`;
       await prisma.newsletterIssue.update({ where: { id: issueId }, data: { status: "FAILED", lastError: error } });
       return { success: false, error };
     }
@@ -159,6 +174,8 @@ export async function sendIssue(
         html: rendered.html.replaceAll(UNSUBSCRIBE_PLACEHOLDER, recipient.unsubscribeUrl),
         text: rendered.text.replaceAll(UNSUBSCRIBE_PLACEHOLDER, recipient.unsubscribeUrl),
         headers: { "List-Unsubscribe": `<${recipient.unsubscribeUrl}>` },
+        // 응답 유실 후 재시도해도 Resend가 같은 수신자에게 두 번 보내지 않도록(24시간 유효).
+        idempotencyKey: `newsletter:${issueId}:${d.email}`,
       });
 
       if (result.success) {
@@ -218,13 +235,19 @@ export async function processDueIssues(
   });
   if (stale.length > 0) {
     await prisma.newsletterIssue.updateMany({
-      where: { id: { in: stale.map((s) => s.id) } },
+      // 조회와 갱신 사이에 정상 완료(SENT)된 호를 FAILED로 덮어쓰지 않도록 상태 조건을 함께 건다.
+      where: { id: { in: stale.map((s) => s.id) }, status: "SENDING" },
       data: { status: "FAILED", lastError: STALE_SENDING_ERROR },
     });
   }
 
+  // 캠페인을 "미사용 처리"했거나 사용기간이 끝났으면 이미 승인된 호도 보내지 않는다.
   const due = await prisma.newsletterIssue.findMany({
-    where: { status: "APPROVED", scheduledAt: { lte: now } },
+    where: {
+      status: "APPROVED",
+      scheduledAt: { lte: now },
+      campaign: { isActive: true, OR: [{ activeUntil: null }, { activeUntil: { gte: now } }] },
+    },
     orderBy: { scheduledAt: "asc" },
     select: { id: true },
   });

@@ -11,6 +11,9 @@ const prismaMock = {
 };
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
+// 프리뷰 배포처럼 NEXTAUTH_URL이 운영 도메인이 아니어도, 메일 링크는 운영 도메인으로 고정돼야 한다.
+process.env.NEXTAUTH_URL = "https://preview-abc.vercel.app/";
+
 const { ISSUE_SEND_LOCK_ERROR, processDueIssues, sendIssue, sendTestIssue } = await import("./send");
 
 const issueRow = {
@@ -49,9 +52,15 @@ beforeEach(() => {
     { id: "d1", email: "a@example.com", subscriberId: "u1" },
     { id: "d2", email: "b@example.com", subscriberId: "u2" },
   ]);
-  prismaMock.newsletterDelivery.count.mockResolvedValue(2);
+  dailySent = 0;
+  // where.sentAt이 있으면 "최근 24시간 전체 발송 수"(일 한도 검사), 없으면 이 호의 SENT 수.
+  prismaMock.newsletterDelivery.count.mockImplementation(async (args: { where: { sentAt?: unknown } }) =>
+    args.where.sentAt ? dailySent : 2
+  );
   sendResendEmailMock.mockResolvedValue({ success: true, id: "re_1" });
 });
+
+let dailySent = 0;
 
 describe("sendIssue", () => {
   it("선점 실패 시 발송하지 않는다", async () => {
@@ -70,6 +79,11 @@ describe("sendIssue", () => {
     expect(first.html).toContain("https://www.coredxi.com/unsubscribe/tokA");
     expect(first.html).not.toContain("{{UNSUBSCRIBE_URL}}");
     expect(first.headers).toEqual({ "List-Unsubscribe": "<https://www.coredxi.com/unsubscribe/tokA>" });
+    expect(first.html).not.toContain("preview-abc");
+    expect(first.html).toContain("https://www.coredxi.com/ax-check?ref=newsletter");
+    expect(first.html).toContain("https://www.coredxi.com/brand/email-logo.png");
+    expect(first.idempotencyKey).toBe("newsletter:i1:a@example.com");
+    expect(sendResendEmailMock.mock.calls[1][0].idempotencyKey).toBe("newsletter:i1:b@example.com");
 
     expect(prismaMock.newsletterDelivery.createMany).toHaveBeenCalledWith({
       data: [
@@ -136,6 +150,40 @@ describe("sendIssue", () => {
     expect(prismaMock.newsletterSubscriber.findMany).not.toHaveBeenCalled();
     expect(sendResendEmailMock.mock.calls[0][0].html).toContain("mailto:");
   });
+
+  it("최근 24시간 발송 수 + 이번 수신자 수가 일 한도를 넘으면 보내지 않고 FAILED", async () => {
+    dailySent = 79; // 79 + 2명 > 80
+    const result = await sendIssue("i1", { throttleMs: 0 });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toContain("24시간");
+    expect(sendResendEmailMock).not.toHaveBeenCalled();
+    expect(prismaMock.newsletterDelivery.createMany).not.toHaveBeenCalled();
+    expect(prismaMock.newsletterDelivery.count).toHaveBeenCalledWith({
+      where: { status: "SENT", sentAt: { gte: expect.any(Date) }, issueId: { not: "i1" } },
+    });
+    expect(prismaMock.newsletterIssue.update).toHaveBeenLastCalledWith({
+      where: { id: "i1" },
+      data: { status: "FAILED", lastError: expect.stringContaining("24시간") },
+    });
+  });
+
+  it("일 한도 경계(78 + 2 = 80)는 발송한다", async () => {
+    dailySent = 78;
+    const result = await sendIssue("i1", { throttleMs: 0 });
+    expect(result).toEqual({ success: true, sent: 2, failed: 0, skipped: 0 });
+  });
+
+  it("수신자가 0명이면 SENT로 끝내지 않고 FAILED + lastError", async () => {
+    prismaMock.newsletterSubscriber.findMany.mockResolvedValue([]);
+    const result = await sendIssue("i1", { throttleMs: 0 });
+    expect(result).toEqual({ success: false, error: expect.stringContaining("수신자가 없습니다") });
+    expect(sendResendEmailMock).not.toHaveBeenCalled();
+    expect(prismaMock.newsletterDelivery.createMany).not.toHaveBeenCalled();
+    expect(prismaMock.newsletterIssue.update).toHaveBeenLastCalledWith({
+      where: { id: "i1" },
+      data: { status: "FAILED", lastError: expect.stringContaining("수신자가 없습니다") },
+    });
+  });
 });
 
 describe("processDueIssues", () => {
@@ -146,13 +194,25 @@ describe("processDueIssues", () => {
       .mockResolvedValueOnce([{ id: "i1" }]);
     const result = await processDueIssues({ now, throttleMs: 0 });
     expect(prismaMock.newsletterIssue.updateMany).toHaveBeenCalledWith({
-      where: { id: { in: ["stale"] } },
+      where: { id: { in: ["stale"] }, status: "SENDING" },
       data: { status: "FAILED", lastError: expect.stringContaining("중단") },
     });
-    expect(prismaMock.newsletterIssue.findMany).toHaveBeenLastCalledWith(
-      expect.objectContaining({ where: { status: "APPROVED", scheduledAt: { lte: now } } })
-    );
     expect(result).toEqual({ processed: 1, sent: 1, failed: 0, recovered: 1 });
+  });
+
+  it("사용 중(isActive)이고 사용기간이 남은 캠페인의 호만 발송 대상으로 고른다", async () => {
+    const now = new Date("2026-10-05T23:05:00Z");
+    prismaMock.newsletterIssue.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    await processDueIssues({ now, throttleMs: 0 });
+    expect(prismaMock.newsletterIssue.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: {
+          status: "APPROVED",
+          scheduledAt: { lte: now },
+          campaign: { isActive: true, OR: [{ activeUntil: null }, { activeUntil: { gte: now } }] },
+        },
+      })
+    );
   });
 });
 
@@ -162,6 +222,8 @@ describe("sendTestIssue", () => {
     const call = sendResendEmailMock.mock.calls[0][0];
     expect(call.subject).toBe("(광고) [테스트] [AX 위클리] 수정된 제목");
     expect(call.html).not.toContain("{{UNSUBSCRIBE_URL}}");
+    expect(call.html).toContain('href="https://www.coredxi.com/#newsletter"');
+    expect(call.html).not.toContain("preview-abc");
     expect(prismaMock.newsletterDelivery.createMany).not.toHaveBeenCalled();
   });
 });

@@ -7,8 +7,12 @@
 import { SALES_SIGNATURE, escapeHtml, getEmailLogoUrl } from "@/lib/ax-check/catalog";
 import { formatKstYmd } from "../schedule";
 import { ensureAdPrefix } from "../subject";
+import { SITE_URL } from "@/lib/seo";
 
 export const UNSUBSCRIBE_PLACEHOLDER = "{{UNSUBSCRIBE_URL}}";
+
+/** 메일 속 모든 자사 링크(CTA·수신거부·로고)의 기준 주소 — 프리뷰 배포에서 보내도 운영 도메인으로 고정. */
+export const NEWSLETTER_SITE_ORIGIN = SITE_URL.replace(/\/+$/, "");
 
 const COPY = {
   ctaLead: "우리 회사 AX 우선과제, 3분이면 진단됩니다.",
@@ -62,7 +66,7 @@ export function withNewsletterUtm(url: string, issueNo: number, siteUrl: string)
 }
 
 export function renderAxWeekly(input: AxWeeklyInput): { subject: string; html: string; text: string } {
-  const siteUrl = input.siteUrl ?? process.env.NEXTAUTH_URL ?? "https://www.coredxi.com";
+  const siteUrl = (input.siteUrl ?? NEWSLETTER_SITE_ORIGIN).replace(/\/+$/, "");
   const dateLabel = formatKstYmd(input.issueDate);
   const ctaUrl = withNewsletterUtm(`${siteUrl}/ax-check?ref=newsletter`, input.issueNo, siteUrl);
   const address = SALES_SIGNATURE.addresses[0];

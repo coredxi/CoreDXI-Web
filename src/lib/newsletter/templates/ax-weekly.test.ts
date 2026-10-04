@@ -75,6 +75,24 @@ describe("renderAxWeekly", () => {
   });
 });
 
+describe("renderAxWeekly — 링크 기준 주소", () => {
+  it("siteUrl을 안 넘기면 NEXTAUTH_URL(프리뷰 등)이 아니라 운영 도메인으로 CTA·로고를 만든다", () => {
+    const prev = process.env.NEXTAUTH_URL;
+    process.env.NEXTAUTH_URL = "https://preview-abc.vercel.app/";
+    try {
+      const { siteUrl: _omit, ...rest } = input;
+      void _omit;
+      const html = renderAxWeekly(rest).html;
+      expect(html).not.toContain("preview-abc");
+      expect(html).toContain("https://www.coredxi.com/ax-check?ref=newsletter");
+      expect(html).toContain('src="https://www.coredxi.com/brand/email-logo.png"');
+    } finally {
+      if (prev === undefined) delete process.env.NEXTAUTH_URL;
+      else process.env.NEXTAUTH_URL = prev;
+    }
+  });
+});
+
 describe("withNewsletterUtm", () => {
   it("자사 도메인에만 utm을 붙이고 기존 쿼리를 유지한다", () => {
     expect(withNewsletterUtm(`${SITE}/blog/a?x=1`, 2, SITE)).toBe(

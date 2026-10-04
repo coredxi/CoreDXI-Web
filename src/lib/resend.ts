@@ -13,6 +13,8 @@ export type SendResendEmailInput = {
   from?: string;
   /** 추가 메일 헤더. 뉴스레터의 List-Unsubscribe 헤더용(2026-10-05). */
   headers?: Record<string, string>;
+  /** Resend Idempotency-Key(24시간 유효). 뉴스레터 재시도 시 같은 수신자 중복 발송 방지용. */
+  idempotencyKey?: string;
 };
 
 export type SendResendEmailResult =
@@ -59,7 +61,9 @@ export async function sendResendEmail(
       ...(input.headers ? { headers: input.headers } : {}),
       ...bodyFields,
     };
-    const { data, error } = await resend.emails.send(payload);
+    const { data, error } = input.idempotencyKey
+      ? await resend.emails.send(payload, { idempotencyKey: input.idempotencyKey })
+      : await resend.emails.send(payload);
 
     if (error) {
       console.error("[sendResendEmail]", error);
