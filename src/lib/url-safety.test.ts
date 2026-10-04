@@ -93,6 +93,7 @@ describe("isSafeFeedUrl", () => {
   it.each([
     "https://rss.etnews.com/Section901.xml",
     "https://www.mk.co.kr/rss/30000001/",
+    "https://100.64.example.com/feed", // 도메인 차용은 허용 (IP 범위만 차단)
   ])("공개 https 피드는 허용: %s", (url) => {
     expect(isSafeFeedUrl(url)).toBe(true);
   });
@@ -100,7 +101,10 @@ describe("isSafeFeedUrl", () => {
   it.each([
     "http://rss.etnews.com/Section901.xml", // https 아님
     "https://localhost/feed",
+    "https://localhost./feed", // 후행 점 제거 필요
     "https://127.0.0.1/feed",
+    "https://127.0.0.2/feed", // 127.0.0.0/8 범위 전체 차단
+    "https://0x7f.1/feed", // 정수형/16진 IP 표기
     "https://10.0.0.5/feed",
     "https://192.168.0.1/feed",
     "https://172.16.3.4/feed",
@@ -111,6 +115,7 @@ describe("isSafeFeedUrl", () => {
     "https://[::1]/feed",
     "https://user:pass@example.com/feed",
     "https://intranet.internal/feed",
+    "https://foo.internal./x", // 후행 점 제거 필요
     "not a url",
   ])("차단: %s", (url) => {
     expect(isSafeFeedUrl(url)).toBe(false);
