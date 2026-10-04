@@ -8,6 +8,8 @@
     }
   ],
   "crons": [
-    { "path": "/api/cron/ax-check-followup", "schedule": "30 0 * * *" }
+    { "path": "/api/cron/ax-check-followup", "schedule": "30 0 * * *" },
+    { "path": "/api/cron/newsletter-collect", "schedule": "0 21 * * *" },
+    { "path": "/api/cron/newsletter-send", "schedule": "0 23 * * *" }
   ]
 }
