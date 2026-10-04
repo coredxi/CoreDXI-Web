@@ -122,6 +122,7 @@
   - 🔧 **2026-09-10 안전서류 분기(Q9) 추가** — Safety-RAG 오너 분기 전달물(9/10, 9/9 전달 분 실행 큐 누락 재전달) 반영: `/ax-check`에 Q9(안전서류 작성 시간) 문항 추가, 월 4시간 이상 응답 시 결과 화면·T1 메일에 Safety-RAG 사례 PDF·10분 데모 CTA(`/contact?source=safety_docs`, 새 폼 없이 기존 문의 폼 재사용) 노출. DB 스키마 변경 없음(기존 `answers`/`summary` Json 컬럼 재사용). `/admin/leads`에 Q9 집계 스트립 추가. **후속(사용자)**: ① Safety-RAG 오너로부터 도입 사례 PDF 최종본 수령 → `public/docs/` 게시 → Vercel `AX_CHECK_SAFETY_CASE_STUDY_URL` 등록 ② 반영일을 Safety-RAG 오너 프로젝트에 통보(응답 집계 시작일로 기록, 스펙 6번 완료 기준).
 - ⬜ **3단계 닫기 (09/29~10/31)** — 팔로업 뉴스레터 발송 설계·1호 발송(옵트인 대상만, 시스템 자동 + 사용자 승인), Calendly 임베드로 결과 화면 CTA → 미팅 예약, 업종 확장(건설 등) 여부 결정, 종료 보고 — **착수 게이트: 실응답 5건 + HOT 1건(2026-09-06)**
   - ✅ **2026-09-28 팔로업 뉴스레터 발송 시스템 기본설계 확정** — 포스코 뉴스배포관리시스템 벤치마크, 열린 질문 5건(광고 표기·단일 캠페인·IT·경제지 매체 재구성·화 08:00·요약 노출) 사용자 확정. 설계: `docs/superpowers/specs/2026-09-28-newsletter-distribution-design.md`. **다음**: 0단계 준비(네이버 검색 API 앱 등록 → `NAVER_SEARCH_CLIENT_ID/SECRET`, 매체 RSS URL 조사·시드 CSV, 1호 키워드 확정)는 게이트와 무관하게 진행 가능 / 1단계 MVP(모델 6종·수집·규칙 선별·위저드·검토후발송·Cron) 코드 착수는 게이트(실응답 5건 + HOT 1건) 충족 후, 액션플랜 `docs/superpowers/plans/`에 별도 작성
+- [x] 뉴스레터 발송 시스템 1단계(MVP) 코드 구현 — 계획 docs/superpowers/plans/2026-10-04-newsletter-distribution-mvp-implementation-plan.md (2026-10-04 코드 구현 완료. 마이그레이션 적용·프로덕션 E2E·1호 발송은 계획 Task 16에서 진행. 저장된 캠페인은 임시저장으로 되돌릴 수 없고, 임시저장 캠페인은 수집·기사 추가·발송 불가, 호 편집은 저장 후에만 미리보기·검토요청·승인·발송 가능)
 - Phase 2에서 이동: 예약/미팅 시스템 → 이 트랙 3단계로 흡수. CMS 구조 편집·댓글·관리자 다크모드는 Phase 2에 잔류(11월 이후)
 
 ---
