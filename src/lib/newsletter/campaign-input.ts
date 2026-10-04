@@ -2,6 +2,7 @@
  * campaign-input.ts — 캠페인 만들기/수정 폼 입력 검증(순수 함수)
  * [홍보팀] 캠페인 저장 시 "이름이 비었어요", "키워드를 넣어 주세요" 같은 안내 문구가 여기서 나옵니다.
  */
+import { FIXED_SEND_HOUR_KST } from "./defaults";
 import { kstYmdToUtc } from "./schedule";
 import type { CadenceValue } from "./schedule";
 import type { KeywordInput } from "./types";
@@ -54,11 +55,14 @@ export function validateCampaignInput(input: CampaignFormInput, opts: { draft: b
   if (input.sendType === "SCHEDULED") {
     return fail("승인 없는 스케줄 자동발송은 2단계에서 활성화됩니다. '검토 후 발송'을 선택해 주세요.");
   }
+  // 1단계는 발송 Cron이 매일 08:00 KST 한 번만 돈다 — 임시저장이라도 다른 시각은 저장하지 않는다.
+  if (input.sendHourKst !== FIXED_SEND_HOUR_KST) {
+    return fail("1단계에서는 발송 시각이 08시(KST)로 고정되어 있습니다.");
+  }
 
   if (!opts.draft) {
     if (!subjectTemplate) return fail("메일 제목 템플릿을 입력해 주세요.");
     if (!keywords.some((k) => k.operator !== "NOT")) return fail("포함 키워드를 1개 이상 입력해 주세요.");
-    if (!isInt(input.sendHourKst, 0, 23)) return fail("발송 시각은 0~23시 사이여야 합니다.");
     if (!isInt(input.collectDays, 1, 31)) return fail("수집기간은 1~31일 사이여야 합니다.");
     if (!isInt(input.maxArticles, 1, 20)) return fail("선별 기사 수는 1~20건 사이여야 합니다.");
     if (input.cadence !== "DAILY" && (input.sendDayOfWeek === null || !isInt(input.sendDayOfWeek, 0, 6))) {

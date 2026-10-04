@@ -63,6 +63,15 @@ describe("validateCampaignInput", () => {
     if (!r.ok) expect(r.error).toContain("2단계");
   });
 
+  it("1단계 발송 시각은 08시 고정 — 저장·임시저장 모두 다른 시각을 거부", () => {
+    for (const draft of [false, true]) {
+      const r = validateCampaignInput({ ...valid, sendHourKst: 9 }, { draft });
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.error).toContain("08시");
+    }
+    expect(validateCampaignInput({ ...valid, sendHourKst: 8 }, { draft: true }).ok).toBe(true);
+  });
+
   it("DAILY는 요일이 없어도 된다", () => {
     expect(validateCampaignInput({ ...valid, cadence: "DAILY", sendDayOfWeek: null }, { draft: false }).ok).toBe(true);
   });

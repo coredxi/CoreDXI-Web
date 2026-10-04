@@ -160,7 +160,10 @@ export function IssueEditor(props: Props) {
           <div className="flex flex-wrap items-end gap-2 rounded-xl border border-gray-200 p-3">
             <div className="space-y-1">
               <Label htmlFor="is-schedule">예약 시각(비우면 캠페인 다음 발송일)</Label>
-              <Input id="is-schedule" type="datetime-local" value={scheduleAt} onChange={(e) => setScheduleAt(e.target.value)} />
+              <Input id="is-schedule" type="datetime-local" value={scheduleAt} onChange={(e) => setScheduleAt(e.target.value)}
+                aria-describedby="is-schedule-hint" />
+              {/* [홍보팀] 발송은 매일 오전 8시에 한 번만 돕니다. 다른 시각을 골라도 그 이후 첫 8시에 나갑니다. */}
+              <p id="is-schedule-hint" className="text-xs text-gray-600">예약 발송은 08시(KST) 슬롯에 나갑니다</p>
             </div>
             <Button type="button" disabled={pending || dirty}
               onClick={() => run(() => approveIssue(props.issueId, scheduleAt ? new Date(`${scheduleAt}:00+09:00`).toISOString() : null), "승인했습니다. 예약 시각에 발송됩니다.")}>

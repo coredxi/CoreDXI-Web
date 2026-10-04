@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeNextSendAt, formatKstYmd, kstDateKey, kstYmdToUtc, type ScheduleInput } from "./schedule";
+import { computeNextSendAt, formatKstYmd, kstDateKey, kstYmdToUtc, snapToSendSlot, type ScheduleInput } from "./schedule";
 
 // 2026-10-05(월) 12:00 KST = 03:00 UTC
 const MON_NOON_KST = new Date("2026-10-05T03:00:00Z");
@@ -72,5 +72,26 @@ describe("kstDateKey / formatKstYmd / kstYmdToUtc", () => {
     expect(kstYmdToUtc("2026-12-31", true)?.toISOString()).toBe("2026-12-31T14:59:59.999Z");
     expect(kstYmdToUtc("2026-13-40")).toBeNull();
     expect(kstYmdToUtc("abc")).toBeNull();
+  });
+});
+
+describe("snapToSendSlot", () => {
+  it("슬롯 이전 시각은 같은 날 08:00 KST로 올린다", () => {
+    // 2026-10-06 07:30 KST = 2026-10-05 22:30 UTC
+    expect(snapToSendSlot(new Date("2026-10-05T22:30:00Z"), 8).toISOString()).toBe("2026-10-05T23:00:00.000Z");
+  });
+
+  it("정확히 08:00 KST면 그대로", () => {
+    expect(snapToSendSlot(new Date("2026-10-05T23:00:00Z"), 8).toISOString()).toBe("2026-10-05T23:00:00.000Z");
+  });
+
+  it("08:00 KST를 지난 시각은 다음 날 08:00 KST", () => {
+    // 2026-10-06 14:00 KST = 05:00 UTC → 2026-10-07 08:00 KST = 2026-10-06 23:00 UTC
+    expect(snapToSendSlot(new Date("2026-10-06T05:00:00Z"), 8).toISOString()).toBe("2026-10-06T23:00:00.000Z");
+  });
+
+  it("KST 자정 직후(UTC로는 전날)도 KST 달력 기준으로 계산", () => {
+    // 2026-10-07 00:30 KST = 2026-10-06 15:30 UTC → 2026-10-07 08:00 KST
+    expect(snapToSendSlot(new Date("2026-10-06T15:30:00Z"), 8).toISOString()).toBe("2026-10-06T23:00:00.000Z");
   });
 });

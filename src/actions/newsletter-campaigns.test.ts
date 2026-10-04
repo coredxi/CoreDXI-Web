@@ -6,14 +6,17 @@ vi.mock("@/lib/newsletter/admin-guard", () => guardMock);
 const collectCampaignMock = vi.fn();
 vi.mock("@/lib/newsletter/collect/collect-campaign", () => ({ collectCampaign: (...a: unknown[]) => collectCampaignMock(...a) }));
 const ensureCurrentIssueMock = vi.fn();
-vi.mock("@/lib/newsletter/issues", () => ({ ensureCurrentIssue: (...a: unknown[]) => ensureCurrentIssueMock(...a) }));
+vi.mock("@/lib/newsletter/issues", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/newsletter/issues")>()),
+  ensureCurrentIssue: (...a: unknown[]) => ensureCurrentIssueMock(...a),
+}));
 
 const prismaMock = {
   newsletterCampaign: { create: vi.fn(), update: vi.fn(), findUnique: vi.fn(), delete: vi.fn() },
   newsletterKeyword: { deleteMany: vi.fn() },
   newsletterSelectionRule: { deleteMany: vi.fn() },
   newsletterCampaignSource: { deleteMany: vi.fn() },
-  newsletterIssue: { count: vi.fn() },
+  newsletterIssue: { count: vi.fn(), updateMany: vi.fn() },
   newsArticle: { upsert: vi.fn() },
   newsletterIssueArticle: { upsert: vi.fn(), count: vi.fn() },
   $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(prismaMock)),
@@ -45,6 +48,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   guardMock.requireNewsletterAdmin.mockResolvedValue({ ok: true, admin });
   guardMock.requireCampaignManager.mockResolvedValue({ ok: true, admin });
+  prismaMock.newsletterIssue.updateMany.mockResolvedValue({ count: 1 });
 });
 
 describe("saveCampaign", () => {
@@ -125,6 +129,23 @@ describe("addManualArticle", () => {
     prismaMock.newsletterIssueArticle.count.mockResolvedValue(2);
     const r = await addManualArticle("c1", { url: "https://a.com/1", title: "직접 추가", sourceName: "블로터", publishedAt: "2026-10-05", snippet: "요약" });
     expect(r).toEqual({ success: true, issueId: "i1" });
+    expect(prismaMock.newsletterIssue.updateMany).toHaveBeenCalledWith({
+      where: { id: "i1", status: { in: ["COLLECTING", "DRAFT", "REVIEW_REQUESTED"] } },
+      data: { editedAt: expect.any(Date), status: "DRAFT" },
+    });
     expect(prismaMock.newsletterIssueArticle.upsert.mock.calls[0][0].create).toMatchObject({ issueId: "i1", articleId: "a1", isSelected: true, sortOrder: 2 });
+  });
+
+  it("쓰기 시점에 호가 승인·발송 중으로 바뀌었으면(count 0) 기사 행을 붙이지 않고 거부", async () => {
+    prismaMock.newsletterCampaign.findUnique.mockResolvedValue({
+      id: "c1", sendType: "REVIEW_THEN_SEND", subjectTemplate: "t", cadence: "WEEKLY", sendDayOfWeek: 2, sendHourKst: 8,
+      activeFrom: new Date("2026-10-01T00:00:00Z"), activeUntil: null,
+    });
+    ensureCurrentIssueMock.mockResolvedValue({ id: "i1", status: "DRAFT", editedAt: null });
+    prismaMock.newsArticle.upsert.mockResolvedValue({ id: "a1" });
+    prismaMock.newsletterIssue.updateMany.mockResolvedValue({ count: 0 });
+    const r = await addManualArticle("c1", { url: "https://a.com/1", title: "직접 추가", sourceName: "", publishedAt: "2026-10-05", snippet: "" });
+    expect(r).toEqual({ success: false, error: "이미 승인되었거나 발송 중인 호는 수정할 수 없습니다" });
+    expect(prismaMock.newsletterIssueArticle.upsert).not.toHaveBeenCalled();
   });
 });

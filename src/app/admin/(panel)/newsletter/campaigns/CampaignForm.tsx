@@ -21,6 +21,7 @@ import {
   DEFAULT_SEND_DAY_OF_WEEK,
   DEFAULT_SEND_HOUR_KST,
   DEFAULT_SUBJECT_TEMPLATE,
+  FIXED_SEND_HOUR_KST,
 } from "@/lib/newsletter/defaults";
 import type { KeywordInput } from "@/lib/newsletter/types";
 
@@ -56,7 +57,8 @@ function defaultInput(): CampaignFormInput {
 /** isDraft: 새 캠페인이거나 아직 임시저장 상태일 때만 true(기본값). 저장 완료된 캠페인은 false를 넘겨 "임시저장" 버튼을 숨긴다. */
 export function CampaignForm({ sources, initial, isDraft = true }: { sources: SourceOption[]; initial?: CampaignFormInput; isDraft?: boolean }) {
   const router = useRouter();
-  const [form, setForm] = useState<CampaignFormInput>(initial ?? defaultInput());
+  // 1단계는 발송 시각 08시 고정 — 예전에 다른 시각으로 저장된 캠페인도 편집 시 08시로 맞춘다.
+  const [form, setForm] = useState<CampaignFormInput>(() => ({ ...(initial ?? defaultInput()), sendHourKst: FIXED_SEND_HOUR_KST }));
   const [preview, setPreview] = useState<KeywordPreviewItem[] | null>(null);
   const [pending, startTransition] = useTransition();
   const [internalText, setInternalText] = useState((initial?.internalRecipients ?? []).join(", "));
@@ -140,9 +142,9 @@ export function CampaignForm({ sources, initial, isDraft = true }: { sources: So
               </select>
             </div>
             <div className="space-y-1">
+              {/* [홍보팀] 1단계는 발송 시각이 오전 8시로 고정입니다(서버 예약 작업이 하루 한 번 08시에만 돕니다). */}
               <Label htmlFor="nl-hour">시각(KST)</Label>
-              <Input id="nl-hour" type="number" min={0} max={23} value={form.sendHourKst}
-                onChange={(e) => set("sendHourKst", Number(e.target.value))} />
+              <Input id="nl-hour" value="08시 (1단계 고정)" readOnly disabled aria-readonly="true" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">

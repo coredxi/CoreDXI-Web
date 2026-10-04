@@ -11,7 +11,12 @@ import { requireCampaignManager, requireNewsletterAdmin } from "@/lib/newsletter
 import { validateCampaignInput, type CampaignFormInput } from "@/lib/newsletter/campaign-input";
 import { collectCampaign } from "@/lib/newsletter/collect/collect-campaign";
 import { searchNaverNews } from "@/lib/newsletter/collect/naver-news";
-import { ensureCurrentIssue, type CampaignForIssue } from "@/lib/newsletter/issues";
+import {
+  ISSUE_MUTATION_RACE_ERROR,
+  attachArticleIfEditable,
+  ensureCurrentIssue,
+  type CampaignForIssue,
+} from "@/lib/newsletter/issues";
 import { keywordHitRate, matchKeywords, pickQueryTerms } from "@/lib/newsletter/keyword-filter";
 import { SNIPPET_MAX_LENGTH, cleanText, computeTitleHash, hostOf, normalizeUrl } from "@/lib/newsletter/normalize";
 import { kstYmdToUtc } from "@/lib/newsletter/schedule";
@@ -210,12 +215,8 @@ export async function addManualArticle(
     },
     select: { id: true },
   });
-  const sortOrder = await prisma.newsletterIssueArticle.count({ where: { issueId: issue.id } });
-  await prisma.newsletterIssueArticle.upsert({
-    where: { issueId_articleId: { issueId: issue.id, articleId: article.id } },
-    create: { issueId: issue.id, articleId: article.id, ruleScore: 100, isSelected: true, sortOrder },
-    update: { isSelected: true },
-  });
+  const attached = await attachArticleIfEditable(issue.id, article.id, 100);
+  if (!attached) return { success: false, error: ISSUE_MUTATION_RACE_ERROR };
   revalidatePath(`${BASE_PATH}/${campaignId}/articles`);
   return { success: true, issueId: issue.id };
 }

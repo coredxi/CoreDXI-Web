@@ -75,3 +75,13 @@ export function kstYmdToUtc(ymd: string, endOfDay = false): Date | null {
   if (formatKstYmd(start) !== ymd) return null; // 2026-13-40 같은 값 거부
   return endOfDay ? new Date(start.getTime() + DAY_MS - 1) : start;
 }
+
+/**
+ * date 이후(같은 시각 포함) 첫 hourKst:00 KST 순간. 1단계 발송 Cron은 하루 1회(08:00 KST)만 돌기 때문에
+ * 관리자가 고른 예약 시각을 실제로 나갈 슬롯에 맞춰 저장·표시한다.
+ */
+export function snapToSendSlot(date: Date, hourKst: number): Date {
+  const p = kstParts(date);
+  const sameDay = kstToUtc(p.y, p.m0, p.d, hourKst);
+  return sameDay >= date ? sameDay : kstToUtc(p.y, p.m0, p.d + 1, hourKst);
+}

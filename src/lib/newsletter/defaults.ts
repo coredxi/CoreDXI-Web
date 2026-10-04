@@ -7,6 +7,8 @@
 export const DEFAULT_SUBJECT_TEMPLATE = "(광고) [AX 위클리] {{issueDate}} 중소기업 AI 도입 소식";
 export const DEFAULT_SEND_DAY_OF_WEEK = 2; // 화요일
 export const DEFAULT_SEND_HOUR_KST = 8;
+/** 1단계 고정 발송 시각. Vercel Hobby Cron이 하루 1회(23:00 UTC = 08:00 KST)만 돌아 다른 시각은 지킬 수 없다. */
+export const FIXED_SEND_HOUR_KST = DEFAULT_SEND_HOUR_KST;
 export const DEFAULT_COLLECT_DAYS = 7;
 export const DEFAULT_MAX_ARTICLES = 7;
 

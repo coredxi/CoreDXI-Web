@@ -106,6 +106,25 @@ describe("approveIssue", () => {
   it("과거 예약 시각은 거부", async () => {
     expect((await approveIssue("i1", "2020-01-01T00:00:00.000Z")).success).toBe(false);
   });
+
+  it("직접 고른 예약 시각은 그 시각 이후 첫 08:00 KST 슬롯으로 맞춘다", async () => {
+    // 2030-03-05 14:00 KST → 2030-03-06 08:00 KST(= 03-05 23:00 UTC)
+    const r = await approveIssue("i1", "2030-03-05T05:00:00.000Z");
+    expect(r).toEqual({ success: true, scheduledAt: "2030-03-05T23:00:00.000Z" });
+    expect(prismaMock.newsletterIssue.updateMany.mock.calls[0][0].data.scheduledAt.toISOString()).toBe(
+      "2030-03-05T23:00:00.000Z"
+    );
+  });
+
+  it("08시 슬롯으로 맞춘 시각이 캠페인 사용기간을 넘으면 거부", async () => {
+    prismaMock.newsletterIssue.findUnique.mockResolvedValue({
+      ...issue,
+      campaign: { ...issue.campaign, activeUntil: new Date("2030-03-05T14:59:59.999Z") }, // 2030-03-05 KST 끝
+    });
+    const r = await approveIssue("i1", "2030-03-05T05:00:00.000Z");
+    expect(r.success).toBe(false);
+    expect(prismaMock.newsletterIssue.updateMany).not.toHaveBeenCalled();
+  });
 });
 
 describe("requestIssueReview", () => {

@@ -8,8 +8,9 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireCampaignManager, requireNewsletterAdmin } from "@/lib/newsletter/admin-guard";
-import { EDITABLE_ISSUE_STATUSES } from "@/lib/newsletter/issues";
-import { computeNextSendAt } from "@/lib/newsletter/schedule";
+import { EDITABLE_ISSUE_STATUSES, ISSUE_MUTATION_RACE_ERROR, attachArticleIfEditable } from "@/lib/newsletter/issues";
+import { FIXED_SEND_HOUR_KST } from "@/lib/newsletter/defaults";
+import { computeNextSendAt, snapToSendSlot } from "@/lib/newsletter/schedule";
 import { renderIssueEmail, sendIssue, sendTestIssue, type SendIssueResult } from "@/lib/newsletter/send";
 import { DRAFT_CAMPAIGN_ERROR, type NewsletterActionResult } from "@/lib/newsletter/types";
 
@@ -21,7 +22,7 @@ export type IssueArticleEdit = {
   summary: string | null;
 };
 
-const MUTATION_RACE = "이미 승인되었거나 발송 중인 호는 수정할 수 없습니다";
+const MUTATION_RACE = ISSUE_MUTATION_RACE_ERROR;
 const NOT_EDITABLE = "이미 승인·발송된 호는 수정할 수 없습니다. 먼저 '승인 취소'를 눌러 주세요.";
 
 async function loadIssueWithGate(issueId: string, opts: { mutating?: boolean } = {}) {
@@ -110,20 +111,7 @@ export async function attachArticleToIssue(issueId: string, articleId: string): 
   const loaded = await loadIssueWithGate(issueId, { mutating: true });
   if (!loaded.ok) return { success: false, error: loaded.error };
   if (!isEditable(loaded.issue.status)) return { success: false, error: NOT_EDITABLE };
-  const ok = await prisma.$transaction(async (tx) => {
-    const r = await tx.newsletterIssue.updateMany({
-      where: { id: issueId, status: { in: [...EDITABLE_ISSUE_STATUSES] } },
-      data: { editedAt: new Date(), status: "DRAFT" },
-    });
-    if (r.count !== 1) return false;
-    const sortOrder = await tx.newsletterIssueArticle.count({ where: { issueId } });
-    await tx.newsletterIssueArticle.upsert({
-      where: { issueId_articleId: { issueId, articleId } },
-      create: { issueId, articleId, ruleScore: 0, isSelected: true, sortOrder },
-      update: { isSelected: true },
-    });
-    return true;
-  });
+  const ok = await attachArticleIfEditable(issueId, articleId, 0);
   if (!ok) return { success: false, error: MUTATION_RACE };
   revalidateIssue(loaded.issue.campaignId, issueId);
   return { success: true };
@@ -163,9 +151,15 @@ export async function approveIssue(
   const now = new Date();
   let scheduledAt: Date | null;
   if (scheduledAtIso) {
-    scheduledAt = new Date(scheduledAtIso);
-    if (Number.isNaN(scheduledAt.getTime()) || scheduledAt <= now) {
+    const chosen = new Date(scheduledAtIso);
+    if (Number.isNaN(chosen.getTime()) || chosen <= now) {
       return { success: false, error: "예약 시각은 현재 이후여야 합니다. 지금 보내려면 '즉시 발송'을 눌러 주세요." };
+    }
+    // 1단계 발송 Cron은 매일 08:00 KST 한 번 — 고른 시각 이후 첫 08시 슬롯으로 맞춰 저장한다.
+    scheduledAt = snapToSendSlot(chosen, FIXED_SEND_HOUR_KST);
+    const { activeUntil } = loaded.issue.campaign;
+    if (activeUntil && scheduledAt > activeUntil) {
+      return { success: false, error: "08시 발송 슬롯으로 맞춘 예약 시각이 캠페인 사용기간을 넘습니다. 날짜를 앞당겨 주세요." };
     }
   } else {
     scheduledAt = computeNextSendAt(loaded.issue.campaign, now);
