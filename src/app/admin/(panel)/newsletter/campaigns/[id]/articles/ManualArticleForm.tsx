@@ -26,11 +26,15 @@ export function ManualArticleForm({ campaignId }: { campaignId: string }) {
       onSubmit={(e) => {
         e.preventDefault();
         startTransition(async () => {
-          const r = await addManualArticle(campaignId, form);
-          if (!r.success) return void toast.error(r.error);
-          toast.success("기사를 추가하고 이번 호에 선택했습니다.");
-          setForm(EMPTY);
-          router.refresh();
+          try {
+            const r = await addManualArticle(campaignId, form);
+            if (!r.success) return void toast.error(r.error);
+            toast.success("기사를 추가하고 이번 호에 선택했습니다.");
+            setForm(EMPTY);
+            router.refresh();
+          } catch {
+            toast.error("요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+          }
         });
       }}
     >

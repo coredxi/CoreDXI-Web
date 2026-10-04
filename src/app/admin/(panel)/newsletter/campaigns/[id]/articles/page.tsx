@@ -48,7 +48,7 @@ export default async function CampaignArticlesPage({ params }: { params: Promise
           <tbody>
             {articles.map((a) => {
               const inIssue = issue ? a.issueArticles.find((ia) => ia.issueId === issue.id) : undefined;
-              const score = a.issueArticles[0]?.ruleScore;
+              const score = inIssue?.ruleScore;
               return (
                 <tr key={a.id} className="border-b border-gray-100 last:border-0">
                   <td className="px-4 py-3">

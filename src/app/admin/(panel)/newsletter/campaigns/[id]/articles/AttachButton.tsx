@@ -16,10 +16,14 @@ export function AttachButton({ issueId, articleId }: { issueId: string; articleI
   return (
     <Button type="button" size="sm" variant="outline" disabled={pending}
       onClick={() => startTransition(async () => {
-        const r = await attachArticleToIssue(issueId, articleId);
-        if (!r.success) return void toast.error(r.error);
-        toast.success("이번 호에 추가했습니다.");
-        router.refresh();
+        try {
+          const r = await attachArticleToIssue(issueId, articleId);
+          if (!r.success) return void toast.error(r.error);
+          toast.success("이번 호에 추가했습니다.");
+          router.refresh();
+        } catch {
+          toast.error("요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+        }
       })}>
       이번 호에 추가
     </Button>

@@ -16,10 +16,14 @@ export function RetryButton({ issueId }: { issueId: string }) {
   return (
     <Button type="button" size="sm" variant="outline" disabled={pending}
       onClick={() => startTransition(async () => {
-        const r = await retryIssue(issueId);
-        if (!r.success) return void toast.error(r.error);
-        toast.success(`재발송 ${r.sent}건, 실패 ${r.failed}건`);
-        router.refresh();
+        try {
+          const r = await retryIssue(issueId);
+          if (!r.success) return void toast.error(r.error);
+          toast.success(`재발송 ${r.sent}건, 실패 ${r.failed}건`);
+          router.refresh();
+        } catch {
+          toast.error("요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+        }
       })}>
       재시도
     </Button>

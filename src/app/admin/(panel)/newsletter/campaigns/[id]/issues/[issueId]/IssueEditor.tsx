@@ -35,6 +35,7 @@ type Props = {
   articles: EditorArticle[];
 };
 
+const ERROR_TOAST = "요청 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
 const EDITABLE = ["COLLECTING", "DRAFT", "REVIEW_REQUESTED"];
 
 export function IssueEditor(props: Props) {
@@ -44,12 +45,26 @@ export function IssueEditor(props: Props) {
   const [articles, setArticles] = useState(props.articles);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [scheduleAt, setScheduleAt] = useState("");
+  const [dirty, setDirty] = useState(false);
   const [pending, startTransition] = useTransition();
   const editable = EDITABLE.includes(props.status);
   const selectedCount = articles.filter((a) => a.isSelected).length;
 
-  const patch = (id: string, p: Partial<EditorArticle>) => setArticles((list) => list.map((a) => (a.id === id ? { ...a, ...p } : a)));
-  const move = (index: number, dir: -1 | 1) =>
+  // [홍보팀] 서버 호출이 예외로 끝나도 화면이 조용히 멈추지 않도록 항상 안내 문구를 띄웁니다.
+  const guarded = async (fn: () => Promise<void>) => {
+    try {
+      await fn();
+    } catch {
+      toast.error(ERROR_TOAST);
+    }
+  };
+
+  const patch = (id: string, p: Partial<EditorArticle>) => {
+    setDirty(true);
+    setArticles((list) => list.map((a) => (a.id === id ? { ...a, ...p } : a)));
+  };
+  const move = (index: number, dir: -1 | 1) => {
+    setDirty(true);
     setArticles((list) => {
       const next = [...list];
       const target = index + dir;
@@ -57,42 +72,46 @@ export function IssueEditor(props: Props) {
       [next[index], next[target]] = [next[target], next[index]];
       return next;
     });
+  };
 
   const run = (fn: () => Promise<{ success: boolean; error?: string }>, ok: string) =>
-    startTransition(async () => {
+    startTransition(() => guarded(async () => {
       const r = await fn();
       if (!r.success) return void toast.error(r.error ?? "실패했습니다.");
       toast.success(ok);
       router.refresh();
-    });
+    }));
 
   const save = () =>
-    run(
-      () => updateIssue(props.issueId, {
+    startTransition(() => guarded(async () => {
+      const r = await updateIssue(props.issueId, {
         subject,
         intro,
         articles: articles.map((a, i) => ({ id: a.id, isSelected: a.isSelected, sortOrder: i, editorNote: a.editorNote, summary: a.summary })),
-      }),
-      "저장했습니다."
-    );
+      });
+      if (!r.success) return void toast.error(r.error);
+      setDirty(false);
+      toast.success("저장했습니다.");
+      router.refresh();
+    }));
 
   const loadPreview = () =>
-    startTransition(async () => {
+    startTransition(() => guarded(async () => {
       const r = await getIssuePreview(props.issueId);
       if (!r.success) return void toast.error(r.error);
       setPreviewHtml(r.html);
-    });
+    }));
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="space-y-4">
         <div className="space-y-1">
           <Label htmlFor="is-subject">메일 제목</Label>
-          <Input id="is-subject" value={subject} disabled={!editable} onChange={(e) => setSubject(e.target.value)} />
+          <Input id="is-subject" value={subject} disabled={!editable} onChange={(e) => { setSubject(e.target.value); setDirty(true); }} />
         </div>
         <div className="space-y-1">
           <Label htmlFor="is-intro">인사말(선택)</Label>
-          <Textarea id="is-intro" value={intro} disabled={!editable} onChange={(e) => setIntro(e.target.value)} />
+          <Textarea id="is-intro" value={intro} disabled={!editable} onChange={(e) => { setIntro(e.target.value); setDirty(true); }} />
         </div>
         <p className="text-sm text-gray-600">선택 {selectedCount}건 / 권장 {props.maxArticles}건</p>
         <ul className="space-y-3">
@@ -126,21 +145,24 @@ export function IssueEditor(props: Props) {
       <div className="space-y-4">
         <div className="flex flex-wrap gap-2">
           {editable && <Button type="button" disabled={pending} onClick={save}>저장</Button>}
-          <Button type="button" variant="outline" disabled={pending} onClick={loadPreview}>미리보기</Button>
+          <Button type="button" variant="outline" disabled={pending || dirty} onClick={loadPreview}>미리보기</Button>
           {editable && (
-            <Button type="button" variant="outline" disabled={pending}
+            <Button type="button" variant="outline" disabled={pending || dirty}
               onClick={() => run(() => requestIssueReview(props.issueId), "검토요청 메일을 보냈습니다.")}>
               검토요청(내게 보내기)
             </Button>
           )}
         </div>
+        {(editable || props.status === "APPROVED" || props.status === "FAILED") && dirty && (
+          <p className="text-sm text-amber-700">저장 후 진행할 수 있습니다.</p>
+        )}
         {editable && (
           <div className="flex flex-wrap items-end gap-2 rounded-xl border border-gray-200 p-3">
             <div className="space-y-1">
               <Label htmlFor="is-schedule">예약 시각(비우면 캠페인 다음 발송일)</Label>
               <Input id="is-schedule" type="datetime-local" value={scheduleAt} onChange={(e) => setScheduleAt(e.target.value)} />
             </div>
-            <Button type="button" disabled={pending}
+            <Button type="button" disabled={pending || dirty}
               onClick={() => run(() => approveIssue(props.issueId, scheduleAt ? new Date(`${scheduleAt}:00+09:00`).toISOString() : null), "승인했습니다. 예약 시각에 발송됩니다.")}>
               승인(예약)
             </Button>
@@ -155,15 +177,15 @@ export function IssueEditor(props: Props) {
         )}
         {(editable || props.status === "APPROVED" || props.status === "FAILED") && (
           <div className="flex gap-2">
-            <Button type="button" variant="destructive" disabled={pending}
+            <Button type="button" variant="destructive" disabled={pending || dirty}
               onClick={() => {
                 if (!window.confirm("지금 구독자 전원에게 발송합니다. 계속할까요?")) return;
-                startTransition(async () => {
+                startTransition(() => guarded(async () => {
                   const r = await sendIssueNow(props.issueId);
                   if (!r.success) return void toast.error(r.error);
                   toast.success(`발송 ${r.sent}건, 실패 ${r.failed}건, 제외 ${r.skipped}건`);
                   router.refresh();
-                });
+                }));
               }}>
               즉시 발송
             </Button>
