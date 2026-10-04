@@ -11,10 +11,23 @@ export type KeywordMatch = {
   groupHits: { group: number; bestScore: number; maxScore: number }[];
 };
 
-const FAIL: KeywordMatch = { passes: false, groupHits: [] };
-
 function norm(s: string): string {
   return s.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function isAsciiOnly(s: string): boolean {
+  return /^[a-z0-9\s]+$/.test(s);
+}
+
+function containsTerm(haystack: string, term: string): boolean {
+  if (!isAsciiOnly(term)) {
+    return haystack.includes(term);
+  }
+  const idx = haystack.indexOf(term);
+  if (idx === -1) return false;
+  const before = idx === 0 || !/[a-z0-9]/.test(haystack[idx - 1]);
+  const after = idx + term.length === haystack.length || !/[a-z0-9]/.test(haystack[idx + term.length]);
+  return before && after;
 }
 
 function clampWeight(w: number): number {
@@ -42,11 +55,13 @@ export function matchKeywords(
 
   for (const k of keywords) {
     const term = norm(k.term);
-    if (k.operator === "NOT" && term && (t.includes(term) || s.includes(term))) return FAIL;
+    if (k.operator === "NOT" && term && (containsTerm(t, term) || containsTerm(s, term))) {
+      return { passes: false, groupHits: [] };
+    }
   }
 
   const groups = positiveGroups(keywords);
-  if (groups.size === 0) return FAIL;
+  if (groups.size === 0) return { passes: false, groupHits: [] };
 
   const groupHits: KeywordMatch["groupHits"] = [];
   for (const [group, terms] of groups) {
@@ -56,10 +71,10 @@ export function matchKeywords(
       const term = norm(k.term);
       const w = clampWeight(k.weight);
       max = Math.max(max, w * 2);
-      const score = t.includes(term) ? w * 2 : s.includes(term) ? w : 0;
+      const score = containsTerm(t, term) ? w * 2 : containsTerm(s, term) ? w : 0;
       best = Math.max(best, score);
     }
-    if (best === 0) return FAIL;
+    if (best === 0) return { passes: false, groupHits: [] };
     groupHits.push({ group, bestScore: best, maxScore: max });
   }
   return { passes: true, groupHits };

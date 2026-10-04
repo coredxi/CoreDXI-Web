@@ -37,6 +37,36 @@ describe("matchKeywords", () => {
     const withBlank: KeywordInput[] = [{ group: 1, operator: "OR", term: "  ", weight: 5 }];
     expect(matchKeywords(withBlank, "아무 기사", "").passes).toBe(false);
   });
+
+  it("영문 키워드는 단어 경계를 존중한다(AX는 TAX 안에서 매칭 안 함)", () => {
+    const kw: KeywordInput[] = [
+      { group: 1, operator: "OR", term: "AX", weight: 4 },
+      { group: 2, operator: "OR", term: "중소기업", weight: 5 },
+    ];
+    expect(matchKeywords(kw, "TAX 정책 중소기업 개편", "").passes).toBe(false);
+    expect(matchKeywords(kw, "중소기업 AX 전환", "").passes).toBe(true);
+  });
+
+  it("한글 입자 뒤의 영문 키워드는 매칭한다(AI가 포함된 문구)", () => {
+    const kw: KeywordInput[] = [
+      { group: 1, operator: "OR", term: "AI", weight: 5 },
+      { group: 2, operator: "OR", term: "중소기업", weight: 5 },
+    ];
+    expect(matchKeywords(kw, "중소기업 AI가 바꾼 현장", "").passes).toBe(true);
+  });
+
+  it("영문 키워드는 단어 경계를 존중한다(SI는 ASIA 안에서 매칭 안 함)", () => {
+    const kw: KeywordInput[] = [{ group: 1, operator: "OR", term: "SI", weight: 2 }];
+    expect(matchKeywords(kw, "ASIA 시장 진출", "").passes).toBe(false);
+  });
+
+  it("제외어도 단어 경계를 존중한다(ai는 retail 안에서 제외 안 함)", () => {
+    const kw: KeywordInput[] = [
+      { group: 1, operator: "OR", term: "중소기업", weight: 5 },
+      { group: 0, operator: "NOT", term: "ai", weight: 1 },
+    ];
+    expect(matchKeywords(kw, "중소기업 retail 동향", "").passes).toBe(true);
+  });
 });
 
 describe("keywordHitRate", () => {
