@@ -58,7 +58,7 @@ export async function getIssueForEdit(issueId: string) {
   const issue = await prisma.newsletterIssue.findUnique({
     where: { id: issueId },
     include: {
-      campaign: { select: { id: true, name: true, maxArticles: true } },
+      campaign: { select: { id: true, name: true, maxArticles: true, audience: true, internalRecipients: true } },
       articles: { orderBy: [{ isSelected: "desc" }, { sortOrder: "asc" }], include: { article: { include: { source: true } } } },
     },
   });

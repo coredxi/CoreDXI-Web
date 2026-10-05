@@ -2,6 +2,7 @@
 import { getIssueForEdit } from "@/actions/newsletter-issues";
 import { formatKstDate, formatKstDateTime } from "@/lib/format-kst-date";
 import { IssueEditor } from "./IssueEditor";
+import { sendNowConfirmMessage } from "@/lib/newsletter/audience";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // 즉시 발송(최대 80통 × 600ms 스로틀)
@@ -22,6 +23,7 @@ export default async function IssuePage({ params }: { params: Promise<{ id: stri
         subject={issue.subject}
         intro={issue.intro}
         maxArticles={issue.campaign.maxArticles}
+        sendNowConfirm={sendNowConfirmMessage(issue.campaign.audience, issue.campaign.internalRecipients.length)}
         scheduledLabel={issue.scheduledAt ? formatKstDateTime(issue.scheduledAt) : null}
         articles={issue.articles.map((ia) => ({
           id: ia.id,

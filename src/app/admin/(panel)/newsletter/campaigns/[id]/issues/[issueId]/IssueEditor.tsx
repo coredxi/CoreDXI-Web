@@ -31,6 +31,8 @@ type Props = {
   subject: string;
   intro: string | null;
   maxArticles: number;
+  /** 즉시 발송 확인창 문구(수신 대상에 따라 다름) */
+  sendNowConfirm: string;
   scheduledLabel: string | null;
   articles: EditorArticle[];
 };
@@ -187,7 +189,7 @@ export function IssueEditor(props: Props) {
           <div className="flex gap-2">
             <Button type="button" variant="destructive" disabled={pending || dirty || noSelection}
               onClick={() => {
-                if (!window.confirm("지금 구독자 전원에게 발송합니다. 계속할까요?")) return;
+                if (!window.confirm(props.sendNowConfirm)) return;
                 startTransition(() => guarded(async () => {
                   const r = await sendIssueNow(props.issueId);
                   if (!r.success) return void toast.error(r.error);
