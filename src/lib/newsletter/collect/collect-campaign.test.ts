@@ -113,8 +113,25 @@ describe("collectCampaign", () => {
     expect(upserts.filter((u: { isSelected: boolean }) => u.isSelected)).toHaveLength(2);
     expect(prismaMock.newsletterIssue.updateMany).toHaveBeenCalledWith({
       where: { id: "i1", status: { in: ["COLLECTING", "DRAFT"] }, editedAt: null },
-      data: { status: "DRAFT" },
+      data: expect.objectContaining({ status: "DRAFT" }),
     });
+  });
+
+  it("저장 전(editedAt 없음) 호에는 선택 기사로 인사말 초안을 같은 가드로 채운다", async () => {
+    prismaMock.newsletterIssueArticle.findMany.mockImplementation(async (args: { where: { isSelected?: boolean } }) =>
+      args.where.isSelected ? [{ article: { title: "중소기업 AI 도입 사례", snippet: null } }] : []
+    );
+    await collectCampaign("c1", { now: NOW, deps: deps([art("중소기업 AI 도입 1", "https://www.etnews.com/1")]) });
+    const call = prismaMock.newsletterIssue.updateMany.mock.calls[0][0];
+    expect(call.where).toEqual({ id: "i1", status: { in: ["COLLECTING", "DRAFT"] }, editedAt: null });
+    expect(call.data.intro).toContain("AI 도입·중소기업 관련 기사 1건");
+    expect(call.data.intro).toContain("\"중소기업 AI 도입 사례\"");
+  });
+
+  it("편집자가 저장한(editedAt 있음) 호는 인사말을 포함해 아무것도 쓰지 않는다", async () => {
+    ensureCurrentIssueMock.mockResolvedValue({ id: "i1", status: "DRAFT", editedAt: new Date() });
+    await collectCampaign("c1", { now: NOW, deps: deps([art("중소기업 AI 도입 1", "https://www.etnews.com/1")]) });
+    expect(prismaMock.newsletterIssue.updateMany).not.toHaveBeenCalled();
   });
 
   it("검토요청(REVIEW_REQUESTED) 호는 후보·상태를 건드리지 않는다", async () => {

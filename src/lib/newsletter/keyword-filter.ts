@@ -27,6 +27,12 @@ function containsTerm(haystack: string, term: string): boolean {
   return pattern.test(haystack);
 }
 
+/** 필터와 같은 규칙(대소문자·공백 무시, 영문 단어 경계)으로 text에 term이 들어 있는지. */
+export function textContainsTerm(text: string, term: string): boolean {
+  const t = norm(term);
+  return t !== "" && containsTerm(norm(text), t);
+}
+
 function clampWeight(w: number): number {
   return Math.min(5, Math.max(1, Math.round(w)));
 }

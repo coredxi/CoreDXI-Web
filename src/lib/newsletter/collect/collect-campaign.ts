@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import type { IssueStatus } from "@/generated/prisma/client";
 import { ensureCurrentIssue, type CampaignForIssue } from "../issues";
 import { keywordHitRate, matchKeywords, pickQueryTerms } from "../keyword-filter";
+import { buildAutoIntro } from "../intro";
 import { SNIPPET_MAX_LENGTH, computeTitleHash, hostOf, matchSourceByDomain, normalizeUrl } from "../normalize";
 import { computeRuleScore } from "../score-rules";
 import type { CandidateArticle, KeywordInput } from "../types";
@@ -220,9 +221,20 @@ export async function collectCampaign(
         update: fields,
       });
     }
+    // 인사말 초안 — 편집자가 저장하기 전(guard: editedAt null)까지만 매 수집마다 다시 쓴다
+    const selected = top.length > 0
+      ? await tx.newsletterIssueArticle.findMany({
+          where: { issueId: issue.id, isSelected: true },
+          orderBy: { sortOrder: "asc" },
+          select: { article: { select: { title: true, snippet: true } } },
+        })
+      : [];
     await tx.newsletterIssue.updateMany({
       where: guard,
-      data: { status: top.length > 0 ? "DRAFT" : "COLLECTING" },
+      data: {
+        status: top.length > 0 ? "DRAFT" : "COLLECTING",
+        intro: buildAutoIntro(selected.map((s) => s.article), keywords),
+      },
     });
     return top.length;
   });
