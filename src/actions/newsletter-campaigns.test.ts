@@ -99,6 +99,13 @@ describe("collectCampaignNow", () => {
     expect(collectCampaignMock).not.toHaveBeenCalled();
   });
 
+  it("RSS 매체 0곳이고 네이버 검색 키도 없으면 수집하지 않고 매체 선택을 안내한다", async () => {
+    prismaMock.newsletterCampaign.findUnique.mockResolvedValue({ isDraft: false, _count: { sources: 0 } });
+    const r = await collectCampaignNow("c1");
+    expect(r).toEqual({ success: false, error: expect.stringContaining("RSS 매체") });
+    expect(collectCampaignMock).not.toHaveBeenCalled();
+  });
+
   it("담당자 게이트 후 수집 결과 요약을 돌려준다", async () => {
     prismaMock.newsletterCampaign.findUnique.mockResolvedValue({ isDraft: false });
     collectCampaignMock.mockResolvedValue({ fetched: 10, stored: 4, matched: 3, attached: 3, issueId: "i1", errors: [] });

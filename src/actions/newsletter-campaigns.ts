@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { requireCampaignManager, requireNewsletterAdmin } from "@/lib/newsletter/admin-guard";
 import { validateCampaignInput, type CampaignFormInput } from "@/lib/newsletter/campaign-input";
 import { collectCampaign } from "@/lib/newsletter/collect/collect-campaign";
-import { searchNaverNews } from "@/lib/newsletter/collect/naver-news";
+import { getNaverSearchCredentials, searchNaverNews } from "@/lib/newsletter/collect/naver-news";
 import {
   ISSUE_MUTATION_RACE_ERROR,
   attachArticleIfEditable,
@@ -24,6 +24,7 @@ import { DRAFT_CAMPAIGN_ERROR, type KeywordInput, type NewsletterActionResult } 
 
 const BASE_PATH = "/admin/newsletter/campaigns";
 const DRAFT_ERROR = DRAFT_CAMPAIGN_ERROR;
+const NO_SOURCE_ERROR = "수집할 RSS 매체가 없습니다. 캠페인 ④ RSS 매체에서 1곳 이상 체크하고 저장해 주세요.";
 
 export async function listCampaigns() {
   const gate = await requireNewsletterAdmin();
@@ -170,8 +171,9 @@ export async function collectCampaignNow(
 ): Promise<NewsletterActionResult<{ fetched: number; stored: number; matched: number; attached: number; issueId: string | null; errors: string[] }>> {
   const gate = await requireCampaignManager(id);
   if (!gate.ok) return { success: false, error: gate.error };
-  const draftCheck = await prisma.newsletterCampaign.findUnique({ where: { id }, select: { isDraft: true } });
+  const draftCheck = await prisma.newsletterCampaign.findUnique({ where: { id }, select: { isDraft: true, _count: { select: { sources: true } } } });
   if (draftCheck?.isDraft) return { success: false, error: DRAFT_ERROR };
+  if (draftCheck?._count?.sources === 0 && !getNaverSearchCredentials()) return { success: false, error: NO_SOURCE_ERROR };
   const r = await collectCampaign(id);
   revalidatePath(`${BASE_PATH}/${id}`);
   revalidatePath(`${BASE_PATH}/${id}/articles`);
