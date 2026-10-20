@@ -11,6 +11,11 @@ import { SALES_SIGNATURE } from "@/lib/ax-check/catalog";
 import type { IssueStatus } from "@/generated/prisma/client";
 import { NEWSLETTER_SITE_ORIGIN, UNSUBSCRIBE_PLACEHOLDER, renderAxWeekly } from "./templates/ax-weekly";
 import { ensureAdPrefix } from "./subject";
+import {
+  buildListUnsubscribeHeaders,
+  oneClickUnsubscribeUrl,
+  unsubscribePageUrl,
+} from "@/lib/newsletter-unsubscribe";
 
 export const ISSUE_SEND_LOCK_ERROR = "이미 발송 중이거나 발송할 수 없는 상태입니다.";
 const NO_ARTICLES_ERROR = "선별된 기사가 없습니다.";
@@ -30,7 +35,14 @@ export type SendIssueResult =
   | { success: true; sent: number; failed: number; skipped: number }
   | { success: false; error: string };
 
-type Recipient = { subscriberId: string | null; email: string; unsubscribeUrl: string };
+type Recipient = {
+  subscriberId: string | null;
+  email: string;
+  /** 본문 "수신거부" 링크 — 구독자는 확인 화면(/unsubscribe/{token}), 내부 수신자는 mailto. */
+  unsubscribeUrl: string;
+  /** List-Unsubscribe 헤더 주소 — 구독자는 원클릭 POST 주소(RFC 8058), 내부 수신자는 mailto. */
+  listUnsubscribeUrl: string;
+};
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -79,6 +91,7 @@ async function resolveRecipients(issue: LoadedIssue): Promise<Recipient[]> {
       subscriberId: null,
       email,
       unsubscribeUrl: internalUnsubscribeUrl(),
+      listUnsubscribeUrl: internalUnsubscribeUrl(),
     }));
   }
   const subscribers = await prisma.newsletterSubscriber.findMany({
@@ -88,7 +101,8 @@ async function resolveRecipients(issue: LoadedIssue): Promise<Recipient[]> {
   return subscribers.map((s) => ({
     subscriberId: s.id,
     email: s.email,
-    unsubscribeUrl: `${SITE_URL}/unsubscribe/${s.unsubscribeToken}`,
+    unsubscribeUrl: unsubscribePageUrl(SITE_URL, s.unsubscribeToken),
+    listUnsubscribeUrl: oneClickUnsubscribeUrl(SITE_URL, s.unsubscribeToken),
   }));
 }
 
@@ -173,7 +187,7 @@ export async function sendIssue(
         subject: rendered.subject,
         html: rendered.html.replaceAll(UNSUBSCRIBE_PLACEHOLDER, recipient.unsubscribeUrl),
         text: rendered.text.replaceAll(UNSUBSCRIBE_PLACEHOLDER, recipient.unsubscribeUrl),
-        headers: { "List-Unsubscribe": `<${recipient.unsubscribeUrl}>` },
+        headers: buildListUnsubscribeHeaders(recipient.listUnsubscribeUrl),
         // 응답 유실 후 재시도해도 Resend가 같은 수신자에게 두 번 보내지 않도록(24시간 유효).
         idempotencyKey: `newsletter:${issueId}:${d.email}`,
       });

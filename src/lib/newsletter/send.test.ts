@@ -78,7 +78,11 @@ describe("sendIssue", () => {
     expect(first.subject).toBe("(광고) [AX 위클리] 수정된 제목");
     expect(first.html).toContain("https://www.coredxi.com/unsubscribe/tokA");
     expect(first.html).not.toContain("{{UNSUBSCRIBE_URL}}");
-    expect(first.headers).toEqual({ "List-Unsubscribe": "<https://www.coredxi.com/unsubscribe/tokA>" });
+    // 본문 링크는 확인 화면(GET 안전), 헤더는 RFC 8058 원클릭 POST 주소(2026-10-20)
+    expect(first.headers).toEqual({
+      "List-Unsubscribe": "<https://www.coredxi.com/api/newsletter/unsubscribe/tokA>",
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    });
     expect(first.html).not.toContain("preview-abc");
     expect(first.html).toContain("https://www.coredxi.com/ax-check?ref=newsletter");
     expect(first.html).toContain("https://www.coredxi.com/brand/email-logo.png");
@@ -149,6 +153,10 @@ describe("sendIssue", () => {
     await sendIssue("i1", { throttleMs: 0 });
     expect(prismaMock.newsletterSubscriber.findMany).not.toHaveBeenCalled();
     expect(sendResendEmailMock.mock.calls[0][0].html).toContain("mailto:");
+    // mailto만 있는 내부 수신자에게는 원클릭(POST) 헤더를 붙이지 않는다
+    const headers = sendResendEmailMock.mock.calls[0][0].headers;
+    expect(headers["List-Unsubscribe"]).toMatch(/^<mailto:/);
+    expect(headers).not.toHaveProperty("List-Unsubscribe-Post");
   });
 
   it("최근 24시간 발송 수 + 이번 수신자 수가 일 한도를 넘으면 보내지 않고 FAILED", async () => {

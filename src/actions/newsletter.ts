@@ -1,11 +1,13 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getClientIp } from "@/lib/client-ip";
 import { sendResendEmail } from "@/lib/resend";
 import { generateUnsubscribeToken } from "@/lib/newsletter-token";
+import { maskEmail, unsubscribePageUrl } from "@/lib/newsletter-unsubscribe";
 import {
   removeResendAudienceContact,
   upsertResendAudienceContact,
@@ -14,6 +16,7 @@ import type {
   NewsletterListResult,
   NewsletterSubscribeResult,
   NewsletterUnsubscribeResult,
+  NewsletterUnsubscribeTarget,
 } from "@/lib/newsletter-types";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -78,7 +81,7 @@ export async function subscribeNewsletter(
       });
     }
 
-    const unsubscribeUrl = `${SITE_URL}/unsubscribe/${subscriber.unsubscribeToken}`;
+    const unsubscribeUrl = unsubscribePageUrl(SITE_URL, subscriber.unsubscribeToken);
     const notifyResult = await sendResendEmail({
       to: email,
       subject: "[CoreDXI] 뉴스레터 구독이 완료되었습니다",
@@ -111,7 +114,7 @@ export async function unsubscribeNewsletterByToken(
 ): Promise<NewsletterUnsubscribeResult> {
   const trimmed = token.trim();
   if (!trimmed) {
-    return { success: false, error: "유효하지 않은 구독 해지 링크입니다." };
+    return { success: false, error: "유효하지 않은 구독 해지 링크입니다.", code: "invalid_token" };
   }
 
   try {
@@ -120,7 +123,7 @@ export async function unsubscribeNewsletterByToken(
     });
 
     if (!subscriber) {
-      return { success: false, error: "유효하지 않은 구독 해지 링크입니다." };
+      return { success: false, error: "유효하지 않은 구독 해지 링크입니다.", code: "invalid_token" };
     }
 
     if (subscriber.status === "UNSUBSCRIBED") {
@@ -140,8 +143,57 @@ export async function unsubscribeNewsletterByToken(
     return {
       success: false,
       error: "구독 해지 처리 중 오류가 발생했습니다.",
+      code: "server_error",
     };
   }
+}
+
+/**
+ * 수신거부 확인 화면용 조회 — 상태를 바꾸지 않는다(GET 안전).
+ * 메일 보안 검사기가 링크를 미리 열어도 구독이 풀리지 않도록, 실제 해지는 confirmUnsubscribe(POST)에서만 한다.
+ */
+export async function getUnsubscribeTarget(token: string): Promise<NewsletterUnsubscribeTarget> {
+  const trimmed = token.trim();
+  if (!trimmed) {
+    return { success: false, error: "유효하지 않은 구독 해지 링크입니다." };
+  }
+  try {
+    const subscriber = await prisma.newsletterSubscriber.findUnique({
+      where: { unsubscribeToken: trimmed },
+      select: { email: true, status: true },
+    });
+    if (!subscriber) {
+      return { success: false, error: "유효하지 않은 구독 해지 링크입니다." };
+    }
+    return {
+      success: true,
+      maskedEmail: maskEmail(subscriber.email),
+      alreadyUnsubscribed: subscriber.status === "UNSUBSCRIBED",
+    };
+  } catch (e) {
+    console.error("[getUnsubscribeTarget]", e);
+    return { success: false, error: "구독 정보를 확인하는 중 오류가 발생했습니다." };
+  }
+}
+
+/**
+ * 확인 화면의 "구독 해지" 버튼(폼 POST)에서 호출. 처리 후 같은 화면으로 돌아가 결과를 보여준다.
+ * 사용: `<form action={confirmUnsubscribe.bind(null, token)}>`
+ */
+export async function confirmUnsubscribe(token: string): Promise<void> {
+  const path = `/unsubscribe/${encodeURIComponent(token.trim())}`;
+
+  const clientIp = await getClientIp();
+  const rateLimit = await checkRateLimit(`newsletter-unsubscribe:${clientIp}`, {
+    max: 20,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!rateLimit.allowed) {
+    redirect(`${path}?error=rate`);
+  }
+
+  const result = await unsubscribeNewsletterByToken(token);
+  redirect(result.success ? path : `${path}?error=failed`);
 }
 
 export async function listNewsletterSubscribers(): Promise<NewsletterListResult> {
