@@ -41,9 +41,16 @@ const prismaMock = {
 };
 vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 
+const redirectMock = vi.fn((url: string) => {
+  throw new Error(`NEXT_REDIRECT:${url}`);
+});
+vi.mock("next/navigation", () => ({ redirect: (url: string) => redirectMock(url) }));
+
 const {
   subscribeNewsletter,
   unsubscribeNewsletterByToken,
+  getUnsubscribeTarget,
+  confirmUnsubscribe,
   listNewsletterSubscribers,
 } = await import("./newsletter");
 
@@ -152,6 +159,7 @@ describe("unsubscribeNewsletterByToken", () => {
     expect(result).toEqual({
       success: false,
       error: "유효하지 않은 구독 해지 링크입니다.",
+      code: "invalid_token",
     });
   });
 
@@ -187,6 +195,79 @@ describe("unsubscribeNewsletterByToken", () => {
 
     expect(result).toEqual({ success: true, email: "user@example.com" });
     expect(prismaMock.newsletterSubscriber.update).not.toHaveBeenCalled();
+  });
+});
+
+describe("getUnsubscribeTarget (확인 화면 — 상태 변경 없음)", () => {
+  it("구독 중이면 가린 이메일과 함께 확인 대상으로 돌려주고 DB를 바꾸지 않는다", async () => {
+    prismaMock.newsletterSubscriber.findUnique.mockResolvedValue({
+      email: "user@example.com",
+      status: "SUBSCRIBED",
+    });
+
+    const result = await getUnsubscribeTarget("token-1");
+
+    expect(result).toEqual({
+      success: true,
+      maskedEmail: "us***@example.com",
+      alreadyUnsubscribed: false,
+    });
+    expect(prismaMock.newsletterSubscriber.update).not.toHaveBeenCalled();
+    expect(removeResendAudienceContactMock).not.toHaveBeenCalled();
+  });
+
+  it("이미 해지된 구독자는 alreadyUnsubscribed=true", async () => {
+    prismaMock.newsletterSubscriber.findUnique.mockResolvedValue({
+      email: "user@example.com",
+      status: "UNSUBSCRIBED",
+    });
+    const result = await getUnsubscribeTarget("token-1");
+    expect(result).toMatchObject({ success: true, alreadyUnsubscribed: true });
+  });
+
+  it("알 수 없는 토큰은 실패", async () => {
+    prismaMock.newsletterSubscriber.findUnique.mockResolvedValue(null);
+    const result = await getUnsubscribeTarget("bogus");
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("confirmUnsubscribe (확인 버튼 POST)", () => {
+  it("해지 후 같은 확인 화면으로 돌아간다", async () => {
+    prismaMock.newsletterSubscriber.findUnique.mockResolvedValue({
+      id: "sub-1",
+      email: "user@example.com",
+      status: "SUBSCRIBED",
+      resendContactId: null,
+    });
+    prismaMock.newsletterSubscriber.update.mockResolvedValue({});
+
+    await expect(confirmUnsubscribe("token-1")).rejects.toThrow(
+      "NEXT_REDIRECT:/unsubscribe/token-1"
+    );
+    expect(prismaMock.newsletterSubscriber.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: "UNSUBSCRIBED" }) })
+    );
+    expect(checkRateLimitMock).toHaveBeenCalledWith(
+      "newsletter-unsubscribe:127.0.0.1",
+      expect.any(Object)
+    );
+  });
+
+  it("rate limit 초과 시 해지하지 않고 오류 안내로 돌아간다", async () => {
+    checkRateLimitMock.mockResolvedValue({ allowed: false, retryAfterSeconds: 60 });
+
+    await expect(confirmUnsubscribe("token-1")).rejects.toThrow(
+      "NEXT_REDIRECT:/unsubscribe/token-1?error=rate"
+    );
+    expect(prismaMock.newsletterSubscriber.update).not.toHaveBeenCalled();
+  });
+
+  it("유효하지 않은 토큰이면 오류 안내로 돌아간다", async () => {
+    prismaMock.newsletterSubscriber.findUnique.mockResolvedValue(null);
+    await expect(confirmUnsubscribe("bogus")).rejects.toThrow(
+      "NEXT_REDIRECT:/unsubscribe/bogus?error=failed"
+    );
   });
 });
 

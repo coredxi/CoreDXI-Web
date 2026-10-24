@@ -315,6 +315,7 @@ ruleScore = clamp(0..100,
 - 메일 1통 = `NewsletterDelivery` 1행. 발송 전 `QUEUED` 로 전원 insert → 순차 `sendResendEmail` → 결과 갱신. 중간 실패해도 재실행 시 `QUEUED`/`FAILED` 만 재시도(멱등).
 - 구독자 100명 초과 시 Resend Batch(`/emails/batch`, 100통/호출)로 전환 — `resend.ts`에 `sendResendBatch` 추가.
 - 각 메일 하단: 기존 `/unsubscribe/{unsubscribeToken}` 링크 + 회사 정보(상호·주소·문의 메일) + `List-Unsubscribe` 헤더.
+  - **2026-10-20 개정 — 수신거부 2단계화**: 본문 링크 `/unsubscribe/{token}`은 GET 시 확인 화면만 보여주고, "구독 해지" 버튼(서버 액션 POST)으로만 해지한다(사내 메일 보안 검사기·링크 미리보기가 GET으로 열어 구독이 풀리는 사고 방지). 헤더는 RFC 8058 원클릭 — `List-Unsubscribe: <https://www.coredxi.com/api/newsletter/unsubscribe/{token}>`, `List-Unsubscribe-Post: List-Unsubscribe=One-Click`. 원클릭 API는 본문 `List-Unsubscribe=One-Click` POST만 해지, GET은 확인 화면으로 303. 내부 시험 수신자(mailto)에는 Post 헤더를 붙이지 않는다. 구현: `src/lib/newsletter-unsubscribe.ts`, `src/app/api/newsletter/unsubscribe/[token]/route.ts`.
 
 ---
 
