@@ -25,6 +25,7 @@
 - 저장소: **`sessionStorage`(탭 단위)**, 키 `coredxi:first-ref`. 쿠키를 쓰지 않으므로 서버로 전송되지 않고 탭을 닫으면 사라짐 → 개인정보처리방침 영향 없음(식별자가 아닌 캠페인 코드만 보관).
 - `FirstRefCapture`(루트 layout에 1회 마운트, 렌더 없음)가 경로 변경 시 `?ref=`를 읽어 **최초 1회만** 보관(이후 다른 ref로 덮어쓰지 않음, `/admin` 제외).
 - `AxCheckForm` 우선순위: **URL의 ref > 세션 보관 ref**. 저장소 접근은 모두 try/catch — 실패해도 ref 없이(direct) 정상 진행.
+- **예외(2026-10-26 후속)**: URL ref가 블로그 CTA 자동 ref(`blog-*`)이고 세션에 최초 유입 ref가 있으면 최초 ref를 우선한다(영업 링크 → 블로그 → CTA 경로를 영업 성과로 집계). 최초 ref가 없을 때만 `blog-*`, 사람이 직접 넣은 `blog-*` 외 URL ref는 그대로 URL 우선.
 - CSP: 인라인 스크립트 추가 없음(클라이언트 컴포넌트의 `useEffect`만 사용).
 
 ### 2-3. ref 검증
