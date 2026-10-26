@@ -59,6 +59,20 @@ describe("resolveRefCode", () => {
     expect(resolveRefCode("bad ref", "sales-kim")).toBe("sales-kim");
   });
 
+  it("URL ref가 블로그 CTA 자동 ref(blog-*)면 보관된 최초 유입 ref가 우선한다", () => {
+    expect(resolveRefCode("blog-my-post", "internal-test")).toBe("internal-test");
+    expect(resolveRefCode("blog-my-post", "blog-other-post")).toBe("blog-other-post");
+  });
+
+  it("최초 유입 ref가 없으면 blog-*를 그대로 쓴다", () => {
+    expect(resolveRefCode("blog-my-post", null)).toBe("blog-my-post");
+    expect(resolveRefCode("blog-my-post", "bad ref!")).toBe("blog-my-post");
+  });
+
+  it("blog-*가 아닌 URL ref(직접 입력한 링크)는 지금처럼 URL이 우선한다", () => {
+    expect(resolveRefCode("newsletter", "sales-kim")).toBe("newsletter");
+  });
+
   it("둘 다 없으면 null", () => {
     expect(resolveRefCode(undefined, null)).toBeNull();
   });

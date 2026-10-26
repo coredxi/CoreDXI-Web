@@ -21,9 +21,16 @@ export function normalizeRefCode(value: unknown): string | null {
   return REF_PATTERN.test(normalized) ? normalized : null;
 }
 
-/** 우선순위: URL의 ref > 세션에 보관된 최초 ref */
+/**
+ * 우선순위: URL의 ref > 세션에 보관된 최초 ref.
+ * 단, URL ref가 블로그 CTA가 자동으로 붙인 blog-*이면 최초 유입 ref(예: 영업 링크)를 우선한다 —
+ * 영업 링크로 들어와 블로그를 읽고 CTA를 누른 방문자를 영업 성과로 집계하기 위함(2026-10-26).
+ */
 export function resolveRefCode(urlRef: unknown, storedRef: unknown): string | null {
-  return normalizeRefCode(urlRef) ?? normalizeRefCode(storedRef);
+  const url = normalizeRefCode(urlRef);
+  const stored = normalizeRefCode(storedRef);
+  if (url && isBlogRef(url) && stored) return stored;
+  return url ?? stored;
 }
 
 type RefStorage = Pick<Storage, "getItem" | "setItem">;

@@ -62,12 +62,12 @@ const EMPTY_CONTACT: ContactState = {
 type Props = { refCode?: string };
 
 export function AxCheckForm({ refCode: urlRefCode }: Props) {
-  // 유입 경로 우선순위: URL의 ref > 같은 탭에서 처음 들어올 때 보관한 ref(FirstRefCapture)
+  // 유입 경로 우선순위: URL의 ref > 같은 탭에서 처음 들어올 때 보관한 ref(FirstRefCapture).
+  // 단, 블로그 CTA가 자동으로 붙인 blog-*보다는 보관된 최초 ref가 우선(resolveRefCode 참고)
   const [refCode, setRefCode] = useState<string | undefined>(
     () => normalizeRefCode(urlRefCode) ?? undefined
   );
   useEffect(() => {
-    if (normalizeRefCode(urlRefCode)) return;
     let storedRef: string | null = null;
     try {
       storedRef = readStoredRef(window.sessionStorage);

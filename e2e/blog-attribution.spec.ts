@@ -37,3 +37,24 @@ test("영업 링크로 처음 들어온 ref가 ref 없는 /ax-check 방문까지
 
   await expect(page.locator('input[type="hidden"][name="ref"]')).toHaveValue("internal-test");
 });
+
+test("영업 링크로 블로그에 들어와 CTA를 누르면 blog-*보다 최초 유입 ref가 우선한다", async ({ page }) => {
+  await page.goto("/blog?ref=internal-test");
+  await page.waitForFunction(
+    () => window.sessionStorage.getItem("coredxi:first-ref") === "internal-test"
+  );
+
+  const firstPostLink = page
+    .locator('a[href^="/blog/"]:not([href^="/blog/category"])')
+    .first();
+  const hasPost = (await firstPostLink.count()) > 0;
+  test.skip(!hasPost, "발행된 블로그 글이 없어 건너뜁니다.");
+
+  await firstPostLink.click();
+  await page.waitForURL(/\/blog\/[^/]+$/);
+  await page.getByRole("link", { name: "3분 AX 체크 시작하기" }).click();
+  await page.waitForURL(/\/ax-check\?ref=blog-/);
+
+  // 제출 직전 폼이 들고 있는 ref — 제출하지 않으므로 리드 데이터는 생기지 않는다.
+  await expect(page.locator('input[type="hidden"][name="ref"]')).toHaveValue("internal-test");
+});
