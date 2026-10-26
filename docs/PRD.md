@@ -72,8 +72,8 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 성공사례 목록 | `/cases` | Prisma `Portfolio` DB → 카드 그리드 |
 | 성공사례 상세 | `/cases/[id]` | 썸네일·동영상 embed·본문, 동적 SEO 메타데이터 |
 | 블로그 목록 | `/blog` | 발행 글 목록 + URL 검색 필터(`?q=`). 2026-08-14 게시물 전량 삭제 후 **2026-08-15 "AI 실무 활용" 4편 재건 발행 완료** — 경위·재건 전략은 `docs/superpowers/specs/2026-08-14-content-brand-strategy-design.md` 참고 |
-| 블로그 상세 | `/blog/[slug]` | Tiptap 본문 렌더(BlockNote 레거시는 제거 완료), JSON-LD, 하단 CTA(`BlogPostCta` — 문의 유도 + 뉴스레터 앵커 링크, `cta_location: "blog_post_bottom"`) |
-| 블로그 카테고리 | `/blog/category/[slug]` | 카테고리별 필터링 |
+| 블로그 상세 | `/blog/[slug]` | Tiptap 본문 렌더(BlockNote 레거시는 제거 완료), JSON-LD, 하단 CTA(`BlogPostCta` — **2026-10-26부터 3분 AX 체크 단일 CTA**(`/ax-check?ref=blog-{slug}`) + 뉴스레터 앵커 링크, `cta_location: "blog_post_bottom"`) |
+| 블로그 카테고리 | `/blog/category/[slug]` | 카테고리별 필터링. 공개 글 0개 카테고리는 사이드바에서 숨김(직접 URL 접근 시 빈 상태 화면, 2026-10-26) |
 | 문의하기 | `/contact` | 문의 폼(Supabase 저장) + 알림 이메일(Resend) |
 | 이용약관 | `/terms` | 정적 법적 문서 |
 | 개인정보처리방침 | `/privacy` | 정적 법적 문서 |
@@ -173,6 +173,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 - **AX 뉴스레터 발송 시스템 기본설계 확정 (2026-09-28)** — 포스코 뉴스배포관리시스템(기준등록→자료수집→AI 선별→검토 후 발송)을 벤치마크해 "외부 구독자용 AX 뉴스 큐레이션 뉴스레터"로 설계. 네이버 뉴스 검색 API + 언론사 RSS 수집, 1차 규칙 점수 → 2차 Claude API 점수·요약, 발송 유형 즉시/스케줄링/검토후발송(기본 검토후발송 = 시스템 자동 + 사용자 승인), 매주 화 08:00 KST, 제목 `(광고)` 표기, 1호는 "중소기업 AI 도입·AX 전환" 단일 캠페인, 매체는 IT·경제지 10~15곳 재구성. 신규 Prisma 테이블 6종·Cron 2종·`/admin/newsletter` 탭 확장. **코드 착수는 신규 기능 게이트(실응답 5건 + HOT 1건) 충족 후**, 0단계 준비(네이버 검색 API 키·RSS 조사·시드 CSV)만 선행 가능. 설계: `docs/superpowers/specs/2026-09-28-newsletter-distribution-design.md`
 - **AX 뉴스레터 발송 시스템 1단계(MVP) 코드 구현 (2026-10-04)** — 모델 9종·수집(네이버 API+RSS)·규칙 점수 선별·`/admin/newsletter` 캠페인/호 편집/발송 이력·Cron 2종(수집 06:00·발송 08:00 KST, Hobby 플랜 1일 1회)·매체 시드 스크립트·E2E 골든패스. 저장된 캠페인은 임시저장으로 되돌릴 수 없고, 임시저장 캠페인은 수집·기사 추가·발송 불가, 호 편집은 저장 후에만 미리보기·검토요청·승인·발송 가능. 2단계(Claude 점수·스케줄 자동발송)는 1호 발송 2회 안정 후. 설계: `docs/superpowers/specs/2026-09-28-newsletter-distribution-design.md`
 - **전환 퍼널 분석 대시보드 2단계(시각화 UI) 구현 완료 (2026-08-14)** — `/admin/dashboard`의 `Ga4FunnelPanel`이 최근 30일 이벤트 카운트 기반 근사 퍼널(방문→스크롤 참여→CTA 클릭→문의 제출)과 뉴스레터 구독 건수를 가로 바 형태로 표시. GA4 정식 Funnel Exploration이 아닌 eventCount/sessions 근사치이며, 스크롤 깊이(`percent`) 구간 세분화는 커스텀 디멘션 등록 확인 전까지 보류(이벤트 총합만 사용). 설계: `docs/superpowers/specs/2026-08-14-funnel-dashboard-stage2-design.md`. **실측(실 GA4 데이터 렌더링·배포 후 실시간 이벤트 확인) 2026-08-30 완료** — 프로덕션에서 전환 퍼널 실 데이터 확인 및 블로그 하단 CTA `cta_click`(`cta_location=blog_post_bottom`) 실시간 수신 확인(`docs/superpowers/plans/2026-08-14-phase1-item4-5-action-plan.md` 2번 표 순서 5~7). **Phase 1 공식 종료**
+- **블로그 콘텐츠 재건 트랙 (2026-10-26 착수, 8주)** — 상시 콘텐츠 운영(Phase 1 DoD 미포함). 블로그 글의 단일 CTA는 3분 AX 체크이며, 블로그·영업 링크 유입이 AX 체크 응답으로 이어지는지 ref 코드로 측정한다. 블로그 본문·하단 CTA의 `/ax-check` 링크에는 `ref=blog-{slug}` 자동 부여(작성자가 넣은 ref는 유지), `?ref=`로 처음 들어온 방문자는 탭 단위 `sessionStorage`에 최초 ref를 보관해 ref 없이 `/ax-check`에 도착해도 이어받음(우선순위 URL > 세션). `/admin/leads`에 ref 필터(전체·블로그 묶음·ref 없음·개별 ref) 추가. 공개 글 0개 카테고리는 공개 블로그 사이드바에서 숨김(직접 URL은 빈 상태 화면 유지, CMS는 전체 표시). DB 스키마 변경 없음. 설계: `docs/superpowers/specs/2026-10-26-blog-attribution-design.md`
 
 ### 6-2. 데이터베이스 스키마 (Prisma)
 

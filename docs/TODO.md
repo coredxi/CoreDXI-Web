@@ -133,6 +133,21 @@
 
 ---
 
+## 1-C. 진행 중 — 블로그 콘텐츠 재건 트랙 🚧 (2026-10-26 착수, 8주)
+
+> 상시 콘텐츠 운영(Phase 1 DoD 미포함). 블로그 글의 단일 CTA는 3분 AX 체크, 블로그·영업 링크 유입 → AX 체크 응답 전환을 ref 코드로 측정. 새 기능 동결 게이트(2026-09-06)와 충돌하지 않도록 측정 장치·표시 정리로 범위 한정, DB 스키마 변경 없음. 설계: `docs/superpowers/specs/2026-10-26-blog-attribution-design.md`
+
+- [x] 블로그 본문·하단 CTA의 `/ax-check` 링크에 `ref=blog-{slug}` 자동 부여(작성자 ref 유지) — 하단 CTA를 문의하기 → 3분 AX 체크로 전환
+- [x] 첫 방문 ref 유지 — `?ref=`로 처음 들어온 ref를 탭 단위 sessionStorage에 보관, ref 없는 `/ax-check` 도착 시 적용(URL > 세션), 저장소 실패 시에도 정상 동작
+- [x] ref 값 검증 `^[a-z0-9-]{1,80}$`(서버 `submitAxCheck`도 동일 적용, 부적합 시 ref 없음으로 저장)
+- [x] `/admin/leads` ref 필터(전체·블로그 묶음 blog-*·ref 없음·개별 ref, 건수 표시)
+- [x] 공개 글 0개 카테고리 사이드바 숨김(A안) — 직접 URL은 빈 상태 화면 유지, CMS는 전체 표시
+- [x] AX 체크 진행 표시 "1 / 10" → "질문 n / 9" + 연락처 단계 "마지막 단계"
+- [ ] `/cases` 샘플 의심 사례 비공개 — **보류**: Portfolio 모델에 공개 여부 필드가 없어 스키마 변경 없이는 "삭제 아닌 비공개" 불가. 사용자 결정 필요(설계 메모 4번)
+- [ ] 배포 후 실측 — 블로그 글 CTA 클릭 → `/admin/leads`에 `blog-*` ref로 응답 기록 확인(테스트 제출은 `ref=internal-test`)
+
+---
+
 ## 2. 개선이 필요한 항목 🔧
 
 - 🔧 **블로그 콘텐츠 전량 소실 및 재건 (2026-08-14)** — coredxi.com 블로그 게시물 다수가 외부 콘텐츠를 복사·붙여넣기한 것으로 확인되어 관리자 페이지에서 전체 삭제. 발단은 사용자의 별도 프로젝트(애드센스 포트폴리오)에서 `fiftyvibe.kr` 애드센스 거절을 계기로 같은 구글 계정에 있던 coredxi.com을 점검하며 발견된 것. coredxi.com은 애드센스 수익화 목적이 아니므로 애드센스 제외 자체는 로드맵에 영향 없음. 재건 전략(브랜드 구조·콘텐츠 소싱·재발 방지책)은 설계 문서로 확정: `docs/superpowers/specs/2026-08-14-content-brand-strategy-design.md`, 실행 순서: `docs/superpowers/plans/2026-08-14-content-rebuild-action-plan.md`, 소싱 정책은 `CONTENT_GUIDE.md` 16번에 반영 완료
