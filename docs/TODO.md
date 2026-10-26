@@ -143,7 +143,11 @@
 - [x] `/admin/leads` ref 필터(전체·블로그 묶음 blog-*·ref 없음·개별 ref, 건수 표시)
 - [x] 공개 글 0개 카테고리 사이드바 숨김(A안) — 직접 URL은 빈 상태 화면 유지, CMS는 전체 표시
 - [x] AX 체크 진행 표시 "1 / 10" → "질문 n / 9" + 연락처 단계 "마지막 단계"
-- [ ] `/cases` 샘플 의심 사례 비공개 — **보류**: Portfolio 모델에 공개 여부 필드가 없어 스키마 변경 없이는 "삭제 아닌 비공개" 불가. 사용자 결정 필요(설계 메모 4번)
+- [ ] `/cases` 샘플 의심 사례 — **사용자가 관리자 화면(`/admin/portfolio`)에서 직접 삭제하기로 결정(2026-10-26)**. Portfolio에 공개 여부 필드가 없어 "비공개" 대신 삭제(설계 메모 4번)
+  - 백로그: `Portfolio.isPublished` 컬럼(수동 migration) — **실제 사례 첫 등록 시** 함께 도입
+- [x] GA4 비콘 CSP 차단 수정 — `connect-src`에 `https://www.google.com`(페이지 이탈 시 `user_engagement` 비콘 `/g/collect`, 실측 차단 확인)·`https://*.analytics.google.com`(GA4 지역 수집 엔드포인트) 추가, `*.google.com` 와일드카드는 열지 않음. Playwright `e2e/csp-violations.spec.ts`로 `/`·`/blog`·`/ax-check` CSP 위반 콘솔 오류 0건 확인(개발 서버 전용 eval 위반 제외)
+- [x] 사이트맵에서 공개 글 0개 블로그 카테고리 제외 — 사이드바와 같은 `listPublicBlogCategories()` 재사용
+- [x] eslint ignore에 `.claude/worktrees/**` 추가 — `npm run lint` 전체 오류 0건(경고 29건은 기존)
 - [ ] 배포 후 실측 — 블로그 글 CTA 클릭 → `/admin/leads`에 `blog-*` ref로 응답 기록 확인(테스트 제출은 `ref=internal-test`)
 
 ---

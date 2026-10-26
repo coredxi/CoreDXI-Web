@@ -38,10 +38,11 @@
 ## 3. 빈 카테고리 숨김 (A안, 2026-10-26 사용자 결정)
 - `listPublicBlogCategories()` — `_count.posts(where: PUBLISHED)`가 0인 카테고리를 공개 블로그 사이드바에서 제외.
 - 관리자 CMS는 기존 `listBlogCategories()` 그대로(전체 표시). 직접 URL `/blog/category/{slug}`는 기존 빈 상태 화면 유지(404 아님).
-- 참고: `sitemap.ts`는 빈 카테고리도 계속 포함(이번 범위 밖).
+- 사이트맵(`sitemap.ts`)도 같은 `listPublicBlogCategories()`로 빈 카테고리 제외(2026-10-26 후속).
 
-## 4. `/cases` 샘플 사례 비공개 — 보류(사용자 결정 필요)
+## 4. `/cases` 샘플 사례 — 사용자가 관리자 화면에서 직접 삭제(2026-10-26 결정)
 - `Portfolio`에 공개 여부 컬럼이 없어 **스키마 변경 없이 "삭제가 아닌 비공개"를 구현할 방법이 없음**. 관리자 화면에도 공개 토글 없음 → 실행할 UPDATE SQL도 없음.
+- `Portfolio.isPublished` 컬럼은 "실제 사례 첫 등록 시" 도입하는 백로그로 둔다(TODO 1-C).
 - 공개 사례가 0건이 되면: `/cases`는 "등록된 성공사례가 없습니다." 빈 상태 카드 표시(깨지지 않음), 홈의 성공사례 미리보기(`CasesPreview`)는 섹션 자체가 숨겨짐. 상단 메뉴·`/solutions`의 "성공사례 보기"는 빈 상태 페이지로 연결됨.
 
 ## 5. AX 체크 진행 표시
