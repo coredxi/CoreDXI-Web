@@ -26,6 +26,14 @@ describe("buildCsp", () => {
     expect(csp).toMatch(/connect-src[^;]*google-analytics\.com/);
   });
 
+  it("allows GA4 collect endpoints on analytics.google.com and www.google.com", () => {
+    const csp = buildCsp("n");
+    expect(csp).toMatch(/connect-src[^;]*https:\/\/\*\.analytics\.google\.com/);
+    expect(csp).toMatch(/connect-src[^;]*https:\/\/www\.google\.com(?=[ ;])/);
+    // google.com 전체 와일드카드는 열지 않는다
+    expect(csp).not.toMatch(/connect-src[^;]*https:\/\/\*\.google\.com/);
+  });
+
   it("allows YouTube and Vimeo frame embeds", () => {
     const csp = buildCsp("n");
     expect(csp).toContain("https://www.youtube.com");

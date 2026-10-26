@@ -59,7 +59,7 @@ Permissions-Policy, HSTS는 이미 적용되어 있으나 CSP만 빠져 있다. 
 | `style-src` | `'self' 'unsafe-inline'` (Tailwind/Radix/shadcn 인라인 style 속성 대응, 스타일 인젝션은 XSS 리스크 낮아 트레이드오프 수용) |
 | `img-src` | `'self' data: https:` (블로그 본문 임의 외부 이미지 호환) |
 | `font-src` | `'self'` |
-| `connect-src` | `'self' https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com` |
+| `connect-src` | `'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.google.com https://www.googletagmanager.com` (2026-10-26: GA4 `www.google.com/g/collect` 비콘 차단 실측 → `www.google.com`, 지역 수집 엔드포인트 `*.analytics.google.com` 추가. `*.google.com` 와일드카드는 열지 않음) |
 | `frame-src` | `'self' https://www.youtube.com https://player.vimeo.com` |
 | `form-action` | `'self'` |
 | `frame-ancestors` | `'self'` |
