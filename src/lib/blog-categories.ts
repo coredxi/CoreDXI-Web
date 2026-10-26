@@ -32,3 +32,37 @@ export async function getBlogCategoryBySlug(slug: string) {
     },
   });
 }
+
+/** 공개 글 수가 1개 이상인 카테고리만 남긴다(빈 카테고리 숨김, 2026-10-26 결정 A안). */
+export function filterNonEmptyCategories<T extends { publishedCount: number }>(
+  categories: T[]
+): T[] {
+  return categories.filter((c) => c.publishedCount > 0);
+}
+
+export type PublicBlogCategoryItem = BlogCategoryItem & { updatedAt: Date };
+
+/**
+ * 공개 블로그 사이드바·사이트맵용 카테고리 목록 — 발행(PUBLISHED) 글이 없는 카테고리는 숨긴다.
+ * 관리자 CMS는 listBlogCategories()를 그대로 써서 모든 카테고리를 본다.
+ * 빈 카테고리도 직접 URL(/blog/category/{slug})로는 기존 빈 상태 화면이 보인다(404 아님).
+ */
+export async function listPublicBlogCategories(): Promise<PublicBlogCategoryItem[]> {
+  const rows = await prisma.blogCategory.findMany({
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      sortOrder: true,
+      updatedAt: true,
+      _count: { select: { posts: { where: { status: "PUBLISHED" } } } },
+    },
+  });
+  const withCounts = rows.map(({ _count, ...category }) => ({
+    category,
+    publishedCount: _count.posts,
+  }));
+  return filterNonEmptyCategories(withCounts).map((row) => row.category);
+}

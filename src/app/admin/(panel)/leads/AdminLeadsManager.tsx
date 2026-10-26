@@ -15,6 +15,11 @@ import {
   SAFETY_DOCS_DEMO_INQUIRY_TYPE,
   getQuestionById,
 } from "@/lib/ax-check/catalog";
+import {
+  REF_FILTER_ALL,
+  buildRefFilterOptions,
+  matchesRefFilter,
+} from "@/lib/ax-check/ref";
 import { LeadList } from "./LeadList";
 import { LeadDetailPanel } from "./LeadDetailPanel";
 import { FOLLOWUP_STATUS_LABEL } from "./FollowupStatusBadge";
@@ -122,6 +127,20 @@ export function AdminLeadsManager({ initialLeads, loadError, initialSelectedId }
 
     return { branchOn, distribution };
   }, [leads, q9Question]);
+
+  // ref(유입 경로) 필터 — 영업 링크·블로그 글(blog-*)별로 응답이 몇 건 들어왔는지 확인용
+  const [refFilter, setRefFilter] = useState(REF_FILTER_ALL);
+  const refFilterOptions = useMemo(
+    () => buildRefFilterOptions(leads.map((l) => l.refCode)),
+    [leads]
+  );
+  const activeRefFilter = refFilterOptions.some((o) => o.value === refFilter)
+    ? refFilter
+    : REF_FILTER_ALL;
+  const visibleLeads = useMemo(
+    () => leads.filter((l) => matchesRefFilter(l.refCode, activeRefFilter)),
+    [leads, activeRefFilter]
+  );
 
   const selectedLead = useMemo(
     () => leads.find((l) => l.id === selectedId) ?? null,
@@ -253,7 +272,25 @@ export function AdminLeadsManager({ initialLeads, loadError, initialSelectedId }
         </div>
       ) : null}
 
-      <LeadList leads={leads} selectedId={selectedId} onSelect={setSelectedId} />
+      <div className="flex flex-wrap items-center gap-2">
+        <label htmlFor="lead-ref-filter" className="text-sm font-semibold text-slate-700">
+          유입 경로(ref)
+        </label>
+        <select
+          id="lead-ref-filter"
+          value={activeRefFilter}
+          onChange={(e) => setRefFilter(e.target.value)}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-indigo-500 focus:outline-none"
+        >
+          {refFilterOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label} ({option.count}건)
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <LeadList leads={visibleLeads} selectedId={selectedId} onSelect={setSelectedId} />
 
       {selectedLead ? (
         <LeadDetailPanel

@@ -8,10 +8,11 @@
  * 설계: docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md 7번
  */
 
-import { type Dispatch, type SetStateAction, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import Link from "next/link";
 import { submitAxCheck } from "@/actions/ax-check";
 import { trackEvent } from "@/lib/ga4-events";
+import { normalizeRefCode, readStoredRef, resolveRefCode } from "@/lib/ax-check/ref";
 import {
   AX_CHECK_QUESTIONS,
   type AxCheckQuestion,
@@ -60,7 +61,22 @@ const EMPTY_CONTACT: ContactState = {
 
 type Props = { refCode?: string };
 
-export function AxCheckForm({ refCode }: Props) {
+export function AxCheckForm({ refCode: urlRefCode }: Props) {
+  // 유입 경로 우선순위: URL의 ref > 같은 탭에서 처음 들어올 때 보관한 ref(FirstRefCapture)
+  const [refCode, setRefCode] = useState<string | undefined>(
+    () => normalizeRefCode(urlRefCode) ?? undefined
+  );
+  useEffect(() => {
+    if (normalizeRefCode(urlRefCode)) return;
+    let storedRef: string | null = null;
+    try {
+      storedRef = readStoredRef(window.sessionStorage);
+    } catch {
+      // sessionStorage 접근이 막힌 환경 — ref 없이(direct) 정상 진행
+    }
+    setRefCode(resolveRefCode(urlRefCode, storedRef) ?? undefined);
+  }, [urlRefCode]);
+
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<AxCheckAnswers>(EMPTY_ANSWERS);
   const [contact, setContact] = useState<ContactState>(EMPTY_CONTACT);
@@ -183,8 +199,11 @@ export function AxCheckForm({ refCode }: Props) {
         <input type="hidden" name="ref" value={refCode ?? ""} />
 
         <div className="mb-6">
+          {/* [홍보팀] 안내 문구("9개 질문")와 맞추기 위해 질문 단계는 "질문 n / 9", 연락처 단계는 "마지막 단계"로 표시 */}
           <p className="text-xs font-medium text-muted-foreground">
-            {step + 1} / {TOTAL_STEPS}
+            {currentQuestion
+              ? `질문 ${step + 1} / ${AX_CHECK_QUESTIONS.length}`
+              : "마지막 단계"}
           </p>
           <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
