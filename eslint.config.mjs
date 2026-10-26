@@ -18,6 +18,8 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // Claude Code가 로컬에 만드는 임시 git worktree(저장소 사본) — 린트 대상 아님
+      ".claude/worktrees/**",
     ],
   },
   {
