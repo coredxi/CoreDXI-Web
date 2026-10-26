@@ -148,7 +148,9 @@
 - [x] GA4 비콘 CSP 차단 수정 — `connect-src`에 `https://www.google.com`(페이지 이탈 시 `user_engagement` 비콘 `/g/collect`, 실측 차단 확인)·`https://*.analytics.google.com`(GA4 지역 수집 엔드포인트) 추가, `*.google.com` 와일드카드는 열지 않음. Playwright `e2e/csp-violations.spec.ts`로 `/`·`/blog`·`/ax-check` CSP 위반 콘솔 오류 0건 확인(개발 서버 전용 eval 위반 제외)
 - [x] 사이트맵에서 공개 글 0개 블로그 카테고리 제외 — 사이드바와 같은 `listPublicBlogCategories()` 재사용
 - [x] eslint ignore에 `.claude/worktrees/**` 추가 — `npm run lint` 전체 오류 0건(경고 29건은 기존)
-- [ ] 배포 후 실측 — 블로그 글 CTA 클릭 → `/admin/leads`에 `blog-*` ref로 응답 기록 확인(테스트 제출은 `ref=internal-test`)
+- [x] PR #13 병합(c0c0dc5)·운영 배포 완료(2026-10-26), 운영 CSP·CTA ref·사이트맵 확인
+- [ ] 운영 실제출 검증: ref=internal-test → /admin/leads 반영 확인 후 테스트 리드 삭제
+- [ ] GA4 실시간 user_engagement 수신 확인
 
 ---
 
