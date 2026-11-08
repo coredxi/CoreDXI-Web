@@ -79,3 +79,6 @@ __pycache__/
 # Superpowers subagent-driven-development 작업 공간 (플랜별 원장·브리프·리뷰 산출물)
 .superpowers/
 .claude/
+
+# Cowork/Claude 세션 산출물 (커밋 금지)
+Claude outputs/
