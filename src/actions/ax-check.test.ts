@@ -36,7 +36,7 @@ vi.mock("@/lib/ax-check/result-token", () => ({
 
 vi.mock("@/lib/ax-check/business-days", () => ({
   computeFollowupScheduledAt: () => new Date("2026-09-04T00:30:00.000Z"),
-  formatKstFollowupSchedule: () => "2026-09-04(금) 09:30",
+  formatKstFollowupSchedule: () => "2026-09-04(금) 오전 중",
 }));
 
 const isFollowupEnabledMock = vi.fn();
@@ -327,7 +327,7 @@ describe("submitAxCheck happy path", () => {
     expect(salesCall).toBeDefined();
     const text = salesCall![0].text as string;
     expect(text).toContain("통화 포인트");
-    expect(text).toContain("상세 진단 메일 예정: 2026-09-04(금) 09:30");
+    expect(text).toContain("상세 진단 메일 예정: 2026-09-04(금) 오전 중");
     expect(text).toContain("/admin/leads?lead=lead-1");
     expect(text).not.toContain("고객용 이메일 초안");
   });
