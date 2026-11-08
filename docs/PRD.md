@@ -336,6 +336,7 @@ src/
 | **접근성** | shadcn/ui 컴포넌트 기반 (WAI-ARIA 준수) |
 | **반응형** | 모바일·태블릿·데스크탑 전 해상도 지원 |
 | **유지보수** | 비개발자용 `CONTENT_GUIDE.md` 제공, 코드 내 `[홍보팀]` 한국어 주석 |
+| **테스트/운영 데이터** | E2E 쓰기 스펙(DB 생성·메일 발송)은 기본 차단, `E2E_ALLOW_WRITES=1` + `E2E_CONFIRM_DB_HOST`(DB 호스트 직접 입력) 명시적 허용 시에만 실행. E2E가 남긴 문의·리드는 관리자 "테스트 데이터 정리"(SUPER_ADMIN)로 삭제 (2026-11-08, `docs/superpowers/specs/2026-11-08-e2e-prod-write-guard-design.md`) |
 
 ---
 

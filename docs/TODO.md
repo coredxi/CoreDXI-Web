@@ -162,6 +162,7 @@
 
 ## 2. 개선이 필요한 항목 🔧
 
+- 🚧 **E2E 운영 쓰기 차단 + 관리자 "테스트 데이터 정리" (2026-11-08 착수, 사용자 1안)** — 로컬 E2E가 운영 DB·Resend를 그대로 써서 11/8 전체 실행 시 운영에 테스트 리드·문의가 생긴 사고 대응. ① 쓰기 스펙(ax-check·contact-form·admin-blog-publish·admin-newsletter·password-reset)은 `E2E_ALLOW_WRITES=1` + `E2E_CONFIRM_DB_HOST` 2단 확인 없으면 skip ② `/admin/contact`·`/admin/leads`에 SUPER_ADMIN 전용 "테스트 데이터 정리"(`[E2E TEST]` 표식 AND 조건). E2E 전용 DB(2안)는 미채택. 설계: `docs/superpowers/specs/2026-11-08-e2e-prod-write-guard-design.md`, 브랜치 `feat/e2e-write-guard-and-test-cleanup`
 - 🔧 **블로그 콘텐츠 전량 소실 및 재건 (2026-08-14)** — coredxi.com 블로그 게시물 다수가 외부 콘텐츠를 복사·붙여넣기한 것으로 확인되어 관리자 페이지에서 전체 삭제. 발단은 사용자의 별도 프로젝트(애드센스 포트폴리오)에서 `fiftyvibe.kr` 애드센스 거절을 계기로 같은 구글 계정에 있던 coredxi.com을 점검하며 발견된 것. coredxi.com은 애드센스 수익화 목적이 아니므로 애드센스 제외 자체는 로드맵에 영향 없음. 재건 전략(브랜드 구조·콘텐츠 소싱·재발 방지책)은 설계 문서로 확정: `docs/superpowers/specs/2026-08-14-content-brand-strategy-design.md`, 실행 순서: `docs/superpowers/plans/2026-08-14-content-rebuild-action-plan.md`, 소싱 정책은 `CONTENT_GUIDE.md` 16번에 반영 완료
   - ✅ **2026-08-14 결정·확인 완료**: 바이라인은 대표 실명 병기 없이 "CoreDXI 팀" 명의로 통일 / 크몽·숨고 리스팅은 AI·AX 컨설팅으로 명확히 포지셔닝되어 있음을 사용자가 확인 / 삭제된 블로그 URL은 `sitemap.ts`(PUBLISHED만 동적 조회) + `blog/[slug]/page.tsx`의 `notFound()` 처리로 이미 정상 404 — 코드 조사로 확인, 추가 조치 불필요
   - **2026-08-14 상세 액션플랜 작성**: 후보 5편 정리, 편당 재가공 체크리스트, 3주 타임라인(항목4 퍼널 대시보드 2단계와 병행) — `docs/superpowers/plans/2026-08-14-phase1-item4-5-action-plan.md` 참고
