@@ -21,6 +21,18 @@ export type SolutionsContent = {
   brochureLabel: string;
   /** [홍보팀] 소개서 PDF 경로("/"로 시작하는 상대 경로) 또는 절대 URL. 비워두면 버튼이 숨겨진다. */
   brochureUrl: string;
+  /** [홍보팀] AX 사례 섹션(Safety-RAG) 라벨. 예: "직접 만들어 운영해 본 AX 사례" */
+  caseStudyEyebrow: string;
+  /** [홍보팀] AX 사례 섹션 제목. 비우면 섹션 전체를 숨긴다. */
+  caseStudyTitle: string;
+  /** [홍보팀] AX 사례 섹션 본문 문단(순서대로 렌더). 빈 배열이면 문단 없이 렌더한다. */
+  caseStudyParagraphs: string[];
+  /** [홍보팀] 사례 PDF 다운로드 버튼 문구. */
+  caseStudyPdfLabel: string;
+  /** [홍보팀] 사례 PDF 경로("/"로 시작하는 상대 경로) 또는 절대 URL. 비우면 PDF 버튼만 숨긴다. */
+  caseStudyPdfUrl: string;
+  /** [홍보팀] 데모 신청 CTA 버튼 문구. 링크 대상은 집계 키라 코드에 고정되어 있다(CMS 아님). */
+  caseStudyDemoLabel: string;
 };
 
 export const SOLUTIONS_CONTENT_DEFAULTS: SolutionsContent = {
@@ -81,4 +93,15 @@ export const SOLUTIONS_CONTENT_DEFAULTS: SolutionsContent = {
     "영업일 기준 1~2일 내 전문 컨설턴트가 연락드립니다. AI 전환의 첫 걸음, CoreDXI와 함께 시작하세요.",
   brochureLabel: "소개서 PDF 다운로드",
   brochureUrl: "/docs/coredxi-ax-consulting-brochure.pdf",
+  caseStudyEyebrow: "직접 만들어 운영해 본 AX 사례",
+  caseStudyTitle:
+    "Safety-RAG — 안전서류 3종 세트를 현장·공종에 맞춰 순서대로 초안 생성",
+  caseStudyParagraphs: [
+    "2026년 6월부터 위험성평가는 5인 이상 사업장의 법적 의무입니다. 문제는 평가표 한 장이 아니라, 원청에 낼 위험성평가표·표준작업계획서·TBM일지 세 종류를 현장·공종마다 매번 새로 만들어야 한다는 데 있습니다.",
+    "코어디엑스아이는 이 문제를 텔레그램 봇으로 직접 구현했습니다. 현장 정보를 입력하면 KICA·KRAS 표준 행렬법을 따르는 3종 문서 초안이 순서대로 생성되고, 엑셀로 바로 내려받습니다. 정부 공식 서식과의 정합, 인용 근거 자동 검증까지 실제로 배포하고 검증했습니다.",
+    "이건 슬라이드가 아니라 저희가 직접 만들어서 지금 돌리고 있는 시스템입니다. 도입 시에는 이 구조를 귀사의 실제 서식·공종에 맞춰 새로 구축해 드립니다.",
+  ],
+  caseStudyPdfLabel: "도입 사례 PDF 보기",
+  caseStudyPdfUrl: "/docs/safety-rag-case-study.pdf",
+  caseStudyDemoLabel: "10분 데모 신청",
 };

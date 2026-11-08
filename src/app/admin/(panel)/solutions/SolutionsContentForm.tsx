@@ -61,6 +61,24 @@ export function SolutionsContentForm({ initial }: Props) {
     );
   }
 
+  function updateCaseStudyParagraph(index: number, value: string) {
+    updateField(
+      "caseStudyParagraphs",
+      updateAt(values.caseStudyParagraphs, index, value)
+    );
+  }
+
+  function addCaseStudyParagraph() {
+    updateField("caseStudyParagraphs", [...values.caseStudyParagraphs, ""]);
+  }
+
+  function removeCaseStudyParagraph(index: number) {
+    updateField(
+      "caseStudyParagraphs",
+      values.caseStudyParagraphs.filter((_, i) => i !== index)
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (pending) return;
@@ -279,6 +297,101 @@ export function SolutionsContentForm({ initial }: Props) {
               placeholder="/docs/coredxi-ax-consulting-brochure.pdf"
             />
           </div>
+        </div>
+      </div>
+
+      <div className="space-y-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-gray-700">
+          AX 사례 섹션 (Safety-RAG)
+        </h2>
+        <p className="text-xs text-gray-500">
+          제목을 비우면 홈페이지에서 섹션 전체가 숨겨집니다. PDF 파일을 교체할
+          때는 같은 파일명(safety-rag-case-study.pdf)으로 덮어쓰면 URL이
+          유지됩니다. 데모 신청 버튼의 링크는 집계용이라 코드에서 고정되어
+          있습니다.
+        </p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="sol-case-eyebrow">섹션 라벨</Label>
+            <Input
+              id="sol-case-eyebrow"
+              value={values.caseStudyEyebrow}
+              onChange={(e) => updateField("caseStudyEyebrow", e.target.value)}
+              disabled={pending}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="sol-case-title">섹션 제목 (비우면 섹션 숨김)</Label>
+            <Input
+              id="sol-case-title"
+              value={values.caseStudyTitle}
+              onChange={(e) => updateField("caseStudyTitle", e.target.value)}
+              disabled={pending}
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label>본문 문단</Label>
+          {values.caseStudyParagraphs.map((paragraph, pi) => (
+            <div key={pi} className="flex gap-2">
+              <Textarea
+                value={paragraph}
+                onChange={(e) => updateCaseStudyParagraph(pi, e.target.value)}
+                rows={2}
+                disabled={pending}
+                aria-label={`AX 사례 문단 ${pi + 1}`}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => removeCaseStudyParagraph(pi)}
+                disabled={pending}
+                className="rounded-xl"
+              >
+                삭제
+              </Button>
+            </div>
+          ))}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addCaseStudyParagraph}
+            disabled={pending}
+            className="rounded-xl"
+          >
+            문단 추가
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="sol-case-pdf-label">PDF 버튼 문구</Label>
+            <Input
+              id="sol-case-pdf-label"
+              value={values.caseStudyPdfLabel}
+              onChange={(e) => updateField("caseStudyPdfLabel", e.target.value)}
+              disabled={pending}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="sol-case-pdf-url">사례 PDF URL</Label>
+            <Input
+              id="sol-case-pdf-url"
+              value={values.caseStudyPdfUrl}
+              onChange={(e) => updateField("caseStudyPdfUrl", e.target.value)}
+              disabled={pending}
+              placeholder="/docs/safety-rag-case-study.pdf"
+            />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="sol-case-demo-label">데모 신청 버튼 문구</Label>
+          <Input
+            id="sol-case-demo-label"
+            value={values.caseStudyDemoLabel}
+            onChange={(e) => updateField("caseStudyDemoLabel", e.target.value)}
+            disabled={pending}
+          />
         </div>
       </div>
 

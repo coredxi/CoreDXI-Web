@@ -8,6 +8,7 @@ import { getPageContent } from "@/lib/page-content";
 import { SOLUTIONS_CONTENT_DEFAULTS } from "@/lib/page-content/solutions";
 import { TrackedCtaLink } from "@/components/analytics/TrackedCtaLink";
 import { BrochureDownloadButton } from "@/components/solutions/BrochureDownloadButton";
+import { SAFETY_DOCS_DEMO_SOURCE } from "@/lib/ax-check/catalog";
 
 export const revalidate = 60;
 
@@ -134,6 +135,49 @@ export default async function SolutionsPage() {
             </div>
           </div>
         </section>
+
+        {/* ── AX 사례 (Safety-RAG) ──────────────────────────────
+            [홍보팀] 문구·PDF URL은 관리자 → 솔루션 관리(/admin/solutions)에서 수정.
+            제목을 비우면 섹션이 숨겨짐. 데모 신청 링크는 집계 키라 코드 고정. */}
+        {content.caseStudyTitle.trim() && (
+          <section className="bg-secondary/20 px-6 py-20">
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="text-sm font-semibold text-primary">
+                {content.caseStudyEyebrow}
+              </p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground">
+                {content.caseStudyTitle}
+              </h2>
+              <div className="mt-6 space-y-4 text-left">
+                {content.caseStudyParagraphs.map((paragraph, i) => (
+                  <p
+                    key={i}
+                    className="text-base leading-relaxed text-muted-foreground"
+                  >
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+              <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                {content.caseStudyPdfUrl && (
+                  <BrochureDownloadButton
+                    href={content.caseStudyPdfUrl}
+                    label={content.caseStudyPdfLabel}
+                    location="solutions_safety_case_download"
+                    className="w-auto"
+                  />
+                )}
+                <TrackedCtaLink
+                  href={`/contact?source=${SAFETY_DOCS_DEMO_SOURCE}`}
+                  location="solutions_safety_demo"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/90"
+                >
+                  {content.caseStudyDemoLabel}
+                </TrackedCtaLink>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ── 도입 프로세스 ─────────────────────────────────────── */}
         <section className="px-6 py-20">

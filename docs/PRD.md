@@ -66,8 +66,8 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 |--------|------|-----------|
 | 홈 | `/` | 히어로 섹션, 성공사례 미리보기(3건), 최신 블로그(5건), Mini About CTA |
 | 회사 소개 | `/about` | 미션·핵심가치·KPI 수치(50+, 98%, 3배)·CTA |
-| 솔루션 | `/solutions` | AI 협업 자동화·AX 컨설팅·엔터프라이즈 AI 플랫폼 3종 카드, 4단계 도입 프로세스, AX 컨설팅 카드에 소개서 PDF 다운로드 버튼(CMS 편집 가능, 2026-09-03). **2026-09 재편 예정(Phase 1.5 2단계)**: "중소기업 AI 도입·AX 전환 컨설팅" 단일 오퍼 — 진단→설계→구축→교육 4단계 + 대상 업종 블록 + AX 체크 CTA |
-| AX 체크(인터뷰 깔때기) | `/ax-check` | **신규(Phase 1.5 1단계, 2026-09-05 목표)** 8문항 전부 선택지·3분 질문지, 상단 컨설팅 소개 인트로, `?ref=` 영업이사 식별, 제출 즉시 화면에 "AX 우선 과제 3가지"(규칙 기반, 업종 예시·3단계 로드맵 포함). **팔로업 메일 자동 발송(2026-09-02 결정, 8/30 수동 발송 대체)**: 제출 즉시 결과 요약 메일(T0) + 영업일 기준 D+2 09:30 KST 상세 진단 메일(T1, Vercel Cron) — 관리자가 발송 전 보류·수정·즉시 발송 가능, 영업이사는 HOT 리드 통화만. 선택 동의 시 뉴스레터 구독 연동. 설계: `docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md`, `docs/superpowers/specs/2026-08-30-ax-check-experience-upgrade-design.md`(인트로·피드백), `docs/superpowers/specs/2026-09-02-ax-check-auto-followup-design.md`(자동 팔로업) |
+| 솔루션 | `/solutions` | AI 협업 자동화·AX 컨설팅·엔터프라이즈 AI 플랫폼 3종 카드, 4단계 도입 프로세스, AX 컨설팅 카드에 소개서 PDF 다운로드 버튼(CMS 편집 가능, 2026-09-03), 카드 섹션과 프로세스 섹션 사이 Safety-RAG 사례 섹션(CMS 편집, 사례 PDF·10분 데모 CTA, 2026-09-15). **2026-09 재편 예정(Phase 1.5 2단계)**: "중소기업 AI 도입·AX 전환 컨설팅" 단일 오퍼 — 진단→설계→구축→교육 4단계 + 대상 업종 블록 + AX 체크 CTA |
+| AX 체크(인터뷰 깔때기) | `/ax-check` | **신규(Phase 1.5 1단계, 2026-09-05 목표)** 8문항 전부 선택지·3분 질문지, 상단 컨설팅 소개 인트로, `?ref=` 영업이사 식별, 제출 즉시 화면에 "AX 우선 과제 3가지"(규칙 기반, 업종 예시·3단계 로드맵 포함). **팔로업 메일 자동 발송(2026-09-02 결정, 8/30 수동 발송 대체)**: 제출 즉시 결과 요약 메일(T0) + 영업일 기준 D+2 09:30 KST 상세 진단 메일(T1, Vercel Cron) — 관리자가 발송 전 보류·수정·즉시 발송 가능, 영업이사는 HOT 리드 통화만. 선택 동의 시 뉴스레터 구독 연동. Q9 안전서류 작성 시간 문항 + 월 4시간 이상 분기(2026-09-10) — 결과 화면·T1 메일에 Safety-RAG 사례 PDF·10분 데모 CTA 노출. 설계: `docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md`, `docs/superpowers/specs/2026-08-30-ax-check-experience-upgrade-design.md`(인트로·피드백), `docs/superpowers/specs/2026-09-02-ax-check-auto-followup-design.md`(자동 팔로업) |
 | AX 체크 결과 재열람 | `/ax-check/result/[token]` | 메일 링크용 토큰 페이지 — T0 결과 요약 메일에 링크 포함(2026-09-02) |
 | 성공사례 목록 | `/cases` | Prisma `Portfolio` DB → 카드 그리드 |
 | 성공사례 상세 | `/cases/[id]` | 썸네일·동영상 embed·본문, 동적 SEO 메타데이터 |
@@ -100,7 +100,7 @@ CoreDXI는 복잡한 기업 협업을 단순화하고 AI를 통해 비즈니스 
 | 대시보드 | `/admin/dashboard` | ✅ 완료 | 통계 카드(블로그·문의·포트폴리오·회원 수), GA4 분석(방문자 요약·인기 페이지·전환 퍼널), 퀵액션, 활동 로그 |
 | 홈 페이지 편집 | `/admin/main` | ✅ 완료 | 히어로 문구·버튼·이미지·신뢰지표 편집 (`PageContent` 테이블, 텍스트 범위) |
 | 회사소개 편집 | `/admin/about` | ✅ 완료 | 히어로·미션·핵심가치·지표·CTA 문구 편집 (`PageContent`) |
-| 솔루션 편집 | `/admin/solutions` | ✅ 완료 | 히어로·솔루션 카드 3종·프로세스 4단계·CTA·소개서 다운로드 버튼 문구/URL 편집 (`PageContent`). 카드 개수·순서 등 구조 편집은 범위 밖(3번 결정 완료 항목 참고) |
+| 솔루션 편집 | `/admin/solutions` | ✅ 완료 | 히어로·솔루션 카드 3종·프로세스 4단계·CTA·소개서 다운로드 버튼 문구/URL·AX 사례 섹션(Safety-RAG) 문구·PDF URL 편집 (`PageContent`). 카드 개수·순서 등 구조 편집은 범위 밖(3번 결정 완료 항목 참고) |
 | 성공사례 관리 | `/admin/portfolio` | ✅ 완료 | 목록·신규 등록·수정·삭제 |
 | 블로그 관리 | `/admin/blog` | ✅ 완료 | 글 목록·신규 작성(Tiptap 에디터)·수정·발행 |
 | 블로그 주제 관리 | `/admin/blog/topics` | ✅ 완료 | 카테고리 CRUD |

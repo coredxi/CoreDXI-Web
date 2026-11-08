@@ -97,4 +97,51 @@ describe("saveSolutionsContent", () => {
     expect(result.success).toBe(false);
     expect(savePageContentMock).not.toHaveBeenCalled();
   });
+
+  it("rejects a javascript: caseStudyPdfUrl", async () => {
+    const result = await saveSolutionsContent({
+      ...SOLUTIONS_CONTENT_DEFAULTS,
+      caseStudyPdfUrl: "javascript:alert(1)",
+    });
+    expect(result.success).toBe(false);
+    expect(savePageContentMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts an empty caseStudyPdfUrl to hide the PDF button", async () => {
+    const result = await saveSolutionsContent({
+      ...SOLUTIONS_CONTENT_DEFAULTS,
+      caseStudyPdfUrl: "",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a non-empty caseStudyTitle with zero paragraphs", async () => {
+    const result = await saveSolutionsContent({
+      ...SOLUTIONS_CONTENT_DEFAULTS,
+      caseStudyParagraphs: [],
+    });
+    expect(result.success).toBe(false);
+    expect(savePageContentMock).not.toHaveBeenCalled();
+  });
+
+  it("skips paragraph validation when caseStudyTitle is empty", async () => {
+    const result = await saveSolutionsContent({
+      ...SOLUTIONS_CONTENT_DEFAULTS,
+      caseStudyTitle: "",
+      caseStudyParagraphs: [],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("trims caseStudyParagraphs and drops blank entries on normalize", async () => {
+    const result = await saveSolutionsContent({
+      ...SOLUTIONS_CONTENT_DEFAULTS,
+      caseStudyParagraphs: ["  문단1  ", "", "  문단2  "],
+    });
+    expect(result.success).toBe(true);
+    expect(savePageContentMock).toHaveBeenCalledWith(
+      "solutions",
+      expect.objectContaining({ caseStudyParagraphs: ["문단1", "문단2"] })
+    );
+  });
 });

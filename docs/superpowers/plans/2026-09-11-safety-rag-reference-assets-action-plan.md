@@ -110,8 +110,8 @@
 |---|---|---|
 | `docs/superpowers/plans/2026-09-11-safety-rag-reference-assets-action-plan.md` | 본 문서 | ✅ 09/11 |
 | `docs/superpowers/plans/2026-09-11-solutions-safety-case-section-claude-code-prompt.md` | Claude Code 실행 프롬프트 | ✅ 09/11 |
-| `docs/TODO.md` | 헤더 날짜, 1-B 2단계 "`/solutions` 재편" 첫 조각(사례 섹션) 진행 표기, Q9 후속 ①② 상태 | ⬜ P2에서 Claude Code |
-| `docs/PRD.md` | 5-1 솔루션 페이지 행에 "Safety-RAG 사례 섹션(CMS)" + AX 체크 행에 "Q9 안전서류 분기" 한 구절 | ⬜ P2 |
-| `CONTENT_GUIDE.md` | 19번 "Safety-RAG 사례 섹션 문구·PDF 교체 방법" (18번과 같은 톤) | ⬜ P2 |
-| `.env.example` | `AX_CHECK_SAFETY_CASE_STUDY_URL` 프로덕션 값 예시 주석 | ⬜ P2 |
+| `docs/TODO.md` | 헤더 날짜, 1-B 2단계 "`/solutions` 재편" 첫 조각(사례 섹션) 진행 표기, Q9 후속 ①② 상태 | ✅ 2026-09-15 (커밋 해시는 PR 참고) |
+| `docs/PRD.md` | 5-1 솔루션 페이지 행에 "Safety-RAG 사례 섹션(CMS)" + AX 체크 행에 "Q9 안전서류 분기" 한 구절 | ✅ 2026-09-15 (커밋 해시는 PR 참고) |
+| `CONTENT_GUIDE.md` | 19번 "Safety-RAG 사례 섹션 문구·PDF 교체 방법" (18번과 같은 톤) | ✅ 2026-09-15 (커밋 해시는 PR 참고) |
+| `.env.example` | `AX_CHECK_SAFETY_CASE_STUDY_URL` 프로덕션 값 예시 주석 | ✅ 2026-09-15 (`3ad9a69`) |
 | 노션 액션 DB(마일스톤 9/19) | 반영일·범위·대외비 결정 메모 + 로그 DB 1건 | ✅ 09/11 |

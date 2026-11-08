@@ -8,6 +8,7 @@ import type { SolutionsContent } from "@/lib/page-content/solutions";
  * [홍보팀] 소개서 다운로드 URL 검증 — "/"로 시작하는 상대 경로 또는 "https://" 절대 URL만
  * 허용한다("javascript:" 등 위험한 스킴, "//" 프로토콜 상대 URL 차단). 빈 문자열은 버튼을
  * 숨기는 용도로 허용한다. src/lib/url-safety.ts의 허용 목록 패턴과 동일한 취지.
+ * AX 사례 섹션의 사례 PDF URL(caseStudyPdfUrl) 검증에도 그대로 재사용한다.
  */
 function isSafeBrochureUrl(url: string): boolean {
   if (url === "") return true;
@@ -35,6 +36,15 @@ function validate(data: SolutionsContent): string | null {
   }
   if (!isSafeBrochureUrl(data.brochureUrl.trim())) {
     return "소개서 URL은 '/'로 시작하는 상대 경로 또는 'https://' 절대 URL만 허용됩니다.";
+  }
+  if (!isSafeBrochureUrl(data.caseStudyPdfUrl.trim())) {
+    return "사례 PDF URL은 '/'로 시작하는 상대 경로 또는 'https://' 절대 URL만 허용됩니다.";
+  }
+  if (
+    data.caseStudyTitle.trim() &&
+    data.caseStudyParagraphs.every((p) => !p.trim())
+  ) {
+    return "AX 사례 섹션 제목을 입력했다면 본문 문단을 1개 이상 입력해 주세요.";
   }
   return null;
 }
@@ -64,6 +74,14 @@ function normalize(data: SolutionsContent): SolutionsContent {
     ctaDesc: data.ctaDesc.trim(),
     brochureLabel: data.brochureLabel.trim(),
     brochureUrl: data.brochureUrl.trim(),
+    caseStudyEyebrow: data.caseStudyEyebrow.trim(),
+    caseStudyTitle: data.caseStudyTitle.trim(),
+    caseStudyParagraphs: data.caseStudyParagraphs
+      .map((p) => p.trim())
+      .filter((p) => p !== ""),
+    caseStudyPdfLabel: data.caseStudyPdfLabel.trim(),
+    caseStudyPdfUrl: data.caseStudyPdfUrl.trim(),
+    caseStudyDemoLabel: data.caseStudyDemoLabel.trim(),
   };
 }
 

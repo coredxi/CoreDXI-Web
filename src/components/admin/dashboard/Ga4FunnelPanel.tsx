@@ -36,7 +36,9 @@ export async function Ga4FunnelPanel() {
             eventCount 기반 · scroll_depth / cta_click / contact_submit
           </p>
           {/* [홍보팀] "CTA 클릭" 단계의 cta_click에는 /solutions 소개서 다운로드 클릭
-              (cta_location: "solutions_brochure_download")도 포함됩니다(2026-09-03 결정). */}
+              (cta_location: "solutions_brochure_download")과 AX 사례 섹션의 PDF 다운로드·
+              데모 신청 클릭(cta_location: "solutions_safety_case_download" /
+              "solutions_safety_demo")도 포함됩니다(2026-09-03 결정, 2026-09-15 사례 섹션 추가). */}
         </div>
         <div className="flex flex-wrap gap-2">
           <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
