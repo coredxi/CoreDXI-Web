@@ -12,6 +12,13 @@
 
 당신은 CoreDXI-Web 저장소에서 작업합니다. 루트 `CLAUDE.md` 규칙을 전부 지키세요. 커밋 트레일러는 세션 지침 문자열을 그대로 씁니다.
 
+### 0. 선행 — T1 크론 스케줄을 KST 10시대로 (main 직접 커밋, 2026-11-08 사용자 결정)
+
+- 배경: 프롬프트 A 보고 — Vercel Hobby 크론은 지정 시각이 속한 1시간 안 임의 시각에 실행된다. 현재 `30 0 * * *`(KST 09:00~09:59 창)이면 09:00~09:29에 돌 때 `processDueFollowups()`의 `followupScheduledAt <= now` 조건에 그날 09:30 예약 건이 걸리지 않아 하루 늦게 나간다.
+- 조치: `main`에서 `vercel.json`의 `/api/cron/ax-check-followup` 스케줄만 `"0 1 * * *"`(UTC 01:00 = KST 10:00~10:59 창)로 바꾼다. 발송 로직·예약 시각 계산(`business-days.ts`의 09:30)·뉴스레터 크론은 건드리지 않는다. 10/8 A안("오전 10시대 발송")과 일치.
+- `docs/TODO.md` 1-B의 "원인 미확인" 줄 아래에 "11/8 스케줄 0 1 * * * 로 변경 — 09:30 예약 건이 같은 날 항상 포함되도록" 한 줄 추가.
+- `npm run test`(크론 라우트·followup 테스트 회귀) 통과 후 커밋 `fix(cron): T1 팔로업 크론을 KST 10시대로 옮겨 당일 누락 방지` → `git push origin main`. 이후 1단계로.
+
 ### 1. 현황 확인
 
 - `git fetch origin`, `git log --oneline origin/main..origin/feat/solutions-safety-case-section`(10건 예상)
