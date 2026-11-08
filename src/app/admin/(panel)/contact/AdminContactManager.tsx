@@ -5,8 +5,10 @@ import {
   updateContactStatus,
 } from "@/actions/contact";
 import { sendReplyEmail } from "@/actions/sendEmail";
+import { TestDataCleanupButton } from "@/components/admin/TestDataCleanupButton";
 import { type ContactStatus } from "@/lib/contact-status";
 import type { ContactRecord } from "@/lib/contact-types";
+import type { TestDataPreview } from "@/lib/test-data/cleanup-criteria";
 import { Settings } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ContactList } from "./ContactList";
@@ -16,12 +18,15 @@ type Props = {
   initialContacts: ContactRecord[];
   loadError?: string;
   initialNotificationEmail: string;
+  /** SUPER_ADMIN일 때만 값이 있음 — 없으면 "테스트 데이터 정리" 버튼을 숨긴다. */
+  cleanupPreview: TestDataPreview | null;
 };
 
 export function AdminContactManager({
   initialContacts,
   loadError,
   initialNotificationEmail,
+  cleanupPreview,
 }: Props) {
   const [adminEmail, setAdminEmail] = useState(initialNotificationEmail);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
@@ -171,42 +176,51 @@ export function AdminContactManager({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
-          <Settings className="h-4 w-4 text-slate-500" />
-          <span className="min-w-[90px] text-xs font-semibold text-slate-600">
-            알림 수신 메일:
-          </span>
-          {isEditingEmail ? (
-            <div className="flex items-center gap-1">
-              <input
-                type="email"
-                value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                className="w-44 rounded border bg-white p-1 text-xs focus:outline-indigo-500"
-              />
-              <button
-                type="button"
-                onClick={handleSaveEmail}
-                disabled={isSavingEmail}
-                className="rounded bg-indigo-600 px-2 py-1 text-xs text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isSavingEmail ? "저장 중..." : "저장"}
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-slate-700">
-                {adminEmail}
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsEditingEmail(true)}
-                className="text-xs text-indigo-600 hover:underline"
-              >
-                변경
-              </button>
-            </div>
-          )}
+        <div className="flex flex-wrap items-center gap-2">
+          {cleanupPreview ? (
+            <TestDataCleanupButton
+              target="contacts"
+              initialPreview={cleanupPreview}
+              onCleaned={(ids) => setContacts((prev) => prev.filter((c) => !ids.includes(c.id)))}
+            />
+          ) : null}
+          <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2">
+            <Settings className="h-4 w-4 text-slate-500" />
+            <span className="min-w-[90px] text-xs font-semibold text-slate-600">
+              알림 수신 메일:
+            </span>
+            {isEditingEmail ? (
+              <div className="flex items-center gap-1">
+                <input
+                  type="email"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  className="w-44 rounded border bg-white p-1 text-xs focus:outline-indigo-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveEmail}
+                  disabled={isSavingEmail}
+                  className="rounded bg-indigo-600 px-2 py-1 text-xs text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isSavingEmail ? "저장 중..." : "저장"}
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-slate-700">
+                  {adminEmail}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingEmail(true)}
+                  className="text-xs text-indigo-600 hover:underline"
+                >
+                  변경
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

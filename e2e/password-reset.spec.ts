@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { Pool } from "pg";
 import { expect, test } from "@playwright/test";
 import { SUPABASE_CA_CERT } from "../src/lib/supabase-ca";
+import { skipUnlessWritesAllowed } from "./helpers/write-guard";
 
 // Prisma 7 생성 클라이언트가 import.meta(ESM 전용 문법)를 쓰기 때문에 Playwright의
 // 테스트 프로세스(CJS 변환)에서 "@/lib/prisma"를 직접 import할 수 없다. 대신 이미
@@ -20,6 +21,8 @@ const pool = new Pool({
 // 링크를 클릭한 것처럼 재현한다. 실제 계정에 영향을 주지 않도록 전용 테스트 User를
 // 만들고 끝나면 정리한다(공유 E2E_ADMIN 계정의 비밀번호를 바꾸면 다른 e2e가 깨진다).
 test.describe("비밀번호 재설정 (이메일 링크) 골든패스", () => {
+  // [홍보팀] 운영 DB에 직접 쓰는 테스트 — E2E_ALLOW_WRITES·E2E_CONFIRM_DB_HOST 없으면 건너뛴다.
+  skipUnlessWritesAllowed(test);
   // 두 테스트가 동시에 뜨면 개발 서버(Turbopack)가 같은 라우트를 동시에 첫 컴파일하며
   // 지연이 생겨 assertion이 간헐적으로 타임아웃한다. 순차 실행으로 고정한다.
   test.describe.configure({ mode: "serial" });

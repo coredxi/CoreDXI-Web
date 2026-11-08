@@ -1,10 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { loginAsAdmin, skipWithoutAdminCredentials } from "./helpers/admin-auth";
+import { skipUnlessWritesAllowed } from "./helpers/write-guard";
 
 // 실제 네이버 API·구독자 발송은 하지 않는다: 기사는 "직접 추가"로 넣고, 발송은 "검토요청(내게 보내기)"까지만.
 // 저장(임시저장 아님)한 캠페인만 기사 추가·검토요청이 가능하다. 호 편집 화면은 수정 없이 바로 미리보기·검토요청한다
 // (수정 후엔 "저장"을 먼저 눌러야 미리보기·검토요청·승인·즉시 발송 버튼이 활성화된다).
 test.describe("관리자 뉴스레터 골든패스", () => {
+  skipUnlessWritesAllowed(test);
   skipWithoutAdminCredentials(test);
 
   test("캠페인 생성 → 기사 직접 추가 → 미리보기 → 검토요청", async ({ page }) => {

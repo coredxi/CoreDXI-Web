@@ -48,7 +48,7 @@ scripts/            # Notion 연동용 Python 스크립트 (개발 워크플로 
 ## 5. 작업 규칙
 
 - 커밋: Conventional Commits(`feat:`, `fix:`, `refactor:`, `chore:`, `docs:`) 형식 유지 — post-commit 훅이 Notion Tasks DB에 자동 기록
-- 테스트/검증: 배포 전 Vitest 유닛 테스트(`npm run test`) + Playwright E2E 골든패스(`npm run test:e2e`) + `npm run lint` + `npx tsc --noEmit` 통과 확인. CI(`ci.yml`)에서 lint+typecheck+test 자동 실행
+- 테스트/검증: 배포 전 Vitest 유닛 테스트(`npm run test`) + Playwright E2E 골든패스(`npm run test:e2e`) + `npm run lint` + `npx tsc --noEmit` 통과 확인. CI(`ci.yml`)에서 lint+typecheck+test 자동 실행. **E2E 운영 보호(2026-11-08)**: 로컬 E2E dev 서버는 운영 DB·Resend를 그대로 쓰므로 기본 `npm run test:e2e`(=`test:e2e:readonly`)는 쓰기 스펙을 건너뛴다. 한 스펙만 돌릴 땐 `npx playwright test e2e/<파일>.spec.ts`(Windows에서 `npm run … -- <필터>` 금지 — 필터가 전달되지 않아 전체 실행됨). 쓰기 스펙이 꼭 필요하면 `E2E_ALLOW_WRITES=1 E2E_CONFIRM_DB_HOST=<호스트>`를 주고, 끝나면 `/admin/contact`·`/admin/leads` "테스트 데이터 정리"로 지운다
 - 금지 사항:
   - `prisma migrate dev` 사용 금지 — `contacts`/`contact_settings`(Supabase 직접 생성 테이블)와 충돌해 스키마 리셋 위험. 반드시 수동 `migration.sql` 작성 + `prisma migrate deploy`만 사용
   - `@tiptap/*` 버전은 `package.json overrides`로 `3.13.0` 고정 — 업그레이드 시 전체 회귀 테스트 필수

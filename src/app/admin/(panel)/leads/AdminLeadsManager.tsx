@@ -20,6 +20,8 @@ import {
   buildRefFilterOptions,
   matchesRefFilter,
 } from "@/lib/ax-check/ref";
+import { TestDataCleanupButton } from "@/components/admin/TestDataCleanupButton";
+import type { TestDataPreview } from "@/lib/test-data/cleanup-criteria";
 import { LeadList } from "./LeadList";
 import { LeadDetailPanel } from "./LeadDetailPanel";
 import { FOLLOWUP_STATUS_LABEL } from "./FollowupStatusBadge";
@@ -32,6 +34,8 @@ type Props = {
   initialLeads: AxCheckLeadRecord[];
   loadError?: string;
   initialSelectedId?: string;
+  /** SUPER_ADMIN일 때만 값이 있음 — 없으면 "테스트 데이터 정리" 버튼을 숨긴다. */
+  cleanupPreview: TestDataPreview | null;
 };
 
 function csvEscape(value: string): string {
@@ -85,7 +89,12 @@ function downloadCsv(csv: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-export function AdminLeadsManager({ initialLeads, loadError, initialSelectedId }: Props) {
+export function AdminLeadsManager({
+  initialLeads,
+  loadError,
+  initialSelectedId,
+  cleanupPreview,
+}: Props) {
   const [leads, setLeads] = useState(initialLeads);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(() => {
@@ -220,15 +229,27 @@ export function AdminLeadsManager({ initialLeads, loadError, initialSelectedId }
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleExportCsv}
-          disabled={leads.length === 0}
-          className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <Download className="h-3.5 w-3.5" />
-          CSV 내보내기
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {cleanupPreview ? (
+            <TestDataCleanupButton
+              target="leads"
+              initialPreview={cleanupPreview}
+              onCleaned={(ids) => {
+                setLeads((prev) => prev.filter((l) => !ids.includes(l.id)));
+                setSelectedId((prev) => (prev && ids.includes(prev) ? null : prev));
+              }}
+            />
+          ) : null}
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={leads.length === 0}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Download className="h-3.5 w-3.5" />
+            CSV 내보내기
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
