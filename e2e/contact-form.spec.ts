@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { skipUnlessWritesAllowed } from "./helpers/write-guard";
 
 test("문의 제출 골든패스", async ({ page }) => {
+  skipUnlessWritesAllowed(test);
   await page.goto("/contact");
 
   await page.getByLabel("이름 (First Name)").fill("길동");

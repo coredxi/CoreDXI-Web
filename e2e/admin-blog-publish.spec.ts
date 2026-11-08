@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { loginAsAdmin, skipWithoutAdminCredentials } from "./helpers/admin-auth";
+import { skipUnlessWritesAllowed } from "./helpers/write-guard";
 
 test("블로그 작성·발행 골든패스", async ({ page }) => {
+  skipUnlessWritesAllowed(test);
   skipWithoutAdminCredentials(test);
 
   await loginAsAdmin(page);

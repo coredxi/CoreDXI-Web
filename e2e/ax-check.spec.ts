@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { loginAsAdmin, skipWithoutAdminCredentials } from "./helpers/admin-auth";
+import { skipUnlessWritesAllowed } from "./helpers/write-guard";
 
 test("AX 체크 제출 골든패스", async ({ page }) => {
+  skipUnlessWritesAllowed(test);
   const company = `[E2E TEST] AX체크회사 ${Date.now()}`;
 
   await page.goto("/ax-check?ref=e2e");
