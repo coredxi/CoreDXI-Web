@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getSupabaseStorageHost, isAllowedOgBackgroundUrl, isBlockedHost } from "./url-safety";
+import { getSupabaseStorageHost, isAllowedOgBackgroundUrl, isBlockedHost, isSafeFeedUrl } from "./url-safety";
 
 describe("isBlockedHost", () => {
   it.each([
@@ -86,5 +86,38 @@ describe("getSupabaseStorageHost", () => {
     expect(getSupabaseStorageHost()).toBeNull();
 
     process.env.NEXT_PUBLIC_SUPABASE_URL = original;
+  });
+});
+
+describe("isSafeFeedUrl", () => {
+  it.each([
+    "https://rss.etnews.com/Section901.xml",
+    "https://www.mk.co.kr/rss/30000001/",
+    "https://100.64.example.com/feed", // 도메인 차용은 허용 (IP 범위만 차단)
+  ])("공개 https 피드는 허용: %s", (url) => {
+    expect(isSafeFeedUrl(url)).toBe(true);
+  });
+
+  it.each([
+    "http://rss.etnews.com/Section901.xml", // https 아님
+    "https://localhost/feed",
+    "https://localhost./feed", // 후행 점 제거 필요
+    "https://127.0.0.1/feed",
+    "https://127.0.0.2/feed", // 127.0.0.0/8 범위 전체 차단
+    "https://0x7f.1/feed", // 정수형/16진 IP 표기
+    "https://10.0.0.5/feed",
+    "https://192.168.0.1/feed",
+    "https://172.16.3.4/feed",
+    "https://169.254.169.254/latest/meta-data", // 클라우드 메타데이터
+    "https://100.64.0.1/feed", // CGNAT
+    "https://0.0.0.0/feed",
+    "https://2130706433/feed", // 정수형 127.0.0.1
+    "https://[::1]/feed",
+    "https://user:pass@example.com/feed",
+    "https://intranet.internal/feed",
+    "https://foo.internal./x", // 후행 점 제거 필요
+    "not a url",
+  ])("차단: %s", (url) => {
+    expect(isSafeFeedUrl(url)).toBe(false);
   });
 });

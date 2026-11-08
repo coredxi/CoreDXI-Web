@@ -108,3 +108,29 @@ describe("blogContentToPlainText", () => {
     expect(blogContentToPlainText(doc)).toBe("첫 문장 둘째 문장");
   });
 });
+
+describe("blogContentToHtml — AX 체크 ref 자동 부여", () => {
+  const linkDoc = (href: string): TiptapBlogContent => ({
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: [{ type: "text", text: "3분 AX 체크", marks: [{ type: "link", attrs: { href } }] }],
+      },
+    ],
+  });
+
+  it("blogSlug를 주면 ref 없는 /ax-check 링크에 ref=blog-{slug}를 붙인다", () => {
+    const html = blogContentToHtml(linkDoc("/ax-check"), { blogSlug: "my-post" });
+    expect(html).toContain('href="/ax-check?ref=blog-my-post"');
+  });
+
+  it("작성자가 넣은 ref는 유지한다", () => {
+    const html = blogContentToHtml(linkDoc("/ax-check?ref=sales-kim"), { blogSlug: "my-post" });
+    expect(html).toContain('href="/ax-check?ref=sales-kim"');
+  });
+
+  it("blogSlug가 없으면 링크를 바꾸지 않는다", () => {
+    expect(blogContentToHtml(linkDoc("/ax-check"))).toContain('href="/ax-check"');
+  });
+});

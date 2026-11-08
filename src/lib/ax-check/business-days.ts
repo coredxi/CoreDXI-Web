@@ -68,15 +68,13 @@ export function computeFollowupScheduledAt(
   return kstDateTimeToUtc(targetKstDate, 9, 30);
 }
 
-/** "2026-09-04(금) 09:30" 형식 — 영업이사 알림 메일에서 사용. */
+/**
+ * "2026-09-04(금) 오전 중" 형식 — 영업이사 알림 메일·/admin/leads에서 사용.
+ * [홍보팀] Vercel 무료(Hobby) 플랜 크론은 정시에 돌지 않아(실제 10시 전후 발송),
+ * 정확한 시각 대신 "오전 중"으로 안내한다. 내부 예약 기준(09:30 KST)은 그대로다.
+ */
 export function formatKstFollowupSchedule(date: Date): string {
   const dateStr = toKstDateString(date);
   const weekdayIndex = new Date(`${dateStr}T00:00:00Z`).getUTCDay();
-  const timeStr = new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(date);
-  return `${dateStr}(${WEEKDAY_KO[weekdayIndex]}) ${timeStr}`;
+  return `${dateStr}(${WEEKDAY_KO[weekdayIndex]}) 오전 중`;
 }

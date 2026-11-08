@@ -46,4 +46,36 @@ describe("sendResendEmail", () => {
       expect.objectContaining({ text: "텍스트 버전", html: "<p>HTML 버전</p>" })
     );
   });
+
+  it("headers를 Resend 페이로드에 그대로 전달한다", async () => {
+    await sendResendEmail({
+      to: "a@example.com",
+      subject: "s",
+      html: "<p>h</p>",
+      headers: { "List-Unsubscribe": "<https://www.coredxi.com/unsubscribe/t>" },
+    });
+    expect(sendMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: { "List-Unsubscribe": "<https://www.coredxi.com/unsubscribe/t>" },
+      })
+    );
+  });
+
+  it("성공 시 Resend 메일 id를 돌려준다", async () => {
+    sendMock.mockResolvedValueOnce({ data: { id: "re_123" }, error: null });
+    await expect(
+      sendResendEmail({ to: "a@example.com", subject: "s", text: "t" })
+    ).resolves.toEqual({ success: true, id: "re_123" });
+  });
+
+  it("idempotencyKey가 주어지면 SDK 두 번째 인자 옵션으로 넘긴다", async () => {
+    await sendResendEmail({ to: "a@example.com", subject: "s", text: "t", idempotencyKey: "newsletter:i1:a@example.com" });
+    expect(sendMock.mock.calls[0]![1]).toEqual({ idempotencyKey: "newsletter:i1:a@example.com" });
+    expect(sendMock.mock.calls[0]![0]).not.toHaveProperty("idempotencyKey");
+  });
+
+  it("idempotencyKey가 없으면 옵션 인자 없이 호출한다(기존 호출부 동작 유지)", async () => {
+    await sendResendEmail({ to: "a@example.com", subject: "s", text: "t" });
+    expect(sendMock.mock.calls[0]).toHaveLength(1);
+  });
 });

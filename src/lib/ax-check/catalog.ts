@@ -13,6 +13,7 @@
  *
  * 설계: docs/superpowers/specs/2026-08-22-sales-funnel-ax-check-design.md 3번·4번
  */
+import { SITE_URL } from "@/lib/seo";
 
 export const CATALOG_VERSION = "v3";
 
@@ -408,10 +409,12 @@ export function escapeHtml(text: string): string {
     .replace(/'/g, "&#39;");
 }
 
-/** 이메일 로고 이미지의 절대 URL. 이메일 클라이언트는 상대 경로 이미지를 표시하지 못한다. */
+/**
+ * 이메일 로고 이미지의 절대 URL. 이메일 클라이언트는 상대 경로 이미지를 표시하지 못한다.
+ * 메일은 받은 뒤 오래 열람되므로 프리뷰 배포 주소(NEXTAUTH_URL)가 아니라 운영 도메인(SITE_URL)에 고정한다.
+ */
 export function getEmailLogoUrl(): string {
-  const siteUrl = process.env.NEXTAUTH_URL ?? "https://www.coredxi.com";
-  return `${siteUrl}/brand/email-logo.png`;
+  return `${SITE_URL.replace(/\/+$/, "")}/brand/email-logo.png`;
 }
 
 /**

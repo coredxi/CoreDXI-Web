@@ -37,7 +37,7 @@ const ADMIN_CMS_NAV: {
   { label: "블로그", href: "/admin/blog", icon: FileText },
   { label: "AX 체크 리드", href: "/admin/leads", icon: ClipboardCheck },
   { label: "문의 내역 확인", href: "/admin/contact", icon: Mail },
-  { label: "뉴스레터 구독자", href: "/admin/newsletter", icon: Send },
+  { label: "뉴스레터", href: "/admin/newsletter", icon: Send },
   { label: "관리자 설정", href: "/admin/settings", icon: Settings },
 ];
 

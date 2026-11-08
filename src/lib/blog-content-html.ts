@@ -1,6 +1,12 @@
 import type { JSONContent } from "@tiptap/core";
 import type { BlogPostContent, TiptapBlogContent } from "@/types/blocknote";
 import { isTiptapDocument } from "@/types/blocknote";
+import { withBlogRef } from "@/lib/ax-check/ref";
+
+export type BlogContentHtmlOptions = {
+  /** 지정하면 본문의 /ax-check 링크에 ref=blog-{slug}를 자동 부여한다(ref가 이미 있으면 유지). */
+  blogSlug?: string;
+};
 
 function escapeHtml(text: string): string {
   return text
@@ -15,13 +21,13 @@ function escapeAttr(text: string): string {
   return escapeHtml(text);
 }
 
-function tiptapNodeToHtml(node: JSONContent): string {
+function tiptapNodeToHtml(node: JSONContent, options: BlogContentHtmlOptions): string {
   const type = node.type ?? "";
   const text = node.text ? escapeHtml(node.text) : "";
   const attrs = node.attrs as Record<string, string | number | boolean | null> | undefined;
 
   if (node.content?.length) {
-    const inner = node.content.map(tiptapNodeToHtml).join("");
+    const inner = node.content.map((child) => tiptapNodeToHtml(child, options)).join("");
     switch (type) {
       case "doc":
         return inner;
@@ -68,7 +74,10 @@ function tiptapNodeToHtml(node: JSONContent): string {
         if (mark.type === "strike") result = `<s>${result}</s>`;
         if (mark.type === "code") result = `<code>${result}</code>`;
         if (mark.type === "link" && typeof mark.attrs?.href === "string") {
-          result = `<a href="${escapeAttr(mark.attrs.href)}" rel="noopener noreferrer">${result}</a>`;
+          const href = options.blogSlug
+            ? withBlogRef(mark.attrs.href, options.blogSlug)
+            : mark.attrs.href;
+          result = `<a href="${escapeAttr(href)}" rel="noopener noreferrer">${result}</a>`;
         }
       }
       return result;
@@ -93,14 +102,17 @@ function tiptapNodeToHtml(node: JSONContent): string {
   }
 }
 
-function tiptapToHtml(doc: TiptapBlogContent): string {
-  return tiptapNodeToHtml(doc);
+function tiptapToHtml(doc: TiptapBlogContent, options: BlogContentHtmlOptions): string {
+  return tiptapNodeToHtml(doc, options);
 }
 
 /** 블로그 본문 JSON을 크롤러가 읽을 수 있는 HTML 문자열로 변환합니다. */
-export function blogContentToHtml(content: BlogPostContent | null): string {
+export function blogContentToHtml(
+  content: BlogPostContent | null,
+  options: BlogContentHtmlOptions = {}
+): string {
   if (!content) return "";
-  if (isTiptapDocument(content)) return tiptapToHtml(content);
+  if (isTiptapDocument(content)) return tiptapToHtml(content, options);
   return "";
 }
 

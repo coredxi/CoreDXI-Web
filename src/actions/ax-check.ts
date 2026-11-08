@@ -23,6 +23,7 @@ import { getClientIp } from "@/lib/client-ip";
 import { sendResendEmail } from "@/lib/resend";
 import { getContactNotificationEmail } from "@/actions/contact";
 import { subscribeNewsletter } from "@/actions/newsletter";
+import { normalizeRefCode } from "@/lib/ax-check/ref";
 import {
   AX_CHECK_QUESTIONS,
   Q3_MAX_SELECT,
@@ -105,7 +106,8 @@ export async function submitAxCheck(input: AxCheckFormInput): Promise<AxCheckSub
   const name = input.name.trim();
   const email = input.email.trim().toLowerCase();
   const phone = input.phone?.trim();
-  const refCode = input.refCode?.trim() || null;
+  // 허용 패턴(영소문자·숫자·하이픈, 80자)에 맞지 않는 ref는 유입 경로 없음(direct)으로 저장한다.
+  const refCode = normalizeRefCode(input.refCode);
 
   if (!company) {
     return { success: false, error: "회사명을 입력해 주세요." };

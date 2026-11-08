@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { prisma } from "@/lib/prisma";
 import { SITE_URL } from "@/lib/seo";
+import { listPublicBlogCategories } from "@/lib/blog-categories";
 
 const BASE_URL = SITE_URL;
 
@@ -31,10 +32,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         select: { slug: true, updatedAt: true },
         orderBy: { createdAt: "desc" },
       }),
-      prisma.blogCategory.findMany({
-        select: { slug: true, updatedAt: true },
-        orderBy: { sortOrder: "asc" },
-      }),
+      // 공개 글이 0개인 카테고리는 블로그 사이드바와 같은 기준으로 제외(2026-10-26)
+      listPublicBlogCategories(),
     ]);
 
     blogRoutes = posts.map((post) => ({

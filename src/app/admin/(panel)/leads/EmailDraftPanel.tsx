@@ -18,6 +18,7 @@ import {
   sendAxCheckFollowupNow,
   updateAxCheckFollowupDraft,
 } from "@/actions/ax-check";
+import { formatKstFollowupSchedule } from "@/lib/ax-check/business-days";
 import { buildCustomerEmailDraft } from "@/lib/ax-check/email-draft";
 import { formatKstDateTime } from "@/lib/format-kst-date";
 import type { AxCheckLeadRecord } from "@/lib/ax-check/types";
@@ -151,10 +152,17 @@ export function EmailDraftPanel({ lead, onLeadPatch }: Props) {
           </span>
         </div>
         <div>
-          <span className="block font-medium text-slate-400">T1 예정 시각</span>
+          {/* [홍보팀] 무료 플랜 크론은 정시에 돌지 않아 날짜 + "오전 중"으로만 보여 줍니다.
+              실제로 나간 시각은 옆 칸 "T1 발송 시각"에 기록됩니다. */}
+          <span className="block font-medium text-slate-400">T1 발송 예정</span>
           <span className="mt-1 block text-slate-700">
-            {lead.followupScheduledAt ? formatKstDateTime(lead.followupScheduledAt) : "—"}
+            {lead.followupScheduledAt ? formatKstFollowupSchedule(lead.followupScheduledAt) : "—"}
           </span>
+          {lead.followupScheduledAt ? (
+            <span className="mt-0.5 block text-[11px] text-slate-500">
+              실제 시각은 &lsquo;T1 발송 시각&rsquo;에 기록
+            </span>
+          ) : null}
         </div>
         <div>
           <span className="block font-medium text-slate-400">T1 발송 시각</span>

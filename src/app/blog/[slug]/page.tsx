@@ -146,10 +146,10 @@ export default async function BlogPostPage({ params }: PageProps) {
       ) : null}
 
       <div className="mt-10 rounded-xl border border-border bg-card p-4 shadow-sm md:p-8">
-        <BlogPostContentServer content={content} />
+        <BlogPostContentServer content={content} blogSlug={slug} />
       </div>
 
-      <BlogPostCta />
+      <BlogPostCta slug={slug} />
     </article>
   );
 }

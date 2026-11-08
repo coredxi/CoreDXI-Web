@@ -18,6 +18,10 @@ export function buildCsp(nonce: string): string {
         "'self'",
         "https://www.google-analytics.com",
         "https://*.google-analytics.com",
+        // GA4 지역 수집 엔드포인트(region1.analytics.google.com 등)
+        "https://*.analytics.google.com",
+        // gtag.js가 /g/collect 비콘을 www.google.com으로도 보낸다(2026-10-26 실측 차단 확인)
+        "https://www.google.com",
         "https://www.googletagmanager.com",
       ],
     ],

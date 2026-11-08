@@ -1,4 +1,4 @@
-import { listBlogCategories } from "@/lib/blog-categories";
+import { listPublicBlogCategories } from "@/lib/blog-categories";
 import { BlogShell } from "@/components/blog/BlogShell";
 
 export const revalidate = 60;
@@ -8,6 +8,6 @@ export default async function BlogLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const categories = await listBlogCategories();
+  const categories = await listPublicBlogCategories();
   return <BlogShell categories={categories}>{children}</BlogShell>;
 }

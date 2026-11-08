@@ -4,6 +4,7 @@
 // User: 일반 고객 (OAuth + 이메일 가입) — NextAuth PrismaAdapter 대상
 //
 // ── 변경 이력 ──────────────────────────────────────────────────────
+// v0.6  2026-10-05  AX 뉴스레터 발송 시스템(캠페인·키워드·매체·기사·호·발송이력) 추가
 // v0.5  2026-05-15  Admin / User 모델 분리
 // v0.4  2026-05-14  관리자 이메일+비밀번호 로그인용 필드 추가
 // v0.3  2026-05-14  Supabase(PostgreSQL)로 전환
@@ -222,6 +223,7 @@ model NewsletterSubscriber {
   source           String?
   subscribedAt     DateTime                   @default(now())
   unsubscribedAt   DateTime?
+  lastSentAt       DateTime?
   createdAt        DateTime                   @default(now())
   updatedAt        DateTime                   @updatedAt
 
@@ -286,4 +288,205 @@ model AxCheckResponse {
   @@index([refCode])
   @@index([email])
   @@index([followupStatus, followupScheduledAt])
+}
+
+// =====================================================
+// AX 뉴스레터 발송 시스템 — docs/superpowers/specs/2026-09-28-newsletter-distribution-design.md 5절
+// =====================================================
+enum NewsletterSendType {
+  IMMEDIATE
+  SCHEDULED
+  REVIEW_THEN_SEND
+}
+
+enum NewsletterCadence {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum KeywordOperator {
+  OR
+  AND
+  NOT
+}
+
+enum ArticleOrigin {
+  NAVER_API
+  RSS
+  MANUAL
+}
+
+enum IssueStatus {
+  COLLECTING
+  DRAFT
+  REVIEW_REQUESTED
+  APPROVED
+  SENDING
+  SENT
+  FAILED
+  CANCELED
+}
+
+enum DeliveryStatus {
+  QUEUED
+  SENT
+  FAILED
+  SKIPPED
+}
+
+model NewsletterCampaign {
+  id                 String             @id @default(cuid())
+  name               String
+  subjectTemplate    String
+  sendType           NewsletterSendType @default(REVIEW_THEN_SEND)
+  cadence            NewsletterCadence  @default(WEEKLY)
+  sendDayOfWeek      Int?
+  sendHourKst        Int                @default(8)
+  activeFrom         DateTime
+  activeUntil        DateTime?
+  collectDays        Int                @default(7)
+  maxArticles        Int                @default(7)
+  templateKey        String             @default("ax-weekly")
+  audience           String             @default("subscribers")
+  internalRecipients String[]           @default([])
+  ownerId            String
+  coManagerIds       String[]           @default([])
+  isActive           Boolean            @default(true)
+  isDraft            Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  keywords NewsletterKeyword[]
+  rules    NewsletterSelectionRule[]
+  sources  NewsletterCampaignSource[]
+  issues   NewsletterIssue[]
+
+  @@index([isActive])
+}
+
+model NewsletterKeyword {
+  id         String             @id @default(cuid())
+  campaignId String
+  campaign   NewsletterCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  group      Int
+  operator   KeywordOperator    @default(OR)
+  term       String
+  weight     Int                @default(1)
+
+  @@index([campaignId])
+}
+
+model NewsletterSelectionRule {
+  id          String             @id @default(cuid())
+  campaignId  String
+  campaign    NewsletterCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  indicator   String
+  label       String
+  description String
+  weight      Int                @default(1)
+  isEnabled   Boolean            @default(true)
+
+  @@unique([campaignId, indicator])
+}
+
+model NewsSource {
+  id          String                     @id @default(cuid())
+  name        String                     @unique
+  category    String
+  homepage    String
+  rssUrl      String?
+  domain      String                     @unique
+  trustWeight Int                        @default(3)
+  isActive    Boolean                    @default(true)
+  campaigns   NewsletterCampaignSource[]
+  articles    NewsArticle[]
+}
+
+model NewsletterCampaignSource {
+  campaignId String
+  sourceId   String
+  campaign   NewsletterCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  source     NewsSource         @relation(fields: [sourceId], references: [id])
+
+  @@id([campaignId, sourceId])
+}
+
+model NewsArticle {
+  id            String                   @id @default(cuid())
+  urlNormalized String                   @unique
+  originalUrl   String
+  title         String
+  snippet       String?
+  publishedAt   DateTime
+  sourceId      String?
+  source        NewsSource?              @relation(fields: [sourceId], references: [id])
+  sourceName    String?
+  origin        ArticleOrigin
+  collectedAt   DateTime                 @default(now())
+  titleHash     String
+  issueArticles NewsletterIssueArticle[]
+
+  @@index([publishedAt])
+  @@index([titleHash])
+}
+
+model NewsletterIssue {
+  id             String             @id @default(cuid())
+  campaignId     String
+  campaign       NewsletterCampaign @relation(fields: [campaignId], references: [id])
+  issueNo        Int
+  issueDate      DateTime
+  subject        String
+  intro          String?
+  status         IssueStatus        @default(COLLECTING)
+  scheduledAt    DateTime?
+  approvedById   String?
+  approvedAt     DateTime?
+  sentAt         DateTime?
+  recipientCount Int                @default(0)
+  editedAt       DateTime?
+  lastError      String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  articles   NewsletterIssueArticle[]
+  deliveries NewsletterDelivery[]
+
+  @@unique([campaignId, issueNo])
+  @@index([status, scheduledAt])
+}
+
+model NewsletterIssueArticle {
+  id              String          @id @default(cuid())
+  issueId         String
+  articleId       String
+  issue           NewsletterIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  article         NewsArticle     @relation(fields: [articleId], references: [id])
+  ruleScore       Int
+  llmScore        Int?
+  llmReason       String?
+  summary         String?
+  indicatorScores Json?
+  isSelected      Boolean         @default(false)
+  sortOrder       Int             @default(0)
+  editorNote      String?
+
+  @@unique([issueId, articleId])
+}
+
+model NewsletterDelivery {
+  id           String          @id @default(cuid())
+  issueId      String
+  issue        NewsletterIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  subscriberId String?
+  email        String
+  status       DeliveryStatus  @default(QUEUED)
+  resendId     String?
+  error        String?
+  sentAt       DateTime?
+
+  @@unique([issueId, email])
+  @@index([issueId, status])
 }

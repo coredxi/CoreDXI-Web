@@ -63,10 +63,10 @@ describe("computeFollowupScheduledAt", () => {
 });
 
 describe("formatKstFollowupSchedule", () => {
-  it("YYYY-MM-DD(요일) HH:mm 형식으로 포맷한다", () => {
+  it("YYYY-MM-DD(요일) 오전 중 형식으로 포맷한다(정시 표기 안 함)", () => {
     // 2026-09-04T00:30:00Z = 2026-09-04 09:30 KST(금요일)
     expect(formatKstFollowupSchedule(new Date("2026-09-04T00:30:00Z"))).toBe(
-      "2026-09-04(금) 09:30"
+      "2026-09-04(금) 오전 중"
     );
   });
 });
