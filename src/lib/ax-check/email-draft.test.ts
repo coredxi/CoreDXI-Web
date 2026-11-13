@@ -78,7 +78,7 @@ describe("buildCustomerEmailDraft", () => {
       baseSummary(),
       { company: "테스트회사", name: "홍길동" }
     );
-    expect(draft.body).toContain("진단(2주) → 설계 → 구축 → 교육");
+    expect(draft.body).toContain("현황 진단 → 로드맵 수립 → PoC 검증 → 확산·정착");
   });
 
   it("수동 편집 슬롯([[ ]])을 포함한다", () => {

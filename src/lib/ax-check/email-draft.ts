@@ -131,7 +131,7 @@ export function buildCustomerEmailDraft(
     `AX 체크 진단에 참여해 주셔서 감사합니다. ${industryLabel} 기준으로 정리한 귀사의 AX 우선 과제입니다.`,
     "",
     ...priorityLines,
-    "CoreDXI는 진단(2주) → 설계 → 구축 → 교육 순서로 프로젝트를 진행합니다. 반복 업무를 실제로 줄이는 것까지 함께 챙깁니다.",
+    "CoreDXI는 현황 진단 → 로드맵 수립 → PoC 검증 → 확산·정착 순서로 프로젝트를 진행합니다. 반복 업무를 실제로 줄이는 것까지 함께 챙깁니다.",
     ...safetyDocsLines,
     "",
     "[[통화에서 말씀 주신 ___ 관련해서는 별도로 안내드리겠습니다.]]",
