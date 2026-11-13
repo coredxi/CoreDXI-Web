@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 
 export const SITE_URL = "https://www.coredxi.com";
 
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/opengraph-image`;
+/**
+ * [홍보팀] 링크 미리보기 이미지 주소입니다. 카카오톡 등은 이미지를 "주소" 단위로 오래 저장해 두므로,
+ * src/app/opengraph-image.tsx 의 그림을 바꿀 때는 아래 v= 값을 그날 날짜로 올려야
+ * 카톡 미리보기에도 새 그림이 나옵니다. (2026-11-13: 근거 없는 수치 → 20년·3분·4단계 교체)
+ */
+export const OG_IMAGE_VERSION = "20261113";
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/opengraph-image?v=${OG_IMAGE_VERSION}`;
 
 export function siteUrl(path = ""): string {
   if (!path || path === "/") return SITE_URL;
