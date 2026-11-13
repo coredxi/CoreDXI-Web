@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { pageMetadata } from "@/lib/seo";
-import Link from "next/link";
 import { ArrowRight, BrainCircuit, BarChart3, Network, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -54,12 +53,15 @@ export default async function SolutionsPage() {
                 무료 도입 상담
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </TrackedCtaLink>
-              <Link
-                href="/cases"
+              {/* [홍보팀] 보조 버튼 — 사례 0건이라 /cases 대신 3분 AX 체크로 연결.
+                  성공사례가 다시 쌓이면 /cases("성공사례 보기")로 되돌릴 수 있음(2026-11-13). */}
+              <TrackedCtaLink
+                href="/ax-check"
+                location="solutions_hero_axcheck"
                 className="inline-flex items-center gap-2 rounded-xl border-2 border-primary/30 bg-card px-8 py-4 text-sm font-semibold text-primary dark:text-blue-300 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/60 hover:bg-primary/5"
               >
-                성공사례 보기
-              </Link>
+                3분 AX 체크 먼저 해보기
+              </TrackedCtaLink>
             </div>
           </div>
         </section>

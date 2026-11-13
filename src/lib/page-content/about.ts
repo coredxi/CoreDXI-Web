@@ -53,9 +53,9 @@ export const ABOUT_CONTENT_DEFAULTS: AboutContent = {
     },
   ],
   stats: [
-    { value: "50+", label: "도입 기업" },
-    { value: "98%", label: "고객 만족도" },
-    { value: "3배", label: "평균 업무 효율 향상" },
+    { value: "20년", label: "IT 시스템 구축·운영 현장 경력" },
+    { value: "3분", label: "무료 AX 체크로 우선 과제 확인" },
+    { value: "4단계", label: "진단 → 로드맵 → 검증 → 정착" },
   ],
   ctaTitle: "CoreDXI와 함께 시작하세요",
   ctaDesc:

@@ -91,7 +91,7 @@ export default function OgImage() {
               lineHeight: 1.5,
             }}
           >
-            복잡한 협업은 심플하게, 변화는 단단하게.
+            IT·통신·영상음향 구축 기업을 위한 AX 전환 컨설팅
           </span>
         </div>
 
@@ -99,9 +99,10 @@ export default function OgImage() {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {(
             [
-              { num: "50+", label: "도입 기업" },
-              { num: "98%", label: "고객 만족도" },
-              { num: "3×", label: "업무 효율" },
+              // [홍보팀] 근거 없는 수치(도입 기업 수·만족도 등)는 넣지 않습니다(2026-11-13).
+              { num: "20년", label: "구축·운영 현장 경력" },
+              { num: "3분", label: "무료 AX 체크" },
+              { num: "4단계", label: "진단→검증→정착" },
             ] as { num: string; label: string }[]
           ).map(({ num, label }) => (
             <div

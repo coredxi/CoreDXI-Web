@@ -24,8 +24,8 @@ export const HOME_CONTENT_DEFAULTS: HomeContent = {
     "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=1600&q=80",
   imageAlt: "CoreDXI 서비스 화면 예시",
   stats: [
-    { value: "50+", label: "도입 기업" },
-    { value: "98%", label: "고객 만족도" },
-    { value: "3배", label: "업무 효율 향상" },
+    { value: "20년", label: "IT 시스템 구축·운영 현장 경력" },
+    { value: "3분", label: "무료 AX 체크로 우선 과제 확인" },
+    { value: "4단계", label: "진단 → 로드맵 → 검증 → 정착" },
   ],
 };
